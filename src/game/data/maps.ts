@@ -1,0 +1,165 @@
+import { TileType } from "@/types/game";
+import type { GameMap } from "@/types/map";
+
+export const MAPS: Record<string, GameMap> = {
+  speakingIsland: {
+    id: "speakingIsland",
+    name: "이야기의 섬",
+    level: "1~10",
+    type: "starter",
+    width: 48,
+    height: 48,
+    tiles: [TileType.GRASS, TileType.SAND, TileType.WATER, TileType.STONE_PATH],
+    monsters: ["slime", "goblin_child", "wild_boar", "skeleton_warrior"],
+    npcs: [
+      { id: "elder", x: 12, y: 10 },
+      { id: "radar", x: 8, y: 14 },
+      { id: "eirin", x: 10, y: 14 },
+      { id: "garo", x: 13, y: 14 },
+      { id: "betty", x: 15, y: 12 },
+    ],
+    safeZone: true,
+    bgm: "peaceful_island",
+    description: "모든 모험가가 처음 발을 디디는 시작 지역입니다.",
+    connections: [
+      {
+        to: "silverKnightTown",
+        fromPortalName: "대륙행 부두",
+        spawn: { x: 4, y: 20 },
+      },
+    ],
+  },
+  silverKnightTown: {
+    id: "silverKnightTown",
+    name: "은기사의 마을",
+    level: "10~20",
+    type: "town",
+    width: 54,
+    height: 54,
+    tiles: [TileType.COBBLESTONE, TileType.BRICK, TileType.GRASS],
+    monsters: [],
+    npcs: [
+      { id: "julie", x: 14, y: 11 },
+      { id: "knight_captain", x: 18, y: 9 },
+    ],
+    safeZone: true,
+    bgm: "medieval_town",
+    description: "기사단이 수호하는 첫 번째 대륙 마을입니다.",
+    connections: [
+      {
+        to: "speakingIsland",
+        fromPortalName: "항구 귀환",
+        spawn: { x: 42, y: 24 },
+      },
+      {
+        to: "windwoodForest",
+        fromPortalName: "바람숲 입구",
+        spawn: { x: 50, y: 18 },
+      },
+      {
+        to: "orcForest",
+        fromPortalName: "오크 군락지 방면",
+        spawn: { x: 10, y: 48 },
+      },
+    ],
+  },
+  windwoodForest: {
+    id: "windwoodForest",
+    name: "바람숲",
+    level: "15~25",
+    type: "hunting",
+    width: 64,
+    height: 64,
+    tiles: [TileType.FOREST_GRASS, TileType.MOSS, TileType.DIRT],
+    monsters: ["poison_spider", "werewolf"],
+    npcs: [],
+    safeZone: false,
+    bgm: "mystical_forest",
+    description: "거대한 나무와 고대 유적이 남아 있는 숲입니다.",
+    connections: [
+      {
+        to: "silverKnightTown",
+        fromPortalName: "마을 귀환길",
+        spawn: { x: 2, y: 12 },
+      },
+      {
+        to: "giranTown",
+        fromPortalName: "상단 교역로",
+        spawn: { x: 60, y: 32 },
+      },
+    ],
+  },
+  orcForest: {
+    id: "orcForest",
+    name: "오크 군락지",
+    level: "18~28",
+    type: "hunting",
+    width: 60,
+    height: 60,
+    tiles: [TileType.DIRT, TileType.MOSS, TileType.DARK_STONE],
+    monsters: ["orc_archer", "orc_chief"],
+    npcs: [],
+    safeZone: false,
+    bgm: "tribal_drums",
+    description: "전투 북소리가 들려오는 거친 황무지입니다.",
+    connections: [
+      {
+        to: "silverKnightTown",
+        fromPortalName: "마을 방면",
+        spawn: { x: 4, y: 4 },
+      },
+    ],
+  },
+  giranTown: {
+    id: "giranTown",
+    name: "기란 도시",
+    level: "30~40",
+    type: "town",
+    width: 72,
+    height: 72,
+    tiles: [TileType.MARBLE, TileType.COBBLESTONE, TileType.STONE_PATH],
+    monsters: [],
+    npcs: [
+      { id: "giran_market", x: 20, y: 16 },
+      { id: "karon", x: 23, y: 18 },
+    ],
+    safeZone: true,
+    bgm: "grand_bazaar",
+    description: "상업과 제작이 집중된 대륙 최대 도시입니다.",
+    connections: [
+      {
+        to: "windwoodForest",
+        fromPortalName: "북쪽 관문",
+        spawn: { x: 6, y: 40 },
+      },
+      {
+        to: "dragonValley",
+        fromPortalName: "용의 계곡 길목",
+        spawn: { x: 68, y: 28 },
+      },
+    ],
+  },
+  dragonValley: {
+    id: "dragonValley",
+    name: "용의 계곡",
+    level: "35~50",
+    type: "hunting",
+    width: 72,
+    height: 72,
+    tiles: [TileType.VOLCANIC_ROCK, TileType.LAVA, TileType.DIRT],
+    monsters: ["drake", "red_dragon"],
+    npcs: [],
+    safeZone: false,
+    bgm: "dragon_roar",
+    description: "용의 포효와 화염이 뒤섞인 고난도 사냥터입니다.",
+    connections: [
+      {
+        to: "giranTown",
+        fromPortalName: "기란 방면 길",
+        spawn: { x: 5, y: 30 },
+      },
+    ],
+  },
+};
+
+export const MAP_LIST = Object.values(MAPS);
