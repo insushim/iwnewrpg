@@ -41,16 +41,16 @@ export class QuizHandler {
       pool.filter((item) => item.category === entry.category && item.en !== entry.en),
     );
     const mixed = shuffle(pool.filter((item) => item.category !== entry.category));
-    const type = Math.random() > 0.5 ? "en_to_kr" : "kr_to_en";
+    const type: QuizQuestion["type"] = "kr_to_en";
 
     const wrongPool = [...sameCategory.slice(0, 2), ...mixed.slice(0, 1)].slice(0, 3);
 
     const question: QuizQuestion = {
       id: `quiz-${crypto.randomUUID()}`,
       type,
-      question: type === "en_to_kr" ? entry.en : entry.kr,
-      correctAnswer: type === "en_to_kr" ? entry.kr : entry.en,
-      wrongAnswers: wrongPool.map((item) => (type === "en_to_kr" ? item.kr : item.en)),
+      question: entry.kr,
+      correctAnswer: entry.en,
+      wrongAnswers: wrongPool.map((item) => item.en),
       difficulty,
       category: entry.category,
     };

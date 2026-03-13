@@ -32,6 +32,7 @@ export function GameSocketBridge() {
         id: socket.id,
         name: player.name,
         mapId: "speakingIsland",
+        className: player.className,
       });
     };
 

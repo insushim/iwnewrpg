@@ -221,6 +221,8 @@ const INITIAL_QUESTS: QuestProgress[] = QUESTS.map((quest) => ({
   progress: 0,
 }));
 
+const INITIAL_SYSTEM_TIMESTAMP = 0;
+
 export const useGameStore = create<GameStore>((set, get) => ({
   player: {
     name: "견습 모험가",
@@ -246,7 +248,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       channel: "system",
       author: "시스템",
       message: "이야기의 섬에 오신 것을 환영합니다.",
-      timestamp: Date.now(),
+      timestamp: INITIAL_SYSTEM_TIMESTAMP,
     },
   ],
   quests: INITIAL_QUESTS,

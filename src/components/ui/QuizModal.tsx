@@ -118,9 +118,9 @@ export function QuizModal() {
 
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
-      <div className="fantasy-frame w-full max-w-2xl rounded-3xl p-6">
+      <div className="fantasy-frame w-full max-w-2xl rounded-[32px] p-6">
         <div className="mb-4 flex items-center justify-between text-sm text-amber-200/80">
-          <span>{question.type === "en_to_kr" ? "영어 → 한글" : "한글 → 영어"}</span>
+          <span>{question.type === "en_to_kr" ? "영어 -> 한글" : "한글 -> 영어"}</span>
           <span>
             {quiz.bossStep}/{quiz.bossTotal}
           </span>
@@ -171,7 +171,7 @@ export function QuizModal() {
                 ? "정답!"
                 : quiz.feedback.status === "timeout"
                   ? "시간 초과!"
-                  : "아쉽습니다!"}
+                  : "오답입니다."}
             </p>
             <p className="mt-1 text-sm text-amber-50/80">정답: {quiz.feedback.answer}</p>
             {quiz.feedback.reward ? (
@@ -185,7 +185,7 @@ export function QuizModal() {
             <button
               type="button"
               onClick={closeQuiz}
-              className="mt-4 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-black"
+              className="mt-4 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-500"
             >
               닫기
             </button>

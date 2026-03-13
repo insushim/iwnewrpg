@@ -14,6 +14,7 @@ type ConnectPayload = {
   id: string;
   name: string;
   mapId?: string;
+  className?: string;
 };
 
 type SessionInventoryItem = {
@@ -49,6 +50,7 @@ type SessionQuestProgress = {
 type SessionPlayer = {
   id: string;
   name: string;
+  className: string;
   mapId: string;
   gold: number;
   exp: number;
@@ -61,6 +63,7 @@ type SessionPlayer = {
   equipment: SessionEquipment;
   quests: SessionQuestProgress[];
   quizCorrectStreak: number;
+  lastAttackAt: number;
 };
 
 type GroundLoot = SessionInventoryItem & {
@@ -71,9 +74,23 @@ type GroundLoot = SessionInventoryItem & {
 };
 
 function createStarterState(payload: ConnectPayload): SessionPlayer {
+  const className = normalizeClassName(payload.className);
+  const starterInventory = [toSessionItem("red_potion", 10), toSessionItem("teleport_scroll", 3)];
+  const starterEquipment: SessionEquipment = {};
+
+  if (className === "Ranger") {
+    starterEquipment.weapon = toSessionItem("hunter_bow", 1);
+    starterInventory.push(toSessionItem("training_arrow", 200));
+  } else if (className === "Arcanist") {
+    starterEquipment.weapon = toSessionItem("arcana_staff", 1);
+  } else {
+    starterEquipment.weapon = toSessionItem("trainee_dagger", 1);
+  }
+
   return {
     id: payload.id,
     name: payload.name,
+    className,
     mapId: payload.mapId ?? "speakingIsland",
     gold: 75,
     exp: 0,
@@ -82,14 +99,15 @@ function createStarterState(payload: ConnectPayload): SessionPlayer {
     maxHp: 52,
     mp: 18,
     maxMp: 18,
-    equipment: {},
+    equipment: starterEquipment,
     quests: QUESTS.map((quest) => ({
       questId: quest.id,
       status: "available",
       progress: 0,
     })),
     quizCorrectStreak: 0,
-    inventory: [toSessionItem("red_potion", 10), toSessionItem("trainee_dagger", 1), toSessionItem("teleport_scroll", 3)],
+    lastAttackAt: 0,
+    inventory: starterInventory,
   };
 }
 
@@ -157,7 +175,11 @@ export function createGameServer(server: HttpServer) {
       const distanceToTarget = getDistance(monster.x, monster.y, activeTarget.presence.x, activeTarget.presence.y);
       const distanceFromHome = getDistance(monster.homeX, monster.homeY, activeTarget.presence.x, activeTarget.presence.y);
 
-      if (activeTarget.session.hp <= 0 || distanceFromHome > monster.chaseRange) {
+      if (
+        activeTarget.session.hp <= 0 ||
+        distanceFromHome > monster.chaseRange ||
+        isInsideMonsterSafeZone(monster.mapId, activeTarget.presence.x, activeTarget.presence.y)
+      ) {
         const returned = monsters.returnHome(monster.id);
         if (returned) {
           io.to(monster.mapId).emit("monster:updated", returned);
@@ -326,28 +348,43 @@ export function createGameServer(server: HttpServer) {
         return;
       }
 
+      const weapon = session.equipment.weapon ? ITEMS[session.equipment.weapon.id] : null;
+      const usesBow = weapon?.subtype === WeaponSubType.BOW;
+      if (usesBow && !removeInventoryItem(session, "training_arrow", 1)) {
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "System",
+          channel: "system",
+          message: "화살이 부족합니다.",
+          timestamp: Date.now(),
+        });
+        socket.emit("player:state", serializePlayerState(session));
+        return;
+      }
+
+      const now = Date.now();
+      const attackCooldown = getAttackCooldown(session);
+      if (now - session.lastAttackAt < attackCooldown) {
+        return;
+      }
+      session.lastAttackAt = now;
+
       monsters.setTarget(payload.monsterId, playerId);
 
       const result = combat.attack(payload.monsterId, getCombatProfile(session));
       if (!result) {
+        if (usesBow) {
+          socket.emit("player:state", serializePlayerState(session));
+        }
         return;
       }
 
       io.to(currentMapId).emit("monster:updated", result.monster);
 
       if (!result.defeated) {
-        const incomingDamage = Math.max(1, result.monster.atk - Math.floor(getDerivedAc(session) / 3));
-        session.hp = Math.max(0, session.hp - incomingDamage);
-
-        if (session.hp === 0) {
-          const expLost = Math.floor(getExpToNext(session.level) * 0.1);
-          session.exp = Math.max(0, session.exp - expLost);
-          session.hp = getDerivedMaxHp(session);
-          session.mp = getDerivedMaxMp(session);
-          socket.emit("player:death", { expLost });
+        if (usesBow) {
+          socket.emit("player:state", serializePlayerState(session));
         }
-
-        socket.emit("player:state", serializePlayerState(session));
         return;
       }
 
@@ -364,11 +401,11 @@ export function createGameServer(server: HttpServer) {
       });
 
       setTimeout(() => {
-        const respawned = monsters.get(result.monster.id);
+        const respawned = monsters.respawn(result.monster.id);
         if (respawned) {
-          io.to(currentMapId).emit("monster:updated", respawned);
+          io.to(respawned.mapId).emit("monster:updated", respawned);
         }
-      }, 5100);
+      }, monsters.getRespawnDelay(result.monster.id));
     });
 
     socket.on(
@@ -508,7 +545,7 @@ export function createGameServer(server: HttpServer) {
       }
 
       session.gold -= price;
-      addInventoryItem(session, toSessionItem(item.id, 1));
+      addInventoryItem(session, toSessionItem(item.id, entry?.quantity ?? 1));
       socket.emit("player:state", serializePlayerState(session));
     });
 
@@ -622,6 +659,20 @@ function getCombatProfile(session: SessionPlayer) {
     dex: 2,
     int: 1,
   };
+}
+
+function getAttackCooldown(session: SessionPlayer) {
+  const weapon = session.equipment.weapon ? ITEMS[session.equipment.weapon.id] : null;
+
+  if (weapon?.subtype === WeaponSubType.BOW) {
+    return 900;
+  }
+
+  if (weapon?.subtype === WeaponSubType.STAFF) {
+    return 1050;
+  }
+
+  return 760;
 }
 
 function getEquipSlot(itemId: string, equipment: SessionEquipment): EquipmentSlot | null {
@@ -777,4 +828,21 @@ function getExpToNext(level: number) {
 
 function getDistance(ax: number, ay: number, bx: number, by: number) {
   return Math.hypot(ax - bx, ay - by);
+}
+
+function normalizeClassName(value?: string) {
+  const normalized = (value ?? "Guardian").trim().toLowerCase();
+
+  if (normalized.includes("ranger") || normalized.includes("레인저")) return "Ranger";
+  if (normalized.includes("arcan") || normalized.includes("아르카")) return "Arcanist";
+  if (normalized.includes("sovereign") || normalized.includes("군주")) return "Sovereign";
+  return "Guardian";
+}
+
+function isInsideMonsterSafeZone(mapId: string, x: number, y: number) {
+  if (mapId !== "speakingIsland") {
+    return false;
+  }
+
+  return x >= 220 && x <= 980 && y >= 180 && y <= 610;
 }

@@ -13,9 +13,14 @@ export function PhaserGame() {
       return;
     }
 
+    const host = hostRef.current;
+    const preventContextMenu = (event: MouseEvent) => event.preventDefault();
+    host.addEventListener("contextmenu", preventContextMenu);
+
     gameRef.current = new Phaser.Game(createGameConfig("game-root"));
 
     return () => {
+      host.removeEventListener("contextmenu", preventContextMenu);
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
