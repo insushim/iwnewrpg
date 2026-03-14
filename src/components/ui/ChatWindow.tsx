@@ -8,6 +8,7 @@ export function ChatWindow() {
   const chat = useGameStore((state) => state.chat);
   const addChat = useGameStore((state) => state.addChat);
   const [value, setValue] = useState("");
+  const [minimized, setMinimized] = useState(false);
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -30,31 +31,78 @@ export function ChatWindow() {
     setValue("");
   };
 
+  if (minimized) {
+    return (
+      <div className="panel hud-panel rounded-[28px] p-3">
+        <button
+          type="button"
+          onClick={() => setMinimized(false)}
+          className="flex items-center gap-2"
+        >
+          <span className="text-sm font-semibold text-amber-50">채팅</span>
+          <span className="rounded-lg bg-amber-500/20 px-2 py-1 text-xs text-amber-300">
+            ▲
+          </span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <section className="panel hud-panel flex h-[270px] flex-col rounded-[28px] p-4">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/60">Chat</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/60">
+            Chat
+          </p>
           <h3 className="mt-1 text-lg font-semibold text-amber-50">채팅</h3>
         </div>
-        <span className="hud-chip px-3 py-1 text-[11px] font-semibold text-amber-100/75">일반</span>
+        <div className="flex items-center gap-2">
+          <span className="hud-chip px-3 py-1 text-[11px] font-semibold text-amber-100/75">
+            일반
+          </span>
+          <button
+            type="button"
+            onClick={() => setMinimized(true)}
+            className="rounded-lg bg-black/30 px-2 py-1 text-xs text-amber-200/60 hover:text-amber-200"
+          >
+            ▼
+          </button>
+        </div>
       </div>
 
       <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto rounded-[22px] border border-amber-200/10 bg-black/20 p-3 pr-2 text-sm">
-        {chat.map((message) => (
-          <div key={message.id}>
-            <span className="mr-2 text-amber-200/50">
-              {message.timestamp > 0
-                ? new Date(message.timestamp).toLocaleTimeString("ko-KR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "--:--"}
-            </span>
-            <span className="mr-1 font-semibold text-amber-50">{message.author}</span>
-            <span className="text-stone-100/90">{message.message}</span>
-          </div>
-        ))}
+        {chat.map((message) => {
+          const getMessageColor = (channel: string) => {
+            switch (channel) {
+              case "system":
+                return "text-yellow-300";
+              case "combat":
+                return "text-orange-300";
+              default:
+                return "text-stone-100";
+            }
+          };
+
+          return (
+            <div key={message.id}>
+              <span className="mr-2 text-amber-200/50">
+                {message.timestamp > 0
+                  ? new Date(message.timestamp).toLocaleTimeString("ko-KR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "--:--"}
+              </span>
+              <span className="mr-1 font-semibold text-amber-50">
+                {message.author}
+              </span>
+              <span className={getMessageColor(message.channel)}>
+                {message.message}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <form onSubmit={onSubmit} className="mt-3 flex gap-2">

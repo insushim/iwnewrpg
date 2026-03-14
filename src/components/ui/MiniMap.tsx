@@ -1,22 +1,35 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { MAPS } from "@/game/data/maps";
 import { useGameStore } from "@/lib/gameStore";
 import { getSocket } from "@/lib/socket";
 
 export function MiniMap() {
+  const [visible, setVisible] = useState(true);
   const currentMapId = useGameStore((state) => state.currentMapId);
   const worldPlayers = useGameStore((state) => state.worldPlayers);
   const worldMonsters = useGameStore((state) => state.worldMonsters);
   const selfId = useGameStore((state) => state.selfId);
   const setCurrentMapId = useGameStore((state) => state.setCurrentMapId);
-  const updateQuestProgress = useGameStore((state) => state.updateQuestProgress);
+  const updateQuestProgress = useGameStore(
+    (state) => state.updateQuestProgress,
+  );
 
   const map = MAPS[currentMapId] ?? MAPS.speakingIsland;
   const selfPlayer = worldPlayers.find((player) => player.id === selfId);
   const coordinateLabel = selfPlayer
     ? `${Math.round((selfPlayer.x - 140) / 36)}, ${Math.round((selfPlayer.y - 230) / 20)}`
     : "-, -";
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      if (e.key === "m" || e.key === "M") setVisible((v) => !v);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const travel = (nextMapId: string) => {
     const socket = getSocket();
@@ -31,7 +44,8 @@ export function MiniMap() {
       .getNpcQuests("elder")
       .find(
         (quest) =>
-          (quest.objectives[0]?.type === "travel" || quest.objectives[0]?.type === "reach") &&
+          (quest.objectives[0]?.type === "travel" ||
+            quest.objectives[0]?.type === "reach") &&
           quest.objectives[0]?.target === nextMapId,
       );
     if (travelQuest?.status === "in_progress") {
@@ -39,16 +53,43 @@ export function MiniMap() {
     }
   };
 
+  if (!visible) {
+    return (
+      <button
+        type="button"
+        onClick={() => setVisible(true)}
+        className="rounded-xl border border-amber-200/20 bg-black/30 px-3 py-2 text-amber-50 hover:bg-black/50"
+      >
+        [M] 지도
+      </button>
+    );
+  }
+
   return (
     <section className="panel hud-panel rounded-[28px] p-3">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/60">Field Map</p>
-          <h3 className="mt-1 text-lg font-semibold text-amber-50">{map.name}</h3>
+          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/60">
+            Field Map
+          </p>
+          <h3 className="mt-1 text-lg font-semibold text-amber-50">
+            {map.name}
+          </h3>
         </div>
-        <div className="text-right text-xs text-amber-100/70">
-          <p>현재 좌표</p>
-          <p className="mt-1 font-semibold text-amber-50">{coordinateLabel}</p>
+        <div className="flex items-center gap-2">
+          <div className="text-right text-xs text-amber-100/70">
+            <p>현재 좌표</p>
+            <p className="mt-1 font-semibold text-amber-50">
+              {coordinateLabel}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setVisible(false)}
+            className="rounded-lg bg-black/30 px-2 py-1 text-xs text-amber-200/60 hover:text-amber-200"
+          >
+            [M]
+          </button>
         </div>
       </div>
 
@@ -80,7 +121,9 @@ export function MiniMap() {
       </div>
 
       <div className="mt-3 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-100/60">이동 가능한 지역</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-100/60">
+          이동 가능한 지역
+        </p>
         {map.connections.length === 0 ? (
           <p className="rounded-2xl border border-amber-200/10 bg-black/20 px-3 py-3 text-xs text-amber-100/55">
             연결된 지역이 없습니다.
@@ -94,7 +137,9 @@ export function MiniMap() {
               className="flex w-full items-center justify-between rounded-2xl border border-amber-200/10 bg-black/20 px-3 py-3 text-left text-xs text-amber-50 transition hover:border-amber-300/25 hover:bg-black/30"
             >
               <span>{connection.fromPortalName}</span>
-              <span className="text-amber-200/70">{MAPS[connection.to]?.name ?? connection.to}</span>
+              <span className="text-amber-200/70">
+                {MAPS[connection.to]?.name ?? connection.to}
+              </span>
             </button>
           ))
         )}

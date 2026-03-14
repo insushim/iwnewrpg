@@ -155,6 +155,22 @@ export class WorldScene extends Phaser.Scene {
   private offlineStreak = 0;
   private quizResultUnsubscribe?: () => void;
 
+  private nearbyNpcId: string | null = null;
+  private interactionHintSprite?: Phaser.GameObjects.Container;
+
+  private monsterAI = new Map<
+    string,
+    {
+      state: "idle" | "wander" | "chase";
+      spawnX: number;
+      spawnY: number;
+      wanderTargetX: number;
+      wanderTargetY: number;
+      wanderTimer: number;
+      lastChaseAt: number;
+    }
+  >();
+
   constructor() {
     super("WorldScene");
   }
@@ -197,6 +213,8 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
     this.updateAnimatedUnits();
     this.sortActorLayer();
+    this.updateNpcProximity();
+    this.updateMonsterAI();
 
     if (this.targetMarker.visible) {
       const target = this.selectedMonsterId
@@ -261,6 +279,15 @@ export class WorldScene extends Phaser.Scene {
         goldMin: 5,
         goldMax: 15,
       });
+      this.monsterAI.set(monster.id, {
+        state: "idle",
+        spawnX: monster.x,
+        spawnY: monster.y,
+        wanderTargetX: monster.x,
+        wanderTargetY: monster.y,
+        wanderTimer: 0,
+        lastChaseAt: 0,
+      });
       this.upsertMonster(monster);
     });
 
@@ -292,14 +319,14 @@ export class WorldScene extends Phaser.Scene {
     y: number;
   }> {
     const positions = [
-      { x: 350, y: 520 },
-      { x: 720, y: 330 },
-      { x: 860, y: 480 },
-      { x: 290, y: 380 },
-      { x: 950, y: 560 },
-      { x: 650, y: 580 },
-      { x: 420, y: 620 },
-      { x: 780, y: 250 },
+      { x: 100, y: 350 }, // 마을 왼쪽
+      { x: 140, y: 500 }, // 마을 왼쪽
+      { x: 1050, y: 300 }, // 마을 오른쪽
+      { x: 1100, y: 480 }, // 마을 오른쪽
+      { x: 1200, y: 350 }, // 마을 오른쪽
+      { x: 400, y: 680 }, // 마을 아래
+      { x: 650, y: 700 }, // 마을 아래
+      { x: 850, y: 660 }, // 마을 아래
     ];
     const monsterTypes = [
       { ...MONSTERS.slime, id: "slime" },
@@ -409,6 +436,11 @@ export class WorldScene extends Phaser.Scene {
 
     const newHp = Math.max(0, monsterData.hp - damage);
     this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: newHp });
+
+    const isCrit = payload.reward ? payload.reward.bonusMultiplier > 1 : false;
+    if (monsterSprite) {
+      this.showDamageNumber(monsterSprite.x, monsterSprite.y, damage, isCrit);
+    }
 
     // Update the monster HP bar via store
     useGameStore.getState().upsertMonster({
@@ -1771,6 +1803,181 @@ export class WorldScene extends Phaser.Scene {
     }
 
     return { x: tileX * TILE_WIDTH + 120, y: tileY * TILE_HEIGHT + 120 };
+  }
+
+  private updateNpcProximity() {
+    if (!this.localPlayer) return;
+
+    let nearestNpc: NpcSprite | null = null;
+    let nearestDistance = Infinity;
+
+    this.npcSprites.forEach((npcSprite: NpcSprite) => {
+      const distance = Phaser.Math.Distance.Between(
+        this.localPlayer!.x,
+        this.localPlayer!.y,
+        npcSprite.x,
+        npcSprite.y,
+      );
+
+      if (distance < 80 && distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestNpc = npcSprite;
+      }
+    });
+
+    if (nearestNpc && this.nearbyNpcId !== (nearestNpc as NpcSprite).npcId) {
+      this.nearbyNpcId = (nearestNpc as NpcSprite).npcId;
+
+      // Show [F] hint above NPC
+      if (this.interactionHintSprite) {
+        this.interactionHintSprite.destroy();
+      }
+
+      this.interactionHintSprite = this.add.container(
+        (nearestNpc as NpcSprite).x,
+        (nearestNpc as NpcSprite).y - 60,
+      );
+      const hintText = this.add
+        .text(0, 0, "[F]", {
+          fontSize: "14px",
+          color: "#ffffff",
+          fontFamily: "sans-serif",
+          backgroundColor: "#000000aa",
+          padding: { x: 6, y: 3 },
+        })
+        .setOrigin(0.5);
+
+      this.interactionHintSprite.add(hintText);
+      this.effectLayer?.add(this.interactionHintSprite);
+    } else if (!nearestNpc && this.nearbyNpcId) {
+      this.nearbyNpcId = null;
+
+      if (this.interactionHintSprite) {
+        this.interactionHintSprite.destroy();
+        this.interactionHintSprite = undefined;
+      }
+    }
+
+    // F key listener
+    if (!this.input.keyboard) return;
+
+    this.input.keyboard.on("keydown-F", () => {
+      if (!this.nearbyNpcId) return;
+      const npc = Object.values(NPCS).find((n) => n.id === this.nearbyNpcId);
+      if (!npc) return;
+
+      useGameStore.getState().openDialogue({
+        npcId: npc.id,
+        npcName: npc.name,
+        dialogue: npc.dialogue,
+      });
+
+      if (npc.shopInventory) {
+        const { ui, setActiveShop, toggleShop } = useGameStore.getState();
+        setActiveShop(npc.id);
+        if (!ui.shopOpen) toggleShop();
+      }
+    });
+  }
+
+  private updateMonsterAI() {
+    if (!this.isOfflineMode || !this.localPlayer) return;
+    const now = this.time.now;
+
+    this.monsterSprites.forEach((sprite, monsterId) => {
+      if (!sprite.visible) return;
+      const ai = this.monsterAI.get(monsterId);
+      if (!ai) return;
+
+      const distToPlayer = Phaser.Math.Distance.Between(
+        sprite.x,
+        sprite.y,
+        this.localPlayer!.x,
+        this.localPlayer!.y,
+      );
+      const AGGRO_RANGE = 150;
+      const ATTACK_RANGE = 45;
+
+      if (distToPlayer < AGGRO_RANGE) {
+        ai.state = "chase";
+        ai.lastChaseAt = now;
+      } else if (ai.state === "chase" && now - ai.lastChaseAt > 3000) {
+        ai.state = "idle";
+      }
+
+      if (ai.state === "chase") {
+        if (distToPlayer > ATTACK_RANGE) {
+          const speed = 50;
+          const angle = Phaser.Math.Angle.Between(
+            sprite.x,
+            sprite.y,
+            this.localPlayer!.x,
+            this.localPlayer!.y,
+          );
+          const newX = sprite.x + Math.cos(angle) * speed * (1 / 60);
+          const newY = sprite.y + Math.sin(angle) * speed * (1 / 60);
+          sprite.setPosition(newX, newY);
+        }
+      } else {
+        // Idle wander
+        if (now > ai.wanderTimer) {
+          ai.wanderTimer = now + 2000 + Math.random() * 3000;
+          const wanderRadius = 80;
+          ai.wanderTargetX =
+            ai.spawnX + (Math.random() - 0.5) * wanderRadius * 2;
+          ai.wanderTargetY =
+            ai.spawnY + (Math.random() - 0.5) * wanderRadius * 2;
+        }
+        const distToWander = Phaser.Math.Distance.Between(
+          sprite.x,
+          sprite.y,
+          ai.wanderTargetX,
+          ai.wanderTargetY,
+        );
+        if (distToWander > 5) {
+          const speed = 30;
+          const angle = Phaser.Math.Angle.Between(
+            sprite.x,
+            sprite.y,
+            ai.wanderTargetX,
+            ai.wanderTargetY,
+          );
+          sprite.setPosition(
+            sprite.x + Math.cos(angle) * speed * (1 / 60),
+            sprite.y + Math.sin(angle) * speed * (1 / 60),
+          );
+        }
+      }
+    });
+  }
+
+  private showDamageNumber(
+    x: number,
+    y: number,
+    damage: number,
+    isCrit: boolean,
+  ) {
+    const text = this.add
+      .text(x, y - 30, isCrit ? `${damage}!` : String(damage), {
+        fontSize: isCrit ? "22px" : "18px",
+        color: isCrit ? "#FFD700" : "#FFFFFF",
+        fontFamily: "sans-serif",
+        stroke: "#07101a",
+        strokeThickness: 4,
+        fontStyle: isCrit ? "bold" : "normal",
+      })
+      .setOrigin(0.5)
+      .setDepth(9999);
+
+    this.effectLayer?.add(text);
+    this.tweens.add({
+      targets: text,
+      y: y - 80,
+      alpha: 0,
+      duration: 900,
+      ease: "Quad.Out",
+      onComplete: () => text.destroy(),
+    });
   }
 }
 

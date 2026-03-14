@@ -93,6 +93,7 @@ type UiState = {
   questWindowOpen: boolean;
   deathOpen: boolean;
   expLostOnDeath: number;
+  minimapOpen: boolean;
 };
 
 type WorldPlayer = {
@@ -179,6 +180,7 @@ type GameStore = {
   toggleInventory: () => void;
   toggleShop: () => void;
   toggleQuestWindow: () => void;
+  toggleMinimap: () => void;
   setActiveShop: (shopId: string | null) => void;
   openDialogue: (payload: {
     npcId: string;
@@ -301,6 +303,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     questWindowOpen: false,
     deathOpen: false,
     expLostOnDeath: 0,
+    minimapOpen: true,
   },
   connected: false,
   selfId: null,
@@ -367,6 +370,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...state.ui,
         questWindowOpen: !state.ui.questWindowOpen,
       },
+    })),
+  toggleMinimap: () =>
+    set((state) => ({
+      ui: { ...state.ui, minimapOpen: !state.ui.minimapOpen },
     })),
   setActiveShop: (shopId) =>
     set((state) => ({
