@@ -4,11 +4,28 @@ import { MAPS } from "@/game/data/maps";
 import { NPCS } from "@/game/data/npcs";
 import { useGameStore } from "@/lib/gameStore";
 import { getSocket } from "@/lib/socket";
+import { ELEMENTARY_VOCABULARY } from "@/data/vocabulary/elementary";
+import { MONSTERS } from "@/game/data/monsters";
 
 type WorldInitPayload = {
   selfId: string;
-  players: Array<{ id: string; name: string; mapId: string; x: number; y: number }>;
-  monsters: Array<{ id: string; mapId: string; name: string; level: number; hp: number; maxHp: number; x: number; y: number }>;
+  players: Array<{
+    id: string;
+    name: string;
+    mapId: string;
+    x: number;
+    y: number;
+  }>;
+  monsters: Array<{
+    id: string;
+    mapId: string;
+    name: string;
+    level: number;
+    hp: number;
+    maxHp: number;
+    x: number;
+    y: number;
+  }>;
 };
 
 type WorldPlayerPayload = {
@@ -31,7 +48,14 @@ type WorldMonsterPayload = {
 };
 
 type LootPayload = {
-  items: Array<{ lootId: string; itemId: string; name: string; quantity: number; x: number; y: number }>;
+  items: Array<{
+    lootId: string;
+    itemId: string;
+    name: string;
+    quantity: number;
+    x: number;
+    y: number;
+  }>;
 };
 
 type NpcSprite = Phaser.GameObjects.Container & {
@@ -115,6 +139,22 @@ export class WorldScene extends Phaser.Scene {
   private npcSprites = new Map<string, NpcSprite>();
   private lootSprites = new Map<string, LootSprite>();
 
+  private isOfflineMode = false;
+  private offlineMonsterHp = new Map<
+    string,
+    {
+      hp: number;
+      maxHp: number;
+      atk: number;
+      exp: number;
+      goldMin: number;
+      goldMax: number;
+    }
+  >();
+  private pendingOfflineMonsterId: string | null = null;
+  private offlineStreak = 0;
+  private quizResultUnsubscribe?: () => void;
+
   constructor() {
     super("WorldScene");
   }
@@ -159,7 +199,9 @@ export class WorldScene extends Phaser.Scene {
     this.sortActorLayer();
 
     if (this.targetMarker.visible) {
-      const target = this.selectedMonsterId ? this.monsterSprites.get(this.selectedMonsterId) : null;
+      const target = this.selectedMonsterId
+        ? this.monsterSprites.get(this.selectedMonsterId)
+        : null;
       if (target && target.visible) {
         this.targetMarker.setPosition(target.x, target.y + 20);
       } else {
@@ -170,8 +212,259 @@ export class WorldScene extends Phaser.Scene {
 
   shutdown() {
     this.stopAutoAttack();
+    this.quizResultUnsubscribe?.();
     this.unsubscribe.forEach((off) => off());
     this.unsubscribe = [];
+  }
+
+  private bootstrapOffline() {
+    this.isOfflineMode = true;
+    const offlineId = `offline-${Date.now()}`;
+    const playerName = useGameStore.getState().player.name;
+
+    const startX = 530;
+    const startY = 400;
+
+    const offlineMonsters = this.generateOfflineMonsters();
+
+    useGameStore.getState().setWorld({
+      selfId: offlineId,
+      players: [
+        {
+          id: offlineId,
+          name: playerName,
+          mapId: "speakingIsland",
+          x: startX,
+          y: startY,
+        },
+      ],
+      monsters: offlineMonsters,
+    });
+
+    this.selfId = offlineId;
+    this.mapId = "speakingIsland";
+
+    this.upsertPlayer({
+      id: offlineId,
+      name: playerName,
+      mapId: "speakingIsland",
+      x: startX,
+      y: startY,
+    });
+
+    offlineMonsters.forEach((monster) => {
+      this.offlineMonsterHp.set(monster.id, {
+        hp: monster.hp,
+        maxHp: monster.maxHp,
+        atk: 4,
+        exp: 10 * monster.level,
+        goldMin: 5,
+        goldMax: 15,
+      });
+      this.upsertMonster(monster);
+    });
+
+    // Listen for quiz results in offline mode
+    this.quizResultUnsubscribe = EventBus.on("quiz_result", (payload) => {
+      if (this.isOfflineMode) {
+        this.handleOfflineQuizResult(payload);
+      }
+    });
+
+    useGameStore.getState().addChat({
+      id: crypto.randomUUID(),
+      channel: "system",
+      author: "시스템",
+      message:
+        "오프라인 모드로 플레이 중입니다. 우클릭으로 이동, 몬스터 우클릭으로 공격하세요!",
+      timestamp: Date.now(),
+    });
+  }
+
+  private generateOfflineMonsters(): Array<{
+    id: string;
+    mapId: string;
+    name: string;
+    level: number;
+    hp: number;
+    maxHp: number;
+    x: number;
+    y: number;
+  }> {
+    const positions = [
+      { x: 350, y: 520 },
+      { x: 720, y: 330 },
+      { x: 860, y: 480 },
+      { x: 290, y: 380 },
+      { x: 950, y: 560 },
+      { x: 650, y: 580 },
+      { x: 420, y: 620 },
+      { x: 780, y: 250 },
+    ];
+    const monsterTypes = [
+      { ...MONSTERS.slime, id: "slime" },
+      { ...MONSTERS.goblin_child, id: "goblin_child" },
+      { ...MONSTERS.slime, id: "slime" },
+    ].filter(Boolean);
+
+    return positions.map((pos, index) => {
+      const monsterDef = monsterTypes[index % monsterTypes.length];
+      const uniqueId = `${monsterDef.id}-offline-${index}`;
+      return {
+        id: uniqueId,
+        mapId: "speakingIsland",
+        name: monsterDef.name,
+        level: monsterDef.level,
+        hp: monsterDef.hp,
+        maxHp: monsterDef.maxHp,
+        x: pos.x,
+        y: pos.y,
+      };
+    });
+  }
+
+  private triggerOfflineQuiz(monsterId: string) {
+    const monsterData = this.offlineMonsterHp.get(monsterId);
+    if (!monsterData || monsterData.hp <= 0) {
+      return;
+    }
+
+    this.pendingOfflineMonsterId = monsterId;
+    this.stopAutoAttack();
+
+    const vocab = ELEMENTARY_VOCABULARY;
+    const questionIndex = Math.floor(Math.random() * vocab.length);
+    const questionEntry = vocab[questionIndex];
+    const useEnToKr = Math.random() > 0.5;
+
+    const wrongIndices: number[] = [];
+    while (wrongIndices.length < 3) {
+      const idx = Math.floor(Math.random() * vocab.length);
+      if (idx !== questionIndex && !wrongIndices.includes(idx)) {
+        wrongIndices.push(idx);
+      }
+    }
+
+    const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
+    const wrongAnswers = wrongIndices.map((idx) =>
+      useEnToKr ? vocab[idx].kr : vocab[idx].en,
+    );
+    const choices = [correctAnswer, ...wrongAnswers].sort(
+      () => Math.random() - 0.5,
+    );
+
+    EventBus.emit("quiz_trigger", {
+      question: {
+        id: `offline-${questionIndex}`,
+        type: useEnToKr ? "en_to_kr" : "kr_to_en",
+        question: useEnToKr ? questionEntry.en : questionEntry.kr,
+        correctAnswer,
+        wrongAnswers,
+        difficulty: "elementary",
+        category: questionEntry.category,
+      },
+      choices,
+      streak: this.offlineStreak,
+      monsterId,
+      monsterLevel: this.offlineMonsterHp.get(monsterId) ? 1 : 1,
+    });
+  }
+
+  private handleOfflineQuizResult(payload: {
+    status: "correct" | "wrong" | "timeout";
+    answer: string;
+    reward?: {
+      gold: number;
+      exp: number;
+      items: string[];
+      bonusMultiplier: number;
+    };
+  }) {
+    const monsterId = this.pendingOfflineMonsterId;
+    if (!monsterId) {
+      return;
+    }
+    this.pendingOfflineMonsterId = null;
+
+    const monsterData = this.offlineMonsterHp.get(monsterId);
+    const monsterSprite = this.monsterSprites.get(monsterId);
+    if (!monsterData || !monsterSprite) {
+      return;
+    }
+
+    if (payload.status !== "correct") {
+      this.offlineStreak = 0;
+      return;
+    }
+
+    this.offlineStreak += 1;
+
+    const state = useGameStore.getState();
+    const attackProfile = state.getAttackProfile();
+    const baseDamage =
+      5 + attackProfile.str + attackProfile.dex + attackProfile.int;
+    const damage = payload.reward
+      ? Math.round(baseDamage * payload.reward.bonusMultiplier)
+      : baseDamage;
+
+    const newHp = Math.max(0, monsterData.hp - damage);
+    this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: newHp });
+
+    // Update the monster HP bar via store
+    useGameStore.getState().upsertMonster({
+      id: monsterId,
+      mapId: "speakingIsland",
+      name: monsterSprite.label.text,
+      level: 1,
+      hp: newHp,
+      maxHp: monsterData.maxHp,
+      x: monsterSprite.x,
+      y: monsterSprite.y,
+    });
+
+    if (newHp <= 0) {
+      // Monster died
+      const goldReward =
+        monsterData.goldMin +
+        Math.floor(
+          Math.random() * (monsterData.goldMax - monsterData.goldMin + 1),
+        );
+      const expReward = monsterData.exp;
+
+      useGameStore
+        .getState()
+        .applyOfflineReward({ gold: goldReward, exp: expReward });
+
+      // Update quest progress for kill quests
+      const killQuest = state.quests.find(
+        (q) => q.questId === "mq_001" && q.status === "in_progress",
+      );
+      if (killQuest) {
+        useGameStore
+          .getState()
+          .updateQuestProgress("mq_001", Math.min(10, killQuest.progress + 1));
+      }
+
+      this.offlineStreak = 0;
+
+      // Respawn monster after 10 seconds
+      this.time.delayedCall(10000, () => {
+        const sprite = this.monsterSprites.get(monsterId);
+        if (!sprite) return;
+        const fullHp = monsterData.maxHp;
+        this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: fullHp });
+        useGameStore.getState().upsertMonster({
+          id: monsterId,
+          mapId: "speakingIsland",
+          name: sprite.label.text,
+          level: 1,
+          hp: fullHp,
+          maxHp: fullHp,
+          x: sprite.x,
+          y: sprite.y,
+        });
+      });
+    }
   }
 
   private registerEvents() {
@@ -192,7 +485,9 @@ export class WorldScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
 
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      const worldPoint = pointer.positionToCamera(this.cameras.main) as Phaser.Math.Vector2;
+      const worldPoint = pointer.positionToCamera(
+        this.cameras.main,
+      ) as Phaser.Math.Vector2;
 
       if (pointer.rightButtonDown()) {
         this.handleRightClick(worldPoint.x, worldPoint.y);
@@ -211,20 +506,23 @@ export class WorldScene extends Phaser.Scene {
 
   private syncFromStore() {
     const state = useGameStore.getState();
+
     if (!state.selfId) {
+      this.bootstrapOffline();
       return;
     }
 
     this.selfId = state.selfId;
     this.mapId = state.currentMapId;
-
     state.worldPlayers.forEach((player) => this.upsertPlayer(player));
     state.worldMonsters.forEach((monster) => this.upsertMonster(monster));
   }
 
   private handleWorldInit(payload: WorldInitPayload) {
     this.selfId = payload.selfId;
-    const selfPlayer = payload.players.find((player) => player.id === payload.selfId);
+    const selfPlayer = payload.players.find(
+      (player) => player.id === payload.selfId,
+    );
     this.mapId = selfPlayer?.mapId ?? useGameStore.getState().currentMapId;
 
     this.playerSprites.forEach((sprite) => sprite.destroy());
@@ -259,8 +557,22 @@ export class WorldScene extends Phaser.Scene {
     const backdrop = this.add.graphics();
     backdrop.fillGradientStyle(0x0e2033, 0x10263b, 0x07121a, 0x050d14, 1);
     backdrop.fillRect(0, 0, mapWidth, mapHeight);
-    backdrop.fillStyle(0x12283a, 0.65).fillEllipse(mapWidth * 0.52, mapHeight * 0.18, mapWidth * 0.9, mapHeight * 0.42);
-    backdrop.fillStyle(0x0c1d29, 0.55).fillEllipse(mapWidth * 0.12, mapHeight * 0.78, mapWidth * 0.48, mapHeight * 0.32);
+    backdrop
+      .fillStyle(0x12283a, 0.65)
+      .fillEllipse(
+        mapWidth * 0.52,
+        mapHeight * 0.18,
+        mapWidth * 0.9,
+        mapHeight * 0.42,
+      );
+    backdrop
+      .fillStyle(0x0c1d29, 0.55)
+      .fillEllipse(
+        mapWidth * 0.12,
+        mapHeight * 0.78,
+        mapWidth * 0.48,
+        mapHeight * 0.32,
+      );
     this.groundLayer?.add(backdrop);
 
     for (let y = 0; y < map.height; y += 1) {
@@ -268,7 +580,9 @@ export class WorldScene extends Phaser.Scene {
         const worldX = 120 + x * TILE_WIDTH;
         const worldY = 120 + y * TILE_HEIGHT;
         const patch = this.createGroundPatch(x, y, map.id);
-        const tile = this.add.image(worldX, worldY, patch.texture).setOrigin(0, 0);
+        const tile = this.add
+          .image(worldX, worldY, patch.texture)
+          .setOrigin(0, 0);
         tile.setAlpha(patch.alpha);
         tile.setTint(patch.tint);
         tile.setRotation(patch.rotation);
@@ -308,7 +622,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private drawWaterBodies(mapId: string) {
-    if (!["speakingIsland", "moonlitWetland", "windwoodForest"].includes(mapId)) {
+    if (
+      !["speakingIsland", "moonlitWetland", "windwoodForest"].includes(mapId)
+    ) {
       return;
     }
 
@@ -351,9 +667,16 @@ export class WorldScene extends Phaser.Scene {
     this.waterLayer?.add(shimmer);
   }
 
-  private scatterProps(mapId: string, mapWidthTiles: number, mapHeightTiles: number) {
+  private scatterProps(
+    mapId: string,
+    mapWidthTiles: number,
+    mapHeightTiles: number,
+  ) {
     const seedOffset = mapId.length * 31;
-    const propCount = Math.max(24, Math.floor((mapWidthTiles * mapHeightTiles) / 90));
+    const propCount = Math.max(
+      24,
+      Math.floor((mapWidthTiles * mapHeightTiles) / 90),
+    );
 
     for (let index = 0; index < propCount; index += 1) {
       const nx = this.noise(index * 0.91 + seedOffset, mapWidthTiles * 0.13);
@@ -369,7 +692,8 @@ export class WorldScene extends Phaser.Scene {
       let texture = "prop_tree";
       if (roll < 0.16) texture = "prop_rock";
       else if (roll < 0.24) texture = "prop_ruin";
-      else if (roll < 0.29 && mapId !== "speakingIsland") texture = "prop_crystal";
+      else if (roll < 0.29 && mapId !== "speakingIsland")
+        texture = "prop_crystal";
       else if (roll < 0.33) texture = "prop_banner";
       const image = this.add.image(x, y, texture).setOrigin(0.5, 0.85);
       const scale =
@@ -381,7 +705,13 @@ export class WorldScene extends Phaser.Scene {
               ? 0.82 + this.noise(index, 3.7) * 0.22
               : 0.72 + this.noise(index, 4.1) * 0.2;
       image.setScale(scale);
-      image.setAlpha(texture === "prop_tree" ? 0.72 : texture === "prop_banner" ? 0.78 : 0.58);
+      image.setAlpha(
+        texture === "prop_tree"
+          ? 0.72
+          : texture === "prop_banner"
+            ? 0.78
+            : 0.58,
+      );
       this.propLayer?.add(image);
     }
   }
@@ -396,15 +726,29 @@ export class WorldScene extends Phaser.Scene {
     const sideCount = Math.floor(STARTER_TOWN_RECT.height / 42);
 
     for (let index = 0; index < topCount; index += 1) {
-      const top = this.add.image(STARTER_TOWN_RECT.x + 24 + index * 48, STARTER_TOWN_RECT.y + 2, "prop_fence").setOrigin(0.5, 0);
+      const top = this.add
+        .image(
+          STARTER_TOWN_RECT.x + 24 + index * 48,
+          STARTER_TOWN_RECT.y + 2,
+          "prop_fence",
+        )
+        .setOrigin(0.5, 0);
       const bottom = this.add
-        .image(STARTER_TOWN_RECT.x + 24 + index * 48, STARTER_TOWN_RECT.bottom - 10, "prop_fence")
+        .image(
+          STARTER_TOWN_RECT.x + 24 + index * 48,
+          STARTER_TOWN_RECT.bottom - 10,
+          "prop_fence",
+        )
         .setOrigin(0.5, 0);
       fenceContainer.add([top, bottom]);
 
       if (index === 2 || index === topCount - 3) {
         const banner = this.add
-          .image(STARTER_TOWN_RECT.x + 24 + index * 48, STARTER_TOWN_RECT.y + 8, "prop_banner")
+          .image(
+            STARTER_TOWN_RECT.x + 24 + index * 48,
+            STARTER_TOWN_RECT.y + 8,
+            "prop_banner",
+          )
           .setOrigin(0.5, 0)
           .setScale(0.72)
           .setAlpha(0.82);
@@ -413,24 +757,50 @@ export class WorldScene extends Phaser.Scene {
     }
 
     for (let index = 0; index < sideCount; index += 1) {
-      const left = this.add.image(STARTER_TOWN_RECT.x + 8, STARTER_TOWN_RECT.y + 18 + index * 42, "prop_fence").setAngle(90).setScale(0.85);
+      const left = this.add
+        .image(
+          STARTER_TOWN_RECT.x + 8,
+          STARTER_TOWN_RECT.y + 18 + index * 42,
+          "prop_fence",
+        )
+        .setAngle(90)
+        .setScale(0.85);
       const right = this.add
-        .image(STARTER_TOWN_RECT.right - 10, STARTER_TOWN_RECT.y + 18 + index * 42, "prop_fence")
+        .image(
+          STARTER_TOWN_RECT.right - 10,
+          STARTER_TOWN_RECT.y + 18 + index * 42,
+          "prop_fence",
+        )
         .setAngle(90)
         .setScale(0.85);
       fenceContainer.add([left, right]);
     }
 
-    const gateGlow = this.add.rectangle(STARTER_TOWN_RECT.centerX, STARTER_TOWN_RECT.bottom - 6, 180, 16, 0xf5de9b, 0.18);
+    const gateGlow = this.add.rectangle(
+      STARTER_TOWN_RECT.centerX,
+      STARTER_TOWN_RECT.bottom - 6,
+      180,
+      16,
+      0xf5de9b,
+      0.18,
+    );
     fenceContainer.add(gateGlow);
 
     const markerLeft = this.add
-      .image(STARTER_TOWN_RECT.x + 44, STARTER_TOWN_RECT.bottom - 18, "prop_ruin")
+      .image(
+        STARTER_TOWN_RECT.x + 44,
+        STARTER_TOWN_RECT.bottom - 18,
+        "prop_ruin",
+      )
       .setOrigin(0.5, 1)
       .setScale(0.8)
       .setAlpha(0.72);
     const markerRight = this.add
-      .image(STARTER_TOWN_RECT.right - 44, STARTER_TOWN_RECT.bottom - 18, "prop_ruin")
+      .image(
+        STARTER_TOWN_RECT.right - 44,
+        STARTER_TOWN_RECT.bottom - 18,
+        "prop_ruin",
+      )
       .setOrigin(0.5, 1)
       .setScale(0.8)
       .setAlpha(0.72);
@@ -448,28 +818,51 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private spawnStaticNpcs() {
-    const entries = Object.values(NPCS).filter((npc) => npc.mapId === this.mapId);
+    const entries = Object.values(NPCS).filter(
+      (npc) => npc.mapId === this.mapId,
+    );
 
     entries.forEach((npc) => {
-      const worldPosition = this.getNpcWorldPosition(npc.id, npc.position.x, npc.position.y);
+      const worldPosition = this.getNpcWorldPosition(
+        npc.id,
+        npc.position.x,
+        npc.position.y,
+      );
       const textureBase = this.getNpcTexture(npc.role);
       const shadow = this.add.ellipse(0, 10, 44, 18, 0x08131b, 0.35);
-      const sprite = this.add.image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0));
+      const sprite = this.add.image(
+        0,
+        0,
+        this.getFrameKey(textureBase, "idle", "s", 0),
+      );
       sprite.setOrigin(0.5, 0.92);
       sprite.setScale(1.28);
 
-      const label = this.add.text(0, -48, npc.name, {
-        fontSize: "14px",
-        color: "#fff4d5",
-        fontFamily: "sans-serif",
-        stroke: "#07101a",
-        strokeThickness: 4,
-      }).setOrigin(0.5);
+      const label = this.add
+        .text(0, -48, npc.name, {
+          fontSize: "14px",
+          color: "#fff4d5",
+          fontFamily: "sans-serif",
+          stroke: "#07101a",
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5);
 
-      const ring = this.add.ellipse(0, 12, 52, 18, 0x8fe8d3, 0.12).setStrokeStyle(2, 0x8fe8d3, 0.55);
-      const hitArea = this.add.zone(0, -18, 72, 92).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      const ring = this.add
+        .ellipse(0, 12, 52, 18, 0x8fe8d3, 0.12)
+        .setStrokeStyle(2, 0x8fe8d3, 0.55);
+      const hitArea = this.add
+        .zone(0, -18, 72, 92)
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
 
-      const container = this.add.container(worldPosition.x, worldPosition.y, [shadow, ring, sprite, label, hitArea]) as NpcSprite;
+      const container = this.add.container(worldPosition.x, worldPosition.y, [
+        shadow,
+        ring,
+        sprite,
+        label,
+        hitArea,
+      ]) as NpcSprite;
       container.npcId = npc.id;
       container.spriteBody = sprite;
       container.facing = "s";
@@ -480,31 +873,39 @@ export class WorldScene extends Phaser.Scene {
       container.lastY = worldPosition.y;
       container.textureBase = textureBase;
 
-      hitArea.on("pointerdown", (pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
-        event.stopPropagation();
-        if (pointer.rightButtonDown()) {
-          this.moveSelfTo(container.x, container.y - 28);
-          return;
-        }
-
-        if (pointer.leftButtonDown()) {
-          useGameStore.getState().openDialogue({
-            npcId: npc.id,
-            npcName: npc.name,
-            dialogue: npc.dialogue,
-          });
-
-          if (npc.shopInventory) {
-            const { ui, setActiveShop, toggleShop } = useGameStore.getState();
-            setActiveShop(npc.id);
-            if (!ui.shopOpen) {
-              toggleShop();
-            }
+      hitArea.on(
+        "pointerdown",
+        (
+          pointer: Phaser.Input.Pointer,
+          _lx: number,
+          _ly: number,
+          event: Phaser.Types.Input.EventData,
+        ) => {
+          event.stopPropagation();
+          if (pointer.rightButtonDown()) {
+            this.moveSelfTo(container.x, container.y - 28);
+            return;
           }
 
-          getSocket().emit("npc:interact", { npcId: npc.id });
-        }
-      });
+          if (pointer.leftButtonDown()) {
+            useGameStore.getState().openDialogue({
+              npcId: npc.id,
+              npcName: npc.name,
+              dialogue: npc.dialogue,
+            });
+
+            if (npc.shopInventory) {
+              const { ui, setActiveShop, toggleShop } = useGameStore.getState();
+              setActiveShop(npc.id);
+              if (!ui.shopOpen) {
+                toggleShop();
+              }
+            }
+
+            getSocket().emit("npc:interact", { npcId: npc.id });
+          }
+        },
+      );
 
       this.actorLayer?.add(container);
       this.npcSprites.set(npc.id, container);
@@ -525,14 +926,23 @@ export class WorldScene extends Phaser.Scene {
 
       const gem = this.add.image(0, 0, "loot_gem").setScale(0.82);
       const glow = this.add.ellipse(0, 6, 26, 12, 0xffdf83, 0.18);
-      const label = this.add.text(0, -20, item.name, {
-        fontSize: "11px",
-        color: "#fff0c0",
-        stroke: "#07101a",
-        strokeThickness: 3,
-      }).setOrigin(0.5);
-      const zone = this.add.zone(0, 0, 40, 40).setInteractive({ useHandCursor: true });
-      const container = this.add.container(item.x, item.y, [glow, gem, label, zone]) as LootSprite;
+      const label = this.add
+        .text(0, -20, item.name, {
+          fontSize: "11px",
+          color: "#fff0c0",
+          stroke: "#07101a",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
+      const zone = this.add
+        .zone(0, 0, 40, 40)
+        .setInteractive({ useHandCursor: true });
+      const container = this.add.container(item.x, item.y, [
+        glow,
+        gem,
+        label,
+        zone,
+      ]) as LootSprite;
       container.lootId = item.lootId;
 
       this.tweens.add({
@@ -544,12 +954,20 @@ export class WorldScene extends Phaser.Scene {
         ease: "Sine.InOut",
       });
 
-      zone.on("pointerdown", (pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
-        event.stopPropagation();
-        if (pointer.rightButtonDown() || pointer.leftButtonDown()) {
-          getSocket().emit("loot:pickup", { lootId: item.lootId });
-        }
-      });
+      zone.on(
+        "pointerdown",
+        (
+          pointer: Phaser.Input.Pointer,
+          _lx: number,
+          _ly: number,
+          event: Phaser.Types.Input.EventData,
+        ) => {
+          event.stopPropagation();
+          if (pointer.rightButtonDown() || pointer.leftButtonDown()) {
+            getSocket().emit("loot:pickup", { lootId: item.lootId });
+          }
+        },
+      );
 
       this.effectLayer?.add(container);
       this.lootSprites.set(item.lootId, container);
@@ -585,20 +1003,28 @@ export class WorldScene extends Phaser.Scene {
 
     const isSelf = payload.id === this.selfId;
     const shadow = this.add.ellipse(0, 10, 44, 18, 0x08131b, 0.32);
-    const ring = this.add.ellipse(0, 12, 62, 20, isSelf ? 0xffefb2 : 0x89cffd, 0.16).setStrokeStyle(
-      2,
-      isSelf ? 0xffefb2 : 0x89cffd,
-      0.7,
-    );
-    const body = this.add.image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0)).setScale(isSelf ? 1.24 : 1.1).setOrigin(0.5, 0.92);
-    const label = this.add.text(0, -58, payload.name, {
-      fontSize: "14px",
-      color: isSelf ? "#fff4ba" : "#f5f5f5",
-      stroke: "#07101a",
-      strokeThickness: 4,
-    }).setOrigin(0.5);
+    const ring = this.add
+      .ellipse(0, 12, 62, 20, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
+      .setStrokeStyle(2, isSelf ? 0xffefb2 : 0x89cffd, 0.7);
+    const body = this.add
+      .image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0))
+      .setScale(isSelf ? 1.24 : 1.1)
+      .setOrigin(0.5, 0.92);
+    const label = this.add
+      .text(0, -58, payload.name, {
+        fontSize: "14px",
+        color: isSelf ? "#fff4ba" : "#f5f5f5",
+        stroke: "#07101a",
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5);
 
-    const container = this.add.container(payload.x, payload.y, [shadow, ring, body, label]) as PlayerSprite;
+    const container = this.add.container(payload.x, payload.y, [
+      shadow,
+      ring,
+      body,
+      label,
+    ]) as PlayerSprite;
     container.playerId = payload.id;
     container.label = label;
     container.ring = ring;
@@ -657,7 +1083,8 @@ export class WorldScene extends Phaser.Scene {
         existing.setPosition(payload.x, payload.y);
         existing.setAlpha(0);
         existing.setVisible(true);
-        existing.hpFill.width = 42 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
+        existing.hpFill.width =
+          42 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
         existing.label.setText(payload.name);
         existing.textureBase = textureBase;
         this.tweens.add({
@@ -670,7 +1097,8 @@ export class WorldScene extends Phaser.Scene {
       }
 
       existing.setAlpha(1);
-      existing.hpFill.width = 42 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
+      existing.hpFill.width =
+        42 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
       existing.label.setText(payload.name);
       existing.textureBase = textureBase;
       this.tweenActor(existing, payload.x, payload.y, 300);
@@ -678,22 +1106,40 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const shadow = this.add.ellipse(0, 10, 48, 18, 0x08131b, 0.32);
-    const ring = this.add.ellipse(0, 12, 58, 20, 0xf57f69, 0.12).setStrokeStyle(2, 0xff9c88, 0.75);
+    const ring = this.add
+      .ellipse(0, 12, 58, 20, 0xf57f69, 0.12)
+      .setStrokeStyle(2, 0xff9c88, 0.75);
     const body = this.add
       .image(0, 2, this.getFrameKey(textureBase, "idle", "s", 0))
       .setOrigin(0.5, 0.86)
       .setScale(this.getMonsterScale(baseId));
-    const hpBack = this.add.rectangle(0, -54, 44, 6, 0x160808, 0.78).setOrigin(0.5);
-    const hpFill = this.add.rectangle(-21, -54, 42, 4, 0xfb7260, 0.95).setOrigin(0, 0.5);
-    const label = this.add.text(0, -70, payload.name, {
-      fontSize: "13px",
-      color: "#ffd9d1",
-      stroke: "#07101a",
-      strokeThickness: 4,
-    }).setOrigin(0.5);
-    const hitArea = this.add.zone(0, -14, 94, 88).setInteractive({ useHandCursor: true });
+    const hpBack = this.add
+      .rectangle(0, -54, 44, 6, 0x160808, 0.78)
+      .setOrigin(0.5);
+    const hpFill = this.add
+      .rectangle(-21, -54, 42, 4, 0xfb7260, 0.95)
+      .setOrigin(0, 0.5);
+    const label = this.add
+      .text(0, -70, payload.name, {
+        fontSize: "13px",
+        color: "#ffd9d1",
+        stroke: "#07101a",
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5);
+    const hitArea = this.add
+      .zone(0, -14, 94, 88)
+      .setInteractive({ useHandCursor: true });
 
-    const container = this.add.container(payload.x, payload.y, [shadow, ring, body, hpBack, hpFill, label, hitArea]) as MonsterSprite;
+    const container = this.add.container(payload.x, payload.y, [
+      shadow,
+      ring,
+      body,
+      hpBack,
+      hpFill,
+      label,
+      hitArea,
+    ]) as MonsterSprite;
     container.monsterId = payload.id;
     container.hpFill = hpFill;
     container.hpBack = hpBack;
@@ -709,17 +1155,25 @@ export class WorldScene extends Phaser.Scene {
     container.textureBase = textureBase;
     container.attackUntil = 0;
 
-    hitArea.on("pointerdown", (pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
-      event.stopPropagation();
-      if (pointer.rightButtonDown()) {
-        this.beginAttack(payload.id);
-        return;
-      }
+    hitArea.on(
+      "pointerdown",
+      (
+        pointer: Phaser.Input.Pointer,
+        _lx: number,
+        _ly: number,
+        event: Phaser.Types.Input.EventData,
+      ) => {
+        event.stopPropagation();
+        if (pointer.rightButtonDown()) {
+          this.beginAttack(payload.id);
+          return;
+        }
 
-      if (pointer.leftButtonDown()) {
-        this.selectMonster(payload.id);
-      }
-    });
+        if (pointer.leftButtonDown()) {
+          this.selectMonster(payload.id);
+        }
+      },
+    );
 
     this.actorLayer?.add(container);
     this.monsterSprites.set(payload.id, container);
@@ -759,9 +1213,19 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const range = this.isRangedClass() ? RANGED_RANGE : MELEE_RANGE;
-    const distance = Phaser.Math.Distance.Between(this.localPlayer.x, this.localPlayer.y, monster.x, monster.y);
+    const distance = Phaser.Math.Distance.Between(
+      this.localPlayer.x,
+      this.localPlayer.y,
+      monster.x,
+      monster.y,
+    );
     if (distance > range) {
-      const angle = Phaser.Math.Angle.Between(monster.x, monster.y, this.localPlayer.x, this.localPlayer.y);
+      const angle = Phaser.Math.Angle.Between(
+        monster.x,
+        monster.y,
+        this.localPlayer.x,
+        this.localPlayer.y,
+      );
       const targetX = monster.x + Math.cos(angle) * range * 0.72;
       const targetY = monster.y + Math.sin(angle) * range * 0.72;
       this.moveSelfTo(targetX, targetY, undefined, true);
@@ -774,12 +1238,25 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     this.lastAttackAt = now;
-    this.localPlayer.facing = this.resolveDirection(monster.x - this.localPlayer.x, monster.y - this.localPlayer.y, this.localPlayer.facing);
+    this.localPlayer.facing = this.resolveDirection(
+      monster.x - this.localPlayer.x,
+      monster.y - this.localPlayer.y,
+      this.localPlayer.facing,
+    );
     this.localPlayer.attackUntil = now + 260;
 
     if (this.isRangedClass()) {
-      const projectile = this.add.image(this.localPlayer.x, this.localPlayer.y - 32, "projectile_arrow").setOrigin(0.2, 0.5);
-      projectile.setRotation(Phaser.Math.Angle.Between(projectile.x, projectile.y, monster.x, monster.y));
+      const projectile = this.add
+        .image(this.localPlayer.x, this.localPlayer.y - 32, "projectile_arrow")
+        .setOrigin(0.2, 0.5);
+      projectile.setRotation(
+        Phaser.Math.Angle.Between(
+          projectile.x,
+          projectile.y,
+          monster.x,
+          monster.y,
+        ),
+      );
       this.effectLayer?.add(projectile);
       this.tweens.add({
         targets: projectile,
@@ -790,7 +1267,9 @@ export class WorldScene extends Phaser.Scene {
         onComplete: () => projectile.destroy(),
       });
     } else {
-      const slash = this.add.arc(monster.x, monster.y - 8, 28, 220, 320, false, 0xfff0b5, 0.28).setStrokeStyle(3, 0xffd97b, 0.9);
+      const slash = this.add
+        .arc(monster.x, monster.y - 8, 28, 220, 320, false, 0xfff0b5, 0.28)
+        .setStrokeStyle(3, 0xffd97b, 0.9);
       this.effectLayer?.add(slash);
       this.tweens.add({
         targets: slash,
@@ -809,10 +1288,20 @@ export class WorldScene extends Phaser.Scene {
       });
     }
 
-    getSocket().emit("combat:attack", { monsterId });
+    const socket = getSocket();
+    if (!socket.connected) {
+      this.triggerOfflineQuiz(monsterId);
+      return;
+    }
+    socket.emit("combat:attack", { monsterId });
   }
 
-  private moveSelfTo(targetX: number, targetY: number, onComplete?: () => void, preserveSelection = false) {
+  private moveSelfTo(
+    targetX: number,
+    targetY: number,
+    onComplete?: () => void,
+    preserveSelection = false,
+  ) {
     if (!this.localPlayer) {
       return;
     }
@@ -822,10 +1311,17 @@ export class WorldScene extends Phaser.Scene {
     const maxY = map.height * TILE_HEIGHT + 180;
     const clampedX = Phaser.Math.Clamp(targetX, 110, maxX);
     const clampedY = Phaser.Math.Clamp(targetY, 120, maxY);
-    const distance = Phaser.Math.Distance.Between(this.localPlayer.x, this.localPlayer.y, clampedX, clampedY);
+    const distance = Phaser.Math.Distance.Between(
+      this.localPlayer.x,
+      this.localPlayer.y,
+      clampedX,
+      clampedY,
+    );
     const duration = Math.max(260, (distance / MOVE_SPEED) * 1000);
 
-    this.destinationMarker?.setPosition(clampedX, clampedY + 10).setVisible(true);
+    this.destinationMarker
+      ?.setPosition(clampedX, clampedY + 10)
+      .setVisible(true);
     if (!preserveSelection) {
       this.selectMonster(null);
     }
@@ -862,7 +1358,12 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
   }
 
-  private tweenActor(target: Phaser.GameObjects.Container, x: number, y: number, minimumDuration: number) {
+  private tweenActor(
+    target: Phaser.GameObjects.Container,
+    x: number,
+    y: number,
+    minimumDuration: number,
+  ) {
     const distance = Phaser.Math.Distance.Between(target.x, target.y, x, y);
     const duration = Math.max(minimumDuration, distance * 2.6);
     this.tweens.killTweensOf(target);
@@ -927,12 +1428,19 @@ export class WorldScene extends Phaser.Scene {
 
   private updateAnimatedUnits() {
     const now = this.time.now;
-    this.playerSprites.forEach((sprite) => this.updateAnimatedActor(sprite, now));
-    this.monsterSprites.forEach((sprite) => this.updateAnimatedActor(sprite, now));
+    this.playerSprites.forEach((sprite) =>
+      this.updateAnimatedActor(sprite, now),
+    );
+    this.monsterSprites.forEach((sprite) =>
+      this.updateAnimatedActor(sprite, now),
+    );
     this.npcSprites.forEach((sprite) => this.updateAnimatedNpc(sprite, now));
   }
 
-  private updateAnimatedActor(sprite: PlayerSprite | MonsterSprite, now: number) {
+  private updateAnimatedActor(
+    sprite: PlayerSprite | MonsterSprite,
+    now: number,
+  ) {
     const dx = sprite.x - sprite.lastX;
     const dy = sprite.y - sprite.lastY;
     const moving = Math.abs(dx) + Math.abs(dy) > 0.45;
@@ -941,9 +1449,16 @@ export class WorldScene extends Phaser.Scene {
       sprite.facing = this.resolveDirection(dx, dy, sprite.facing);
     }
 
-    const nextState: AnimState = sprite.attackUntil > now ? "attack" : moving ? "walk" : "idle";
-    const frameInterval = nextState === "attack" ? 90 : nextState === "walk" ? 110 : 260;
-    const frameCount = nextState === "attack" ? ATTACK_FRAME_COUNT : nextState === "walk" ? WALK_FRAME_COUNT : IDLE_FRAME_COUNT;
+    const nextState: AnimState =
+      sprite.attackUntil > now ? "attack" : moving ? "walk" : "idle";
+    const frameInterval =
+      nextState === "attack" ? 90 : nextState === "walk" ? 110 : 260;
+    const frameCount =
+      nextState === "attack"
+        ? ATTACK_FRAME_COUNT
+        : nextState === "walk"
+          ? WALK_FRAME_COUNT
+          : IDLE_FRAME_COUNT;
 
     if (sprite.animState !== nextState) {
       sprite.animState = nextState;
@@ -954,8 +1469,20 @@ export class WorldScene extends Phaser.Scene {
       sprite.frameTimer = now;
     }
 
-    sprite.spriteBody.setTexture(this.getFrameKey(sprite.textureBase, sprite.animState, sprite.facing, sprite.animFrame));
-    const bob = sprite.animState === "walk" ? [0, -1.4, -2.2, -0.8][sprite.animFrame % 4] : sprite.animState === "attack" ? -1.2 : 0;
+    sprite.spriteBody.setTexture(
+      this.getFrameKey(
+        sprite.textureBase,
+        sprite.animState,
+        sprite.facing,
+        sprite.animFrame,
+      ),
+    );
+    const bob =
+      sprite.animState === "walk"
+        ? [0, -1.4, -2.2, -0.8][sprite.animFrame % 4]
+        : sprite.animState === "attack"
+          ? -1.2
+          : 0;
     sprite.spriteBody.y = bob;
     sprite.lastX = sprite.x;
     sprite.lastY = sprite.y;
@@ -965,7 +1492,14 @@ export class WorldScene extends Phaser.Scene {
     if (now - sprite.frameTimer >= 320) {
       sprite.animFrame = (sprite.animFrame + 1) % IDLE_FRAME_COUNT;
       sprite.frameTimer = now;
-      sprite.spriteBody.setTexture(this.getFrameKey(sprite.textureBase, "idle", sprite.facing, sprite.animFrame));
+      sprite.spriteBody.setTexture(
+        this.getFrameKey(
+          sprite.textureBase,
+          "idle",
+          sprite.facing,
+          sprite.animFrame,
+        ),
+      );
       sprite.spriteBody.y = sprite.animFrame === 0 ? 0 : -0.5;
     }
   }
@@ -995,7 +1529,12 @@ export class WorldScene extends Phaser.Scene {
         return;
       }
 
-      const distance = Phaser.Math.Distance.Between(monster.x, monster.y - 12, x, y);
+      const distance = Phaser.Math.Distance.Between(
+        monster.x,
+        monster.y - 12,
+        x,
+        y,
+      );
       if (distance < 68 && distance < bestDistance) {
         best = monster;
         bestDistance = distance;
@@ -1053,13 +1592,26 @@ export class WorldScene extends Phaser.Scene {
   private getMonsterTexture(baseId: string) {
     if (baseId.includes("slime")) return "anim_monster_slime";
     if (baseId.includes("skeleton")) return "anim_monster_skeleton";
-    if (baseId.includes("bog") || baseId.includes("frog")) return "anim_monster_bog";
+    if (baseId.includes("bog") || baseId.includes("frog"))
+      return "anim_monster_bog";
     if (baseId.includes("spider")) return "anim_monster_spider";
-    if (baseId.includes("wolf") || baseId.includes("werewolf")) return "anim_monster_wolf";
-    if (baseId.includes("orc") || baseId.includes("kobold") || baseId.includes("lizard")) return "anim_monster_orc";
+    if (baseId.includes("wolf") || baseId.includes("werewolf"))
+      return "anim_monster_wolf";
+    if (
+      baseId.includes("orc") ||
+      baseId.includes("kobold") ||
+      baseId.includes("lizard")
+    )
+      return "anim_monster_orc";
     if (baseId.includes("boar")) return "anim_monster_boar";
-    if (baseId.includes("wisp") || baseId.includes("sprite")) return "anim_monster_wisp";
-    if (baseId.includes("dragon") || baseId.includes("wyvern") || baseId.includes("drake")) return "anim_monster_dragon";
+    if (baseId.includes("wisp") || baseId.includes("sprite"))
+      return "anim_monster_wisp";
+    if (
+      baseId.includes("dragon") ||
+      baseId.includes("wyvern") ||
+      baseId.includes("drake")
+    )
+      return "anim_monster_dragon";
     if (baseId.includes("golem")) return "anim_monster_rock_golem";
     return "anim_monster_slime";
   }
@@ -1074,7 +1626,9 @@ export class WorldScene extends Phaser.Scene {
   private isRangedClass() {
     const state = useGameStore.getState();
     const weaponId = state.equipment.weapon?.id ?? "";
-    const arrows = state.inventory.find((item) => item.id === "training_arrow")?.quantity ?? 0;
+    const arrows =
+      state.inventory.find((item) => item.id === "training_arrow")?.quantity ??
+      0;
     return weaponId === "hunter_bow" && arrows > 0;
   }
 
@@ -1086,15 +1640,23 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createGroundPatch(x: number, y: number, mapId: string) {
-    const seed = this.noise(x * 0.31 + mapId.length, y * 0.29 + mapId.length * 2);
+    const seed = this.noise(
+      x * 0.31 + mapId.length,
+      y * 0.29 + mapId.length * 2,
+    );
     const moisture = this.noise(x * 0.11 + 9, y * 0.17 + 17);
     const nearRoad =
-      (mapId === "speakingIsland" && ((y >= 5 && y <= 9 && x >= 2 && x <= 13) || (x >= 5 && x <= 7 && y >= 2 && y <= 11))) ||
+      (mapId === "speakingIsland" &&
+        ((y >= 5 && y <= 9 && x >= 2 && x <= 13) ||
+          (x >= 5 && x <= 7 && y >= 2 && y <= 11))) ||
       Math.abs(y - 5.2) < 1.6;
 
     if (nearRoad) {
       return {
-        texture: mapId === "silverKnightTown" || mapId === "giranTown" ? "tile_cobble" : "tile_path",
+        texture:
+          mapId === "silverKnightTown" || mapId === "giranTown"
+            ? "tile_cobble"
+            : "tile_path",
         alpha: 0.86,
         tint: 0xffffff,
         rotation: 0,
@@ -1147,11 +1709,20 @@ export class WorldScene extends Phaser.Scene {
     return value - Math.floor(value);
   }
 
-  private getFrameKey(base: string, state: AnimState, direction: DirectionKey, frame: number) {
+  private getFrameKey(
+    base: string,
+    state: AnimState,
+    direction: DirectionKey,
+    frame: number,
+  ) {
     return `${base}_${state}_${direction}_${frame}`;
   }
 
-  private resolveDirection(dx: number, dy: number, fallback: DirectionKey): DirectionKey {
+  private resolveDirection(
+    dx: number,
+    dy: number,
+    fallback: DirectionKey,
+  ): DirectionKey {
     if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) {
       return fallback;
     }
@@ -1177,7 +1748,12 @@ export class WorldScene extends Phaser.Scene {
         betty: { x: 820, y: 420 },
       };
 
-      return positions[npcId] ?? { x: tileX * TILE_WIDTH + 120, y: tileY * TILE_HEIGHT + 120 };
+      return (
+        positions[npcId] ?? {
+          x: tileX * TILE_WIDTH + 120,
+          y: tileY * TILE_HEIGHT + 120,
+        }
+      );
     }
 
     if (this.mapId === "silverKnightTown") {
@@ -1186,7 +1762,12 @@ export class WorldScene extends Phaser.Scene {
         knight_captain: { x: 860, y: 310 },
       };
 
-      return positions[npcId] ?? { x: tileX * TILE_WIDTH + 120, y: tileY * TILE_HEIGHT + 120 };
+      return (
+        positions[npcId] ?? {
+          x: tileX * TILE_WIDTH + 120,
+          y: tileY * TILE_HEIGHT + 120,
+        }
+      );
     }
 
     return { x: tileX * TILE_WIDTH + 120, y: tileY * TILE_HEIGHT + 120 };

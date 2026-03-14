@@ -67,7 +67,12 @@ type EquipmentSlot =
   | "belt";
 
 type EquipmentState = Partial<Record<EquipmentSlot, InventoryItem>>;
-type QuestStatus = "available" | "in_progress" | "ready_to_turn_in" | "claimable" | "completed";
+type QuestStatus =
+  | "available"
+  | "in_progress"
+  | "ready_to_turn_in"
+  | "claimable"
+  | "completed";
 
 type QuestProgress = {
   questId: string;
@@ -175,7 +180,11 @@ type GameStore = {
   toggleShop: () => void;
   toggleQuestWindow: () => void;
   setActiveShop: (shopId: string | null) => void;
-  openDialogue: (payload: { npcId: string; npcName: string; dialogue: string[] }) => void;
+  openDialogue: (payload: {
+    npcId: string;
+    npcName: string;
+    dialogue: string[];
+  }) => void;
   closeDialogue: () => void;
   openDeath: (expLost: number) => void;
   closeDeath: () => void;
@@ -190,7 +199,11 @@ type GameStore = {
   getAttackProfile: () => AttackProfile;
   getDerivedStats: () => DerivedStats;
   setConnected: (connected: boolean) => void;
-  setWorld: (payload: { selfId: string; players: WorldPlayer[]; monsters: WorldMonster[] }) => void;
+  setWorld: (payload: {
+    selfId: string;
+    players: WorldPlayer[];
+    monsters: WorldMonster[];
+  }) => void;
   upsertWorldPlayer: (player: WorldPlayer) => void;
   removeWorldPlayer: (playerId: string) => void;
   upsertMonster: (monster: WorldMonster) => void;
@@ -207,12 +220,35 @@ type GameStore = {
   tickQuiz: () => void;
   resolveQuiz: (payload: QuizFeedback) => void;
   closeQuiz: () => void;
+  applyOfflineReward: (reward: {
+    gold: number;
+    exp: number;
+    items?: string[];
+  }) => void;
 };
 
 const INITIAL_INVENTORY: InventoryItem[] = [
-  { id: "red_potion", name: "붉은 물약", quantity: 10, rarity: "common", type: "consumable" },
-  { id: "trainee_dagger", name: "수련생의 단검", quantity: 1, rarity: "common", type: "weapon" },
-  { id: "teleport_scroll", name: "순간이동 주문서", quantity: 3, rarity: "common", type: "scroll" },
+  {
+    id: "red_potion",
+    name: "붉은 물약",
+    quantity: 10,
+    rarity: "common",
+    type: "consumable",
+  },
+  {
+    id: "trainee_dagger",
+    name: "수련생의 단검",
+    quantity: 1,
+    rarity: "common",
+    type: "weapon",
+  },
+  {
+    id: "teleport_scroll",
+    name: "순간이동 주문서",
+    quantity: 3,
+    rarity: "common",
+    type: "scroll",
+  },
 ];
 
 const INITIAL_QUESTS: QuestProgress[] = QUESTS.map((quest) => ({
@@ -297,7 +333,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addDroppedLoot: (items) =>
     set((state) => ({
       droppedLoot: [
-        ...state.droppedLoot.filter((current) => !items.some((next) => next.lootId === current.lootId)),
+        ...state.droppedLoot.filter(
+          (current) => !items.some((next) => next.lootId === current.lootId),
+        ),
         ...items,
       ],
     })),
@@ -382,7 +420,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set((state) => ({
       quests: state.quests.map((quest) =>
-        quest.questId === questId ? { ...quest, status: "in_progress", progress: 0 } : quest,
+        quest.questId === questId
+          ? { ...quest, status: "in_progress", progress: 0 }
+          : quest,
       ),
       ui: {
         ...state.ui,
@@ -470,7 +510,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
             ? {
                 ...quest,
                 progress,
-                status: progress >= goal && quest.status === "in_progress" ? "ready_to_turn_in" : quest.status,
+                status:
+                  progress >= goal && quest.status === "in_progress"
+                    ? "ready_to_turn_in"
+                    : quest.status,
               }
             : quest,
         ),
@@ -515,15 +558,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       const derived = getDerivedStatsFromState(state.player, state.equipment);
       const nextInventory = state.inventory
-        .map((entry) => (entry.id === itemId ? { ...entry, quantity: entry.quantity - 1 } : entry))
+        .map((entry) =>
+          entry.id === itemId
+            ? { ...entry, quantity: entry.quantity - 1 }
+            : entry,
+        )
         .filter((entry) => entry.quantity > 0);
 
       return {
         inventory: nextInventory,
         player: {
           ...state.player,
-          hp: Math.min(derived.maxHp, state.player.hp + (itemData.stats.hp ?? 0)),
-          mp: Math.min(derived.maxMp, state.player.mp + (itemData.stats.mp ?? 0)),
+          hp: Math.min(
+            derived.maxHp,
+            state.player.hp + (itemData.stats.hp ?? 0),
+          ),
+          mp: Math.min(
+            derived.maxMp,
+            state.player.mp + (itemData.stats.mp ?? 0),
+          ),
         },
         chat: [
           ...state.chat.slice(-48),
@@ -553,7 +606,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     set((state) => {
-      const inventoryItem = state.inventory.find((entry) => entry.id === itemId);
+      const inventoryItem = state.inventory.find(
+        (entry) => entry.id === itemId,
+      );
       const slot = getEquipSlot(itemId, state.equipment);
       if (!inventoryItem || !slot) {
         return state;
@@ -562,7 +617,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const nextEquipment = { ...state.equipment };
       const previouslyEquipped = nextEquipment[slot];
       nextEquipment[slot] = inventoryItem;
-      const nextInventory = state.inventory.filter((entry) => entry.id !== itemId);
+      const nextInventory = state.inventory.filter(
+        (entry) => entry.id !== itemId,
+      );
       if (previouslyEquipped) {
         nextInventory.push(previouslyEquipped);
       }
@@ -617,7 +674,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const weapon = equipment.weapon ? ITEMS[equipment.weapon.id] : null;
 
     if (weapon?.subtype === "staff" || player.className === "Arcanist") {
-      return { str: 2, dex: 1, int: 8 + derived.maxAttack + (weapon?.stats.spellPower ?? 0) };
+      return {
+        str: 2,
+        dex: 1,
+        int: 8 + derived.maxAttack + (weapon?.stats.spellPower ?? 0),
+      };
     }
 
     if (weapon?.subtype === "bow" || player.className === "Ranger") {
@@ -638,7 +699,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setWorld: (payload) =>
     set(() => ({
       selfId: payload.selfId,
-      currentMapId: payload.players.find((entry) => entry.id === payload.selfId)?.mapId ?? "speakingIsland",
+      currentMapId:
+        payload.players.find((entry) => entry.id === payload.selfId)?.mapId ??
+        "speakingIsland",
       droppedLoot: [],
       worldPlayers: payload.players,
       worldMonsters: payload.monsters,
@@ -646,7 +709,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   upsertWorldPlayer: (player) =>
     set((state) => ({
       worldPlayers: state.worldPlayers.some((entry) => entry.id === player.id)
-        ? state.worldPlayers.map((entry) => (entry.id === player.id ? player : entry))
+        ? state.worldPlayers.map((entry) =>
+            entry.id === player.id ? player : entry,
+          )
         : [...state.worldPlayers, player],
     })),
   removeWorldPlayer: (playerId) =>
@@ -655,8 +720,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })),
   upsertMonster: (monster) =>
     set((state) => ({
-      worldMonsters: state.worldMonsters.some((entry) => entry.id === monster.id)
-        ? state.worldMonsters.map((entry) => (entry.id === monster.id ? monster : entry))
+      worldMonsters: state.worldMonsters.some(
+        (entry) => entry.id === monster.id,
+      )
+        ? state.worldMonsters.map((entry) =>
+            entry.id === monster.id ? monster : entry,
+          )
         : [...state.worldMonsters, monster],
     })),
   openQuiz: (payload) =>
@@ -702,9 +771,66 @@ export const useGameStore = create<GameStore>((set, get) => ({
         remaining: state.quiz.timeLimit,
       },
     })),
+  applyOfflineReward: ({ gold, exp, items = [] }) => {
+    set((state) => {
+      const prevLevel = state.player.level;
+      const playerWithGold = {
+        ...state.player,
+        gold: state.player.gold + gold,
+      };
+      const nextPlayer = applyExpReward(playerWithGold, exp);
+      const leveled = nextPlayer.level > prevLevel;
+
+      const nextInventory = [...state.inventory];
+      items.forEach((itemId) => {
+        const itemData = ITEMS[itemId];
+        if (!itemData) return;
+        const existing = nextInventory.find((entry) => entry.id === itemId);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          nextInventory.push({
+            id: itemData.id,
+            name: itemData.name,
+            quantity: 1,
+            rarity: itemData.rarity,
+            type: itemData.type,
+          });
+        }
+      });
+
+      const messages: ChatMessage[] = [
+        {
+          id: crypto.randomUUID(),
+          channel: "system",
+          author: "시스템",
+          message: `+${gold} Gold, +${exp} EXP 획득!`,
+          timestamp: Date.now(),
+        },
+      ];
+      if (leveled) {
+        messages.push({
+          id: crypto.randomUUID(),
+          channel: "system",
+          author: "시스템",
+          message: `레벨 업! Lv.${nextPlayer.level} 달성!`,
+          timestamp: Date.now() + 1,
+        });
+      }
+
+      return {
+        player: nextPlayer,
+        inventory: nextInventory,
+        chat: [...state.chat.slice(-(50 - messages.length)), ...messages],
+      };
+    });
+  },
 }));
 
-function getEquipSlot(itemId: string, equipment: EquipmentState): EquipmentSlot | null {
+function getEquipSlot(
+  itemId: string,
+  equipment: EquipmentState,
+): EquipmentSlot | null {
   const item = ITEMS[itemId];
   if (!item) return null;
   if (item.type === ItemType.WEAPON) return "weapon";
@@ -714,20 +840,33 @@ function getEquipSlot(itemId: string, equipment: EquipmentState): EquipmentSlot 
   if (item.subtype === ArmorSubType.CLOAK) return "cloak";
   if (item.subtype === ArmorSubType.BOOTS) return "boots";
   if (item.subtype === ArmorSubType.GLOVES) return "gloves";
-  if (item.subtype === ArmorSubType.RING) return equipment.ring1 ? "ring2" : "ring1";
+  if (item.subtype === ArmorSubType.RING)
+    return equipment.ring1 ? "ring2" : "ring1";
   if (item.subtype === ArmorSubType.AMULET) return "amulet";
   if (item.subtype === ArmorSubType.BELT) return "belt";
   return null;
 }
 
-function getDerivedStatsFromState(player: PlayerSnapshot, equipment: EquipmentState): DerivedStats {
+function getDerivedStatsFromState(
+  player: PlayerSnapshot,
+  equipment: EquipmentState,
+): DerivedStats {
   const equippedItems = Object.values(equipment)
     .map((item) => (item ? ITEMS[item.id] : null))
     .filter(Boolean);
 
-  const hpBonus = equippedItems.reduce((sum, item) => sum + (item?.stats.hp ?? 0), 0);
-  const mpBonus = equippedItems.reduce((sum, item) => sum + (item?.stats.mp ?? 0), 0);
-  const acBonus = equippedItems.reduce((sum, item) => sum + (item?.stats.ac ?? 0), 0);
+  const hpBonus = equippedItems.reduce(
+    (sum, item) => sum + (item?.stats.hp ?? 0),
+    0,
+  );
+  const mpBonus = equippedItems.reduce(
+    (sum, item) => sum + (item?.stats.mp ?? 0),
+    0,
+  );
+  const acBonus = equippedItems.reduce(
+    (sum, item) => sum + (item?.stats.ac ?? 0),
+    0,
+  );
   const weapon = equipment.weapon ? ITEMS[equipment.weapon.id] : null;
 
   return {
@@ -755,4 +894,12 @@ function applyExpReward(player: PlayerSnapshot, expReward: number) {
   return nextPlayer;
 }
 
-export type { EquipmentSlot, EquipmentState, InventoryItem, PlayerSnapshot, DroppedLoot, QuestProgress, QuestStatus };
+export type {
+  EquipmentSlot,
+  EquipmentState,
+  InventoryItem,
+  PlayerSnapshot,
+  DroppedLoot,
+  QuestProgress,
+  QuestStatus,
+};

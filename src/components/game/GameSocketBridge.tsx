@@ -41,8 +41,13 @@ export function GameSocketBridge() {
       EventBus.emit("socket_connected", { connected: false });
     };
 
+    const onConnectError = () => {
+      // offline fallback — no action required
+    };
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
     socket.on("world:init", (payload) => {
       setWorld(payload);
       EventBus.emit("world_init", payload);
@@ -91,7 +96,13 @@ export function GameSocketBridge() {
     });
     socket.on(
       "player:moved",
-      (payload: { id: string; name: string; mapId: string; x: number; y: number }) => {
+      (payload: {
+        id: string;
+        name: string;
+        mapId: string;
+        x: number;
+        y: number;
+      }) => {
         upsertWorldPlayer(payload);
         EventBus.emit("player_moved", payload);
       },
@@ -217,6 +228,7 @@ export function GameSocketBridge() {
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("connect_error", onConnectError);
       socket.off("world:init");
       socket.off("player:state");
       socket.off("player:joined");
