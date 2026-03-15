@@ -116,7 +116,7 @@ const MELEE_RANGE = 92;
 const RANGED_RANGE = 420;
 const WALK_FRAME_COUNT = 4;
 const IDLE_FRAME_COUNT = 2;
-const ATTACK_FRAME_COUNT = 3;
+const ATTACK_FRAME_COUNT = 4;
 
 export class WorldScene extends Phaser.Scene {
   private mapId = "speakingIsland";
@@ -155,6 +155,8 @@ export class WorldScene extends Phaser.Scene {
   >();
   private pendingOfflineMonsterId: string | null = null;
   private offlineStreak = 0;
+  private offlineAttackCount = new Map<string, number>();
+  private QUIZ_EVERY_N_ATTACKS = 5;
   private quizResultUnsubscribe?: () => void;
 
   private nearbyNpcId: string | null = null;
@@ -428,48 +430,46 @@ export class WorldScene extends Phaser.Scene {
 
     this.offlineStreak += 1;
 
+    // 퀴즈 정답 시 보너스 데미지만 적용
     const state = useGameStore.getState();
-    const attackProfile = state.getAttackProfile();
-    const baseDamage =
-      5 + attackProfile.str + attackProfile.dex + attackProfile.int;
-    const damage = payload.reward
-      ? Math.round(baseDamage * payload.reward.bonusMultiplier)
-      : baseDamage;
-
-    const newHp = Math.max(0, monsterData.hp - damage);
+    const bonusDamage = Math.floor(
+      (5 + state.getAttackProfile().int) *
+        (payload.reward?.bonusMultiplier ?? 1),
+    );
+    const newHp = Math.max(0, monsterData.hp - bonusDamage);
     this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: newHp });
 
-    const isCrit = payload.reward ? payload.reward.bonusMultiplier > 1 : false;
     if (monsterSprite) {
-      this.showDamageNumber(monsterSprite.x, monsterSprite.y, damage, isCrit);
+      this.showDamageNumber(
+        monsterSprite.x,
+        monsterSprite.y - 20,
+        bonusDamage,
+        true,
+      );
+      useGameStore.getState().upsertMonster({
+        id: monsterId,
+        mapId: this.mapId,
+        name: monsterSprite.label.text,
+        level: 1,
+        hp: newHp,
+        maxHp: monsterData.maxHp,
+        x: monsterSprite.x,
+        y: monsterSprite.y,
+      });
     }
 
-    // Update the monster HP bar via store
-    useGameStore.getState().upsertMonster({
-      id: monsterId,
-      mapId: "speakingIsland",
-      name: monsterSprite.label.text,
-      level: 1,
-      hp: newHp,
-      maxHp: monsterData.maxHp,
-      x: monsterSprite.x,
-      y: monsterSprite.y,
-    });
-
+    // 퀴즈 보너스로 몬스터 사망 시
     if (newHp <= 0) {
-      // Monster died
       const goldReward =
         monsterData.goldMin +
         Math.floor(
           Math.random() * (monsterData.goldMax - monsterData.goldMin + 1),
         );
-      const expReward = monsterData.exp;
+      useGameStore.getState().applyOfflineReward({
+        gold: goldReward + 10,
+        exp: monsterData.exp + 20,
+      });
 
-      useGameStore
-        .getState()
-        .applyOfflineReward({ gold: goldReward, exp: expReward });
-
-      // Update quest progress for kill quests
       const killQuest = state.quests.find(
         (q) => q.questId === "mq_001" && q.status === "in_progress",
       );
@@ -478,10 +478,9 @@ export class WorldScene extends Phaser.Scene {
           .getState()
           .updateQuestProgress("mq_001", Math.min(10, killQuest.progress + 1));
       }
-
       this.offlineStreak = 0;
+      this.offlineAttackCount.delete(monsterId);
 
-      // Respawn monster after 10 seconds
       this.time.delayedCall(10000, () => {
         const sprite = this.monsterSprites.get(monsterId);
         if (!sprite) return;
@@ -489,7 +488,7 @@ export class WorldScene extends Phaser.Scene {
         this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: fullHp });
         useGameStore.getState().upsertMonster({
           id: monsterId,
-          mapId: "speakingIsland",
+          mapId: this.mapId,
           name: sprite.label.text,
           level: 1,
           hp: fullHp,
@@ -497,7 +496,18 @@ export class WorldScene extends Phaser.Scene {
           x: sprite.x,
           y: sprite.y,
         });
+        sprite.setVisible(true);
+        sprite.setAlpha(0);
+        this.tweens.add({ targets: sprite, alpha: 1, duration: 400 });
       });
+    }
+
+    // 퀘스트 연속 정답 추적
+    const streakQuest = state.quests.find((q) => q.questId === "mq_003");
+    if (streakQuest?.status === "in_progress") {
+      useGameStore
+        .getState()
+        .updateQuestProgress("mq_003", Math.min(10, streakQuest.progress + 1));
     }
   }
 
@@ -1395,7 +1405,100 @@ export class WorldScene extends Phaser.Scene {
 
     const socket = getSocket();
     if (!socket.connected) {
-      this.triggerOfflineQuiz(monsterId);
+      // 오프라인 직접 데미지 처리
+      const monsterData = this.offlineMonsterHp.get(monsterId);
+      const monsterSprite = this.monsterSprites.get(monsterId);
+      if (!monsterData || monsterData.hp <= 0) return;
+
+      const state = useGameStore.getState();
+      const attackProfile = state.getAttackProfile();
+      const baseDamage =
+        3 + attackProfile.str + Math.floor(attackProfile.dex * 0.5);
+      const variance = Math.floor(Math.random() * 4) - 1; // -1 ~ +2
+      const damage = Math.max(1, baseDamage + variance);
+      const isCrit = Math.random() < 0.12;
+      const finalDamage = isCrit ? Math.floor(damage * 1.8) : damage;
+
+      const newHp = Math.max(0, monsterData.hp - finalDamage);
+      this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: newHp });
+
+      // 데미지 숫자 표시
+      if (monsterSprite) {
+        this.showDamageNumber(
+          monsterSprite.x,
+          monsterSprite.y,
+          finalDamage,
+          isCrit,
+        );
+      }
+
+      // 몬스터 HP 바 업데이트
+      useGameStore.getState().upsertMonster({
+        id: monsterId,
+        mapId: this.mapId,
+        name: monsterSprite?.label.text ?? "",
+        level: 1,
+        hp: newHp,
+        maxHp: monsterData.maxHp,
+        x: monsterSprite?.x ?? 0,
+        y: monsterSprite?.y ?? 0,
+      });
+
+      // 몬스터 사망 처리
+      if (newHp <= 0) {
+        const goldReward =
+          monsterData.goldMin +
+          Math.floor(
+            Math.random() * (monsterData.goldMax - monsterData.goldMin + 1),
+          );
+        const expReward = monsterData.exp;
+        useGameStore
+          .getState()
+          .applyOfflineReward({ gold: goldReward, exp: expReward });
+
+        const killQuest = state.quests.find(
+          (q) => q.questId === "mq_001" && q.status === "in_progress",
+        );
+        if (killQuest) {
+          useGameStore
+            .getState()
+            .updateQuestProgress(
+              "mq_001",
+              Math.min(10, killQuest.progress + 1),
+            );
+        }
+        this.offlineStreak = 0;
+        this.offlineAttackCount.delete(monsterId);
+
+        // 리스폰
+        this.time.delayedCall(10000, () => {
+          const sprite = this.monsterSprites.get(monsterId);
+          if (!sprite) return;
+          const fullHp = monsterData.maxHp;
+          this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: fullHp });
+          useGameStore.getState().upsertMonster({
+            id: monsterId,
+            mapId: this.mapId,
+            name: sprite.label.text,
+            level: 1,
+            hp: fullHp,
+            maxHp: fullHp,
+            x: sprite.x,
+            y: sprite.y,
+          });
+          sprite.setVisible(true);
+          sprite.setAlpha(0);
+          this.tweens.add({ targets: sprite, alpha: 1, duration: 400 });
+        });
+        return;
+      }
+
+      // 주기적 퀴즈 트리거 (N번마다 1번)
+      const attackCount = (this.offlineAttackCount.get(monsterId) ?? 0) + 1;
+      this.offlineAttackCount.set(monsterId, attackCount);
+      if (attackCount % this.QUIZ_EVERY_N_ATTACKS === 0) {
+        this.triggerOfflineQuiz(monsterId);
+      }
       return;
     }
     socket.emit("combat:attack", { monsterId });
@@ -1557,7 +1660,7 @@ export class WorldScene extends Phaser.Scene {
     const nextState: AnimState =
       sprite.attackUntil > now ? "attack" : moving ? "walk" : "idle";
     const frameInterval =
-      nextState === "attack" ? 90 : nextState === "walk" ? 110 : 260;
+      nextState === "attack" ? 80 : nextState === "walk" ? 100 : 280;
     const frameCount =
       nextState === "attack"
         ? ATTACK_FRAME_COUNT
@@ -1584,9 +1687,9 @@ export class WorldScene extends Phaser.Scene {
     );
     const bob =
       sprite.animState === "walk"
-        ? [0, -1.4, -2.2, -0.8][sprite.animFrame % 4]
+        ? [0, -1.8, -2.8, -0.9][sprite.animFrame % 4]
         : sprite.animState === "attack"
-          ? -1.2
+          ? [-1, -3.5, 2, 0][sprite.animFrame % 4]
           : 0;
     sprite.spriteBody.y = bob;
     sprite.lastX = sprite.x;

@@ -11,7 +11,9 @@ export function QuizModal() {
   const closeQuiz = useGameStore((state) => state.closeQuiz);
   const tickQuiz = useGameStore((state) => state.tickQuiz);
   const resolveQuiz = useGameStore((state) => state.resolveQuiz);
-  const updateQuestProgress = useGameStore((state) => state.updateQuestProgress);
+  const updateQuestProgress = useGameStore(
+    (state) => state.updateQuestProgress,
+  );
   const quests = useGameStore((state) => state.quests);
 
   useEffect(() => {
@@ -63,6 +65,13 @@ export function QuizModal() {
   }, [quiz.feedback, quests, updateQuestProgress]);
 
   useEffect(() => {
+    if (!quiz.active) return;
+    const prevent = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", prevent);
+    return () => document.removeEventListener("contextmenu", prevent);
+  }, [quiz.active]);
+
+  useEffect(() => {
     if (!quiz.active || quiz.feedback || quiz.remaining > 0) {
       return;
     }
@@ -81,7 +90,14 @@ export function QuizModal() {
       status: "timeout",
       answer: quiz.question?.correctAnswer ?? "",
     });
-  }, [quiz.active, quiz.feedback, quiz.monsterId, quiz.question, quiz.remaining, resolveQuiz]);
+  }, [
+    quiz.active,
+    quiz.feedback,
+    quiz.monsterId,
+    quiz.question,
+    quiz.remaining,
+    resolveQuiz,
+  ]);
 
   if (!quiz.active || !quiz.question) {
     return null;
@@ -117,10 +133,15 @@ export function QuizModal() {
   };
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+    <div
+      className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <div className="fantasy-frame w-full max-w-2xl rounded-[32px] p-6">
         <div className="mb-4 flex items-center justify-between text-sm text-amber-200/80">
-          <span>{question.type === "en_to_kr" ? "영어 -> 한글" : "한글 -> 영어"}</span>
+          <span>
+            {question.type === "en_to_kr" ? "영어 -> 한글" : "한글 -> 영어"}
+          </span>
           <span>
             {quiz.bossStep}/{quiz.bossTotal}
           </span>
@@ -132,14 +153,23 @@ export function QuizModal() {
             <span>{quiz.remaining}초</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-black/40">
-            <div className="h-full bg-game-gold" style={{ width: `${progress}%` }} />
+            <div
+              className="h-full bg-game-gold"
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
 
         <div className="mb-6 text-center">
-          <p className="mb-2 text-sm uppercase tracking-[0.3em] text-amber-100/60">{question.category}</p>
-          <h2 className="text-4xl font-semibold text-amber-50">{question.question}</h2>
-          <p className="mt-3 text-sm text-amber-100/70">현재 연속 정답: {quiz.streak}</p>
+          <p className="mb-2 text-sm uppercase tracking-[0.3em] text-amber-100/60">
+            {question.category}
+          </p>
+          <h2 className="text-4xl font-semibold text-amber-50">
+            {question.question}
+          </h2>
+          <p className="mt-3 text-sm text-amber-100/70">
+            현재 연속 정답: {quiz.streak}
+          </p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -173,14 +203,19 @@ export function QuizModal() {
                   ? "시간 초과!"
                   : "오답입니다."}
             </p>
-            <p className="mt-1 text-sm text-amber-50/80">정답: {quiz.feedback.answer}</p>
+            <p className="mt-1 text-sm text-amber-50/80">
+              정답: {quiz.feedback.answer}
+            </p>
             {quiz.feedback.reward ? (
               <p className="mt-1 text-sm text-amber-200/80">
-                +{quiz.feedback.reward.gold} Gold / +{quiz.feedback.reward.exp} EXP
+                +{quiz.feedback.reward.gold} Gold / +{quiz.feedback.reward.exp}{" "}
+                EXP
               </p>
             ) : null}
             {quiz.feedback.reward?.items.length ? (
-              <p className="mt-1 text-sm text-amber-100/80">획득 아이템: {quiz.feedback.reward.items.join(", ")}</p>
+              <p className="mt-1 text-sm text-amber-100/80">
+                획득 아이템: {quiz.feedback.reward.items.join(", ")}
+              </p>
             ) : null}
             <button
               type="button"

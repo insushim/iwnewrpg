@@ -35,8 +35,8 @@ export default function GamePage() {
         <ChatWindow />
       </div>
 
-      {/* 우측 상단 미니맵 */}
-      <div className="pointer-events-auto absolute right-3 top-3 z-10">
+      {/* 우측 상단 미니맵 - 작게 */}
+      <div className="pointer-events-auto absolute right-3 top-3 z-10 w-[200px]">
         <MiniMap />
       </div>
 
