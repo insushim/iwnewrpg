@@ -291,7 +291,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   ],
   quests: INITIAL_QUESTS,
   ui: {
-    inventoryOpen: true,
+    inventoryOpen: false,
     chatOpen: true,
     shopOpen: false,
     activeShopId: "radar",

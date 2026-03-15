@@ -446,7 +446,7 @@ export class WorldScene extends Phaser.Scene {
         bonusDamage,
         true,
       );
-      useGameStore.getState().upsertMonster({
+      const bonusUpdatePayload = {
         id: monsterId,
         mapId: this.mapId,
         name: monsterSprite.label.text,
@@ -455,7 +455,9 @@ export class WorldScene extends Phaser.Scene {
         maxHp: monsterData.maxHp,
         x: monsterSprite.x,
         y: monsterSprite.y,
-      });
+      };
+      useGameStore.getState().upsertMonster(bonusUpdatePayload);
+      EventBus.emit("monster_updated", bonusUpdatePayload);
     }
 
     // 퀴즈 보너스로 몬스터 사망 시
@@ -1432,8 +1434,8 @@ export class WorldScene extends Phaser.Scene {
         );
       }
 
-      // 몬스터 HP 바 업데이트
-      useGameStore.getState().upsertMonster({
+      // 몬스터 HP 바 업데이트 (스토어 + Phaser 씬 동시 반영)
+      const monsterUpdatePayload = {
         id: monsterId,
         mapId: this.mapId,
         name: monsterSprite?.label.text ?? "",
@@ -1442,7 +1444,9 @@ export class WorldScene extends Phaser.Scene {
         maxHp: monsterData.maxHp,
         x: monsterSprite?.x ?? 0,
         y: monsterSprite?.y ?? 0,
-      });
+      };
+      useGameStore.getState().upsertMonster(monsterUpdatePayload);
+      EventBus.emit("monster_updated", monsterUpdatePayload);
 
       // 몬스터 사망 처리
       if (newHp <= 0) {
