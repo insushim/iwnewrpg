@@ -322,35 +322,102 @@ export class WorldScene extends Phaser.Scene {
     x: number;
     y: number;
   }> {
-    const positions = [
-      { x: 100, y: 350 }, // 마을 왼쪽
-      { x: 140, y: 500 }, // 마을 왼쪽
-      { x: 1050, y: 300 }, // 마을 오른쪽
-      { x: 1100, y: 480 }, // 마을 오른쪽
-      { x: 1200, y: 350 }, // 마을 오른쪽
-      { x: 400, y: 680 }, // 마을 아래
-      { x: 650, y: 700 }, // 마을 아래
-      { x: 850, y: 660 }, // 마을 아래
+    // 마을 안전구역: x:220~980, y:180~610 → 그 밖에 배치
+    const monsterSpawns: Array<{ monsterId: string; x: number; y: number }> = [
+      // 마을 왼쪽 (입문 구역 - 슬라임, 고블린)
+      { monsterId: "slime", x: 80, y: 300 },
+      { monsterId: "slime", x: 130, y: 460 },
+      { monsterId: "goblin_child", x: 160, y: 560 },
+      { monsterId: "goblin_child", x: 90, y: 650 },
+      // 마을 오른쪽 (중급 구역 - 멧돼지, 거미)
+      { monsterId: "wild_boar", x: 1050, y: 260 },
+      { monsterId: "wild_boar", x: 1150, y: 420 },
+      { monsterId: "poison_spider", x: 1080, y: 580 },
+      { monsterId: "poison_spider", x: 1200, y: 340 },
+      // 마을 아래 (슬라임, 고블린, 개구리)
+      { monsterId: "slime", x: 280, y: 700 },
+      { monsterId: "goblin_child", x: 500, y: 730 },
+      { monsterId: "bog_frog", x: 700, y: 720 },
+      { monsterId: "goblin_child", x: 880, y: 700 },
+      // 맵 상단 (스켈레톤, 오크)
+      { monsterId: "skeleton_warrior", x: 160, y: 110 },
+      { monsterId: "orc_archer", x: 700, y: 100 },
+      { monsterId: "skeleton_warrior", x: 1000, y: 120 },
+      // 맵 외곽 (강적)
+      { monsterId: "kobold_raider", x: 180, y: 820 },
+      { monsterId: "bog_frog", x: 600, y: 850 },
+      { monsterId: "orc_archer", x: 1100, y: 800 },
     ];
-    const monsterTypes = [
-      { ...MONSTERS.slime, id: "slime" },
-      { ...MONSTERS.goblin_child, id: "goblin_child" },
-      { ...MONSTERS.slime, id: "slime" },
-    ].filter(Boolean);
 
-    return positions.map((pos, index) => {
-      const monsterDef = monsterTypes[index % monsterTypes.length];
-      const uniqueId = `${monsterDef.id}-offline-${index}`;
-      return {
-        id: uniqueId,
-        mapId: "speakingIsland",
-        name: monsterDef.name,
-        level: monsterDef.level,
-        hp: monsterDef.hp,
-        maxHp: monsterDef.maxHp,
-        x: pos.x,
-        y: pos.y,
-      };
+    return monsterSpawns
+      .map((spawn, index) => {
+        const def = MONSTERS[spawn.monsterId];
+        if (!def) return null;
+        const uniqueId = `${spawn.monsterId}-offline-${index}`;
+        return {
+          id: uniqueId,
+          mapId: "speakingIsland",
+          name: def.name,
+          level: def.level,
+          hp: def.hp,
+          maxHp: def.maxHp,
+          x: spawn.x,
+          y: spawn.y,
+        };
+      })
+      .filter(Boolean) as Array<{
+      id: string;
+      mapId: string;
+      name: string;
+      level: number;
+      hp: number;
+      maxHp: number;
+      x: number;
+      y: number;
+    }>;
+  }
+
+  private triggerKillQuiz(monsterId: string) {
+    const monsterData = this.offlineMonsterHp.get(monsterId);
+    if (!monsterData) return;
+
+    this.pendingOfflineMonsterId = monsterId;
+
+    const vocab = ELEMENTARY_VOCABULARY;
+    const questionIndex = Math.floor(Math.random() * vocab.length);
+    const questionEntry = vocab[questionIndex];
+    const useEnToKr = Math.random() > 0.5;
+
+    const wrongIndices: number[] = [];
+    while (wrongIndices.length < 3) {
+      const idx = Math.floor(Math.random() * vocab.length);
+      if (idx !== questionIndex && !wrongIndices.includes(idx)) {
+        wrongIndices.push(idx);
+      }
+    }
+
+    const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
+    const wrongAnswers = wrongIndices.map((idx) =>
+      useEnToKr ? vocab[idx].kr : vocab[idx].en,
+    );
+    const choices = [correctAnswer, ...wrongAnswers].sort(
+      () => Math.random() - 0.5,
+    );
+
+    EventBus.emit("quiz_trigger", {
+      question: {
+        id: `kill-${questionIndex}`,
+        type: useEnToKr ? "en_to_kr" : "kr_to_en",
+        question: useEnToKr ? questionEntry.en : questionEntry.kr,
+        correctAnswer,
+        wrongAnswers,
+        difficulty: "elementary",
+        category: questionEntry.category,
+      },
+      choices,
+      streak: this.offlineStreak,
+      monsterId,
+      monsterLevel: 1,
     });
   }
 
@@ -430,7 +497,19 @@ export class WorldScene extends Phaser.Scene {
 
     this.offlineStreak += 1;
 
-    // 퀴즈 정답 시 보너스 데미지만 적용
+    // 킬 퀴즈 (몬스터가 이미 사망): 보너스 보상만 지급
+    if (monsterData.hp <= 0) {
+      useGameStore.getState().applyOfflineReward({
+        gold: Math.floor(
+          monsterData.goldMin +
+            (monsterData.goldMax - monsterData.goldMin) * 0.5,
+        ),
+        exp: Math.floor(monsterData.exp * 0.5),
+      });
+      return;
+    }
+
+    // 전투 중 퀴즈 정답 시 보너스 데미지 적용
     const state = useGameStore.getState();
     const bonusDamage = Math.floor(
       (5 + state.getAttackProfile().int) *
@@ -675,7 +754,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const water = this.add.graphics();
-    water.fillStyle(0x2b83aa, 0.6);
+    water.fillStyle(0x2b83aa, 0.18);
 
     if (mapId === "speakingIsland") {
       water.fillEllipse(1480, 480, 520, 720);
@@ -1471,8 +1550,9 @@ export class WorldScene extends Phaser.Scene {
               Math.min(10, killQuest.progress + 1),
             );
         }
-        this.offlineStreak = 0;
         this.offlineAttackCount.delete(monsterId);
+        // 킬 시 영어 퀴즈 트리거
+        this.triggerKillQuiz(monsterId);
 
         // 리스폰
         this.time.delayedCall(10000, () => {
