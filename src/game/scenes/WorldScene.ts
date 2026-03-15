@@ -85,6 +85,8 @@ type MonsterSprite = Phaser.GameObjects.Container & {
   lastY: number;
   textureBase: string;
   attackUntil: number;
+  hitFlash: number;
+  prevHp: number;
 };
 
 type PlayerSprite = Phaser.GameObjects.Container & {
@@ -1099,13 +1101,29 @@ export class WorldScene extends Phaser.Scene {
     const existing = this.monsterSprites.get(payload.id);
 
     if (payload.hp <= 0) {
-      if (existing) {
+      if (existing && existing.visible) {
         this.tweens.killTweensOf(existing);
-        existing.setVisible(false);
         if (this.selectedMonsterId === payload.id) {
           this.stopAutoAttack();
           this.targetMarker?.setVisible(false);
         }
+        this.showDeathEffect(existing.x, existing.y);
+        this.tweens.add({
+          targets: existing,
+          alpha: 0,
+          scaleY: 0.08,
+          y: existing.y + 16,
+          duration: 380,
+          ease: "Power2.Out",
+          onComplete: () => {
+            existing.setVisible(false);
+            existing.setAlpha(1);
+            existing.setScale(1);
+            existing.y -= 16;
+          },
+        });
+      } else if (existing) {
+        existing.setVisible(false);
       }
       return;
     }
@@ -1119,6 +1137,7 @@ export class WorldScene extends Phaser.Scene {
           42 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
         existing.label.setText(payload.name);
         existing.textureBase = textureBase;
+        existing.prevHp = payload.hp;
         this.tweens.add({
           targets: existing,
           alpha: 1,
@@ -1127,6 +1146,20 @@ export class WorldScene extends Phaser.Scene {
         });
         return;
       }
+
+      // Hit flash effect when HP decreases
+      if (payload.hp < existing.prevHp && payload.hp > 0) {
+        this.showHitEffect(existing.x, existing.y);
+        this.tweens.add({
+          targets: existing.spriteBody,
+          alpha: 0.2,
+          duration: 55,
+          yoyo: true,
+          repeat: 1,
+          ease: "Linear",
+        });
+      }
+      existing.prevHp = payload.hp;
 
       existing.setAlpha(1);
       existing.hpFill.width =
@@ -1186,6 +1219,8 @@ export class WorldScene extends Phaser.Scene {
     container.lastY = payload.y;
     container.textureBase = textureBase;
     container.attackUntil = 0;
+    container.hitFlash = 0;
+    container.prevHp = payload.hp;
 
     hitArea.on(
       "pointerdown",
@@ -1278,44 +1313,82 @@ export class WorldScene extends Phaser.Scene {
     this.localPlayer.attackUntil = now + 260;
 
     if (this.isRangedClass()) {
+      const startX = this.localPlayer.x + 10;
+      const startY = this.localPlayer.y - 28;
       const projectile = this.add
-        .image(this.localPlayer.x, this.localPlayer.y - 32, "projectile_arrow")
-        .setOrigin(0.2, 0.5);
+        .image(startX, startY, "projectile_arrow")
+        .setOrigin(0.2, 0.5)
+        .setScale(1.1);
       projectile.setRotation(
-        Phaser.Math.Angle.Between(
-          projectile.x,
-          projectile.y,
-          monster.x,
-          monster.y,
-        ),
+        Phaser.Math.Angle.Between(startX, startY, monster.x, monster.y - 18),
       );
       this.effectLayer?.add(projectile);
       this.tweens.add({
         targets: projectile,
         x: monster.x,
         y: monster.y - 18,
-        duration: 240,
-        ease: "Quad.Out",
-        onComplete: () => projectile.destroy(),
+        duration: 200,
+        ease: "Power2.In",
+        onComplete: () => {
+          // Impact flash on arrival
+          const hit = this.add.ellipse(
+            monster.x,
+            monster.y - 18,
+            22,
+            16,
+            0xffe080,
+            0.75,
+          );
+          this.effectLayer?.add(hit);
+          this.tweens.add({
+            targets: hit,
+            alpha: 0,
+            scale: 1.6,
+            duration: 140,
+            onComplete: () => hit.destroy(),
+          });
+          projectile.destroy();
+        },
       });
     } else {
+      // Main slash arc
       const slash = this.add
-        .arc(monster.x, monster.y - 8, 28, 220, 320, false, 0xfff0b5, 0.28)
-        .setStrokeStyle(3, 0xffd97b, 0.9);
+        .arc(monster.x, monster.y - 8, 32, 200, 340, false, 0xfff0b5, 0.32)
+        .setStrokeStyle(4, 0xffd97b, 0.95);
       this.effectLayer?.add(slash);
       this.tweens.add({
         targets: slash,
         alpha: 0,
-        scaleX: 1.25,
-        scaleY: 1.25,
-        duration: 180,
+        scaleX: 1.4,
+        scaleY: 1.4,
+        duration: 200,
+        ease: "Power2.Out",
         onComplete: () => slash.destroy(),
+      });
+      // Secondary impact flash
+      const impact = this.add.ellipse(
+        monster.x,
+        monster.y - 12,
+        38,
+        28,
+        0xffffff,
+        0.45,
+      );
+      this.effectLayer?.add(impact);
+      this.tweens.add({
+        targets: impact,
+        alpha: 0,
+        scaleX: 1.8,
+        scaleY: 1.8,
+        duration: 150,
+        ease: "Power2.Out",
+        onComplete: () => impact.destroy(),
       });
       this.tweens.add({
         targets: this.localPlayer,
-        scaleX: 1.04,
-        scaleY: 1.04,
-        duration: 80,
+        scaleX: 1.06,
+        scaleY: 1.06,
+        duration: 70,
         yoyo: true,
       });
     }
@@ -1906,7 +1979,13 @@ export class WorldScene extends Phaser.Scene {
       }
 
       if (ai.state === "chase") {
-        if (distToPlayer > ATTACK_RANGE) {
+        // Don't chase player into village safe zone
+        if (
+          STARTER_TOWN_RECT.contains(this.localPlayer!.x, this.localPlayer!.y)
+        ) {
+          ai.state = "idle";
+          ai.lastChaseAt = 0;
+        } else if (distToPlayer > ATTACK_RANGE) {
           const speed = 50;
           const angle = Phaser.Math.Angle.Between(
             sprite.x,
@@ -1916,7 +1995,13 @@ export class WorldScene extends Phaser.Scene {
           );
           const newX = sprite.x + Math.cos(angle) * speed * (1 / 60);
           const newY = sprite.y + Math.sin(angle) * speed * (1 / 60);
-          sprite.setPosition(newX, newY);
+          // Don't enter safe zone
+          if (!STARTER_TOWN_RECT.contains(newX, newY)) {
+            sprite.setPosition(newX, newY);
+          } else {
+            ai.state = "idle";
+            ai.lastChaseAt = 0;
+          }
         }
       } else {
         // Idle wander
@@ -1978,6 +2063,63 @@ export class WorldScene extends Phaser.Scene {
       ease: "Quad.Out",
       onComplete: () => text.destroy(),
     });
+  }
+
+  private showHitEffect(x: number, y: number) {
+    for (let i = 0; i < 5; i += 1) {
+      const angle = (i / 5) * Math.PI * 2;
+      const dist = 14 + Math.random() * 16;
+      const spark = this.add
+        .ellipse(x, y - 20, 6, 6, i % 2 === 0 ? 0xffffff : 0xffe060, 0.9)
+        .setScale(0.6 + Math.random() * 0.6);
+      this.effectLayer?.add(spark);
+      this.tweens.add({
+        targets: spark,
+        x: x + Math.cos(angle) * dist,
+        y: y - 20 + Math.sin(angle) * dist,
+        alpha: 0,
+        scale: 0.1,
+        duration: 280 + Math.random() * 160,
+        ease: "Power2.Out",
+        onComplete: () => spark.destroy(),
+      });
+    }
+  }
+
+  private showDeathEffect(x: number, y: number) {
+    const flash = this.add.ellipse(x, y - 16, 56, 36, 0xffffff, 0.72);
+    this.effectLayer?.add(flash);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scaleX: 2.4,
+      scaleY: 2.4,
+      duration: 420,
+      ease: "Power2.Out",
+      onComplete: () => flash.destroy(),
+    });
+    for (let i = 0; i < 8; i += 1) {
+      const angle = (i / 8) * Math.PI * 2;
+      const particle = this.add.ellipse(
+        x + Math.cos(angle) * 8,
+        y - 20 + Math.sin(angle) * 8,
+        5,
+        5,
+        [0xffffff, 0xffe060, 0xff8844][i % 3],
+        0.85,
+      );
+      this.effectLayer?.add(particle);
+      this.tweens.add({
+        targets: particle,
+        x: x + Math.cos(angle) * (28 + Math.random() * 22),
+        y: y - 20 + Math.sin(angle) * (28 + Math.random() * 22),
+        alpha: 0,
+        scale: 0.15,
+        duration: 480 + Math.random() * 220,
+        ease: "Power2.Out",
+        onComplete: () => particle.destroy(),
+      });
+    }
   }
 }
 

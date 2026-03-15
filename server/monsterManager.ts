@@ -17,7 +17,12 @@ export type MonsterState = {
   templateId: string;
   mapId: string;
   name: string;
-  drops: Array<{ itemId: string; rate: number; minQuantity?: number; maxQuantity?: number }>;
+  drops: Array<{
+    itemId: string;
+    rate: number;
+    minQuantity?: number;
+    maxQuantity?: number;
+  }>;
   level: number;
   hp: number;
   maxHp: number;
@@ -37,27 +42,216 @@ export type MonsterState = {
 };
 
 const SPAWN_LAYOUTS: SpawnZone[] = [
-  { mapId: "speakingIsland", monsterId: "slime", count: 6, minX: 1320, maxX: 1880, minY: 160, maxY: 360, radius: 90 },
-  { mapId: "speakingIsland", monsterId: "slime", count: 4, minX: 1460, maxX: 2040, minY: 980, maxY: 1320, radius: 100 },
-  { mapId: "speakingIsland", monsterId: "goblin_child", count: 5, minX: 1320, maxX: 1920, minY: 520, maxY: 860, radius: 110 },
-  { mapId: "speakingIsland", monsterId: "wild_boar", count: 4, minX: 1860, maxX: 2480, minY: 760, maxY: 1320, radius: 130 },
-  { mapId: "speakingIsland", monsterId: "skeleton_warrior", count: 3, minX: 2140, maxX: 2860, minY: 260, maxY: 900, radius: 140 },
-  { mapId: "speakingIsland", monsterId: "goblin_child", count: 3, minX: 2460, maxX: 3040, minY: 1080, maxY: 1520, radius: 120 },
-  { mapId: "windwoodForest", monsterId: "poison_spider", count: 4, minX: 780, maxX: 1680, minY: 260, maxY: 860, radius: 120 },
-  { mapId: "windwoodForest", monsterId: "forest_sprite", count: 3, minX: 1520, maxX: 2380, minY: 260, maxY: 920, radius: 120 },
-  { mapId: "windwoodForest", monsterId: "werewolf", count: 3, minX: 1820, maxX: 2620, minY: 880, maxY: 1420, radius: 150 },
-  { mapId: "orcForest", monsterId: "orc_archer", count: 4, minX: 980, maxX: 1960, minY: 320, maxY: 960, radius: 120 },
-  { mapId: "orcForest", monsterId: "kobold_raider", count: 4, minX: 1380, maxX: 2280, minY: 840, maxY: 1320, radius: 120 },
-  { mapId: "orcForest", monsterId: "orc_chief", count: 1, minX: 2300, maxX: 2540, minY: 960, maxY: 1220, radius: 80 },
-  { mapId: "gludioPlain", monsterId: "wild_boar", count: 5, minX: 780, maxX: 1860, minY: 320, maxY: 980, radius: 130 },
-  { mapId: "gludioPlain", monsterId: "goblin_child", count: 4, minX: 1560, maxX: 2480, minY: 620, maxY: 1340, radius: 120 },
-  { mapId: "gludioPlain", monsterId: "lizard_scout", count: 3, minX: 2160, maxX: 2920, minY: 360, maxY: 980, radius: 140 },
-  { mapId: "moonlitWetland", monsterId: "bog_frog", count: 4, minX: 1180, maxX: 2160, minY: 460, maxY: 1320, radius: 120 },
-  { mapId: "moonlitWetland", monsterId: "poison_spider", count: 4, minX: 1860, maxX: 2820, minY: 280, maxY: 1220, radius: 130 },
-  { mapId: "moonlitWetland", monsterId: "stone_golem", count: 2, minX: 2580, maxX: 3240, minY: 880, maxY: 1520, radius: 150 },
-  { mapId: "dragonValley", monsterId: "drake", count: 4, minX: 1420, maxX: 2520, minY: 300, maxY: 1060, radius: 160 },
-  { mapId: "dragonValley", monsterId: "ash_wyvern", count: 2, minX: 2380, maxX: 3240, minY: 720, maxY: 1380, radius: 180 },
-  { mapId: "dragonValley", monsterId: "red_dragon", count: 1, minX: 3160, maxX: 3440, minY: 920, maxY: 1220, radius: 90 },
+  {
+    mapId: "speakingIsland",
+    monsterId: "slime",
+    count: 6,
+    minX: 1320,
+    maxX: 1880,
+    minY: 160,
+    maxY: 360,
+    radius: 90,
+  },
+  {
+    mapId: "speakingIsland",
+    monsterId: "slime",
+    count: 4,
+    minX: 1460,
+    maxX: 2040,
+    minY: 980,
+    maxY: 1320,
+    radius: 100,
+  },
+  {
+    mapId: "speakingIsland",
+    monsterId: "goblin_child",
+    count: 5,
+    minX: 1320,
+    maxX: 1920,
+    minY: 520,
+    maxY: 860,
+    radius: 110,
+  },
+  {
+    mapId: "speakingIsland",
+    monsterId: "wild_boar",
+    count: 4,
+    minX: 1860,
+    maxX: 2480,
+    minY: 760,
+    maxY: 1320,
+    radius: 130,
+  },
+  {
+    mapId: "speakingIsland",
+    monsterId: "skeleton_warrior",
+    count: 3,
+    minX: 2140,
+    maxX: 2860,
+    minY: 260,
+    maxY: 900,
+    radius: 140,
+  },
+  {
+    mapId: "speakingIsland",
+    monsterId: "goblin_child",
+    count: 3,
+    minX: 2460,
+    maxX: 3040,
+    minY: 1080,
+    maxY: 1520,
+    radius: 120,
+  },
+  {
+    mapId: "windwoodForest",
+    monsterId: "poison_spider",
+    count: 4,
+    minX: 780,
+    maxX: 1680,
+    minY: 260,
+    maxY: 860,
+    radius: 120,
+  },
+  {
+    mapId: "windwoodForest",
+    monsterId: "forest_sprite",
+    count: 3,
+    minX: 1520,
+    maxX: 2380,
+    minY: 260,
+    maxY: 920,
+    radius: 120,
+  },
+  {
+    mapId: "windwoodForest",
+    monsterId: "werewolf",
+    count: 3,
+    minX: 1820,
+    maxX: 2620,
+    minY: 880,
+    maxY: 1420,
+    radius: 150,
+  },
+  {
+    mapId: "orcForest",
+    monsterId: "orc_archer",
+    count: 4,
+    minX: 980,
+    maxX: 1960,
+    minY: 320,
+    maxY: 960,
+    radius: 120,
+  },
+  {
+    mapId: "orcForest",
+    monsterId: "kobold_raider",
+    count: 4,
+    minX: 1380,
+    maxX: 2280,
+    minY: 840,
+    maxY: 1320,
+    radius: 120,
+  },
+  {
+    mapId: "orcForest",
+    monsterId: "orc_chief",
+    count: 1,
+    minX: 2300,
+    maxX: 2540,
+    minY: 960,
+    maxY: 1220,
+    radius: 80,
+  },
+  {
+    mapId: "gludioPlain",
+    monsterId: "wild_boar",
+    count: 5,
+    minX: 780,
+    maxX: 1860,
+    minY: 320,
+    maxY: 980,
+    radius: 130,
+  },
+  {
+    mapId: "gludioPlain",
+    monsterId: "goblin_child",
+    count: 4,
+    minX: 1560,
+    maxX: 2480,
+    minY: 620,
+    maxY: 1340,
+    radius: 120,
+  },
+  {
+    mapId: "gludioPlain",
+    monsterId: "lizard_scout",
+    count: 3,
+    minX: 2160,
+    maxX: 2920,
+    minY: 360,
+    maxY: 980,
+    radius: 140,
+  },
+  {
+    mapId: "moonlitWetland",
+    monsterId: "bog_frog",
+    count: 4,
+    minX: 1180,
+    maxX: 2160,
+    minY: 460,
+    maxY: 1320,
+    radius: 120,
+  },
+  {
+    mapId: "moonlitWetland",
+    monsterId: "poison_spider",
+    count: 4,
+    minX: 1860,
+    maxX: 2820,
+    minY: 280,
+    maxY: 1220,
+    radius: 130,
+  },
+  {
+    mapId: "moonlitWetland",
+    monsterId: "stone_golem",
+    count: 2,
+    minX: 2580,
+    maxX: 3240,
+    minY: 880,
+    maxY: 1520,
+    radius: 150,
+  },
+  {
+    mapId: "dragonValley",
+    monsterId: "drake",
+    count: 4,
+    minX: 1420,
+    maxX: 2520,
+    minY: 300,
+    maxY: 1060,
+    radius: 160,
+  },
+  {
+    mapId: "dragonValley",
+    monsterId: "ash_wyvern",
+    count: 2,
+    minX: 2380,
+    maxX: 3240,
+    minY: 720,
+    maxY: 1380,
+    radius: 180,
+  },
+  {
+    mapId: "dragonValley",
+    monsterId: "red_dragon",
+    count: 1,
+    minX: 3160,
+    maxX: 3440,
+    minY: 920,
+    maxY: 1220,
+    radius: 90,
+  },
 ];
 
 export class MonsterManager {
@@ -74,7 +268,9 @@ export class MonsterManager {
   }
 
   listAll() {
-    return Array.from(this.monsters.values()).map((monster) => this.ensureRespawned(monster));
+    return Array.from(this.monsters.values()).map((monster) =>
+      this.ensureRespawned(monster),
+    );
   }
 
   get(id: string) {
@@ -100,8 +296,14 @@ export class MonsterManager {
 
     const angle = Math.atan2(targetY - monster.y, targetX - monster.x);
     const step = monster.moveSpeed * 18;
-    monster.x += Math.cos(angle) * step;
-    monster.y += Math.sin(angle) * step;
+    const nextX = monster.x + Math.cos(angle) * step;
+    const nextY = monster.y + Math.sin(angle) * step;
+
+    // Don't enter village safe zone
+    if (!isInSafeZone(monster.mapId, nextX, nextY)) {
+      monster.x = nextX;
+      monster.y = nextY;
+    }
     return monster;
   }
 
@@ -112,14 +314,20 @@ export class MonsterManager {
     }
 
     monster.targetId = null;
-    const distance = Math.hypot(monster.homeX - monster.x, monster.homeY - monster.y);
+    const distance = Math.hypot(
+      monster.homeX - monster.x,
+      monster.homeY - monster.y,
+    );
     if (distance < 18) {
       monster.x = monster.homeX;
       monster.y = monster.homeY;
       return monster;
     }
 
-    const angle = Math.atan2(monster.homeY - monster.y, monster.homeX - monster.x);
+    const angle = Math.atan2(
+      monster.homeY - monster.y,
+      monster.homeX - monster.x,
+    );
     const step = monster.moveSpeed * 20;
     monster.x += Math.cos(angle) * step;
     monster.y += Math.sin(angle) * step;
@@ -213,17 +421,19 @@ export class MonsterManager {
   }
 
   private reseedMonster(monster: MonsterState) {
-    const zone =
-      SPAWN_LAYOUTS.find((entry) => entry.mapId === monster.mapId && entry.monsterId === monster.templateId) ?? {
-        mapId: monster.mapId as keyof typeof MAPS,
-        count: 1,
-        monsterId: monster.templateId as keyof typeof MONSTERS,
-        minX: monster.homeX - 120,
-        maxX: monster.homeX + 120,
-        minY: monster.homeY - 120,
-        maxY: monster.homeY + 120,
-        radius: 100,
-      };
+    const zone = SPAWN_LAYOUTS.find(
+      (entry) =>
+        entry.mapId === monster.mapId && entry.monsterId === monster.templateId,
+    ) ?? {
+      mapId: monster.mapId as keyof typeof MAPS,
+      count: 1,
+      monsterId: monster.templateId as keyof typeof MONSTERS,
+      minX: monster.homeX - 120,
+      maxX: monster.homeX + 120,
+      minY: monster.homeY - 120,
+      maxY: monster.homeY + 120,
+      radius: 100,
+    };
     const template = MONSTERS[monster.templateId];
     const home = this.randomPoint(zone);
 
@@ -245,11 +455,20 @@ export class MonsterManager {
     };
   }
 
-  private randomPoint(zone: Pick<SpawnZone, "mapId" | "minX" | "maxX" | "minY" | "maxY" | "radius">) {
+  private randomPoint(
+    zone: Pick<
+      SpawnZone,
+      "mapId" | "minX" | "maxX" | "minY" | "maxY" | "radius"
+    >,
+  ) {
     const map = MAPS[zone.mapId] ?? MAPS.speakingIsland;
     for (let attempt = 0; attempt < 16; attempt += 1) {
-      const x = randomBetween(zone.minX, zone.maxX) + randomBetween(-zone.radius, zone.radius);
-      const y = randomBetween(zone.minY, zone.maxY) + randomBetween(-zone.radius, zone.radius);
+      const x =
+        randomBetween(zone.minX, zone.maxX) +
+        randomBetween(-zone.radius, zone.radius);
+      const y =
+        randomBetween(zone.minY, zone.maxY) +
+        randomBetween(-zone.radius, zone.radius);
       const point = {
         x: clamp(x, 120, map.width * 72 + 140),
         y: clamp(y, 120, map.height * 52 + 140),
@@ -280,5 +499,13 @@ function isBlockedSpawn(mapId: keyof typeof MAPS, x: number, y: number) {
     return false;
   }
 
+  return x >= 220 && x <= 980 && y >= 180 && y <= 610;
+}
+
+function isInSafeZone(mapId: string, x: number, y: number) {
+  if (mapId !== "speakingIsland") {
+    return false;
+  }
+  // Village safe zone: STARTER_TOWN_RECT equivalent (x:220-980, y:180-610)
   return x >= 220 && x <= 980 && y >= 180 && y <= 610;
 }
