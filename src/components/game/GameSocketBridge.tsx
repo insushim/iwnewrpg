@@ -242,24 +242,8 @@ export function GameSocketBridge() {
       socket.off("player:death");
       socket.off("chat:message");
     };
-  }, [
-    addChat,
-    addDroppedLoot,
-    openDeath,
-    player.className,
-    player.name,
-    removeDroppedLoot,
-    removeWorldPlayer,
-    setConnected,
-    setEquipment,
-    setInventory,
-    setPlayer,
-    setQuests,
-    setCurrentMapId,
-    setWorld,
-    upsertMonster,
-    upsertWorldPlayer,
-  ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return null;
 }

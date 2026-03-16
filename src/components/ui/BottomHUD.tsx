@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MAPS } from "@/game/data/maps";
 import { useGameStore } from "@/lib/gameStore";
 
@@ -30,6 +30,23 @@ export function BottomHUD() {
   const ui = useGameStore((state) => state.ui);
   const inventory = useGameStore((state) => state.inventory) ?? [];
   const consumeItem = useGameStore((state) => state.consumeItem);
+
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(player.name);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const startEditName = () => {
+    setNameInput(player.name);
+    setEditingName(true);
+    setTimeout(() => nameInputRef.current?.select(), 0);
+  };
+  const commitName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed.length >= 2 && trimmed.length <= 12) {
+      useGameStore.getState().setPlayer({ name: trimmed });
+    }
+    setEditingName(false);
+  };
 
   const hpRatio = Math.max(0, Math.min(100, (player.hp / Math.max(1, derived.maxHp)) * 100));
   const mpRatio = Math.max(0, Math.min(100, (player.mp / Math.max(1, derived.maxMp)) * 100));
@@ -109,7 +126,29 @@ export function BottomHUD() {
           <div className="w-[240px]">
             <div className="mb-1 flex items-end justify-between">
               <div>
-                <div className="text-[13px] font-semibold text-[#f5e8c3]">{player.name}</div>
+                {editingName ? (
+                  <input
+                    ref={nameInputRef}
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    onBlur={commitName}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitName();
+                      if (e.key === "Escape") setEditingName(false);
+                    }}
+                    maxLength={12}
+                    className="w-[140px] rounded border border-amber-400/50 bg-black/60 px-1.5 py-0.5 text-[13px] font-semibold text-[#f5e8c3] outline-none"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={startEditName}
+                    title="클릭하여 닉네임 변경"
+                    className="text-[13px] font-semibold text-[#f5e8c3] hover:text-amber-300 hover:underline"
+                  >
+                    {player.name}
+                  </button>
+                )}
                 <div className="text-[10px] uppercase tracking-[0.22em] text-[#b79660]">
                   {classLabel}
                 </div>
