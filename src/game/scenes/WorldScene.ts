@@ -2524,6 +2524,7 @@ export class WorldScene extends Phaser.Scene {
     sprite: PlayerSprite | MonsterSprite,
     now: number,
   ) {
+    if (!sprite.spriteBody || !sprite.spriteBody.scene) return;
     const dx = sprite.x - sprite.lastX;
     const dy = sprite.y - sprite.lastY;
     const moving = Math.abs(dx) + Math.abs(dy) > 0.45;
@@ -2604,6 +2605,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private updateAnimatedNpc(sprite: NpcSprite, now: number) {
+    if (!sprite.spriteBody || !sprite.spriteBody.scene) return;
     if (now - sprite.frameTimer >= 320) {
       sprite.animFrame = (sprite.animFrame + 1) % IDLE_FRAME_COUNT;
       sprite.frameTimer = now;

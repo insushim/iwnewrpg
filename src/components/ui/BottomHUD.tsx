@@ -28,7 +28,7 @@ export function BottomHUD() {
   const toggleInventory = useGameStore((state) => state.toggleInventory);
   const toggleQuestWindow = useGameStore((state) => state.toggleQuestWindow);
   const ui = useGameStore((state) => state.ui);
-  const inventory = useGameStore((state) => state.inventory);
+  const inventory = useGameStore((state) => state.inventory) ?? [];
   const consumeItem = useGameStore((state) => state.consumeItem);
 
   const hpRatio = Math.max(0, Math.min(100, (player.hp / Math.max(1, derived.maxHp)) * 100));
@@ -73,13 +73,13 @@ export function BottomHUD() {
   const classColor = classColors[normalizedClass] ?? "#b2b2b2";
   const classLabel =
     normalizedClass === "guardian"
-      ? "Guardian"
+      ? "가디언"
       : normalizedClass === "ranger"
-        ? "Ranger"
+        ? "레인저"
         : normalizedClass === "arcanist"
-          ? "Arcanist"
+          ? "아르카니스트"
           : normalizedClass === "sovereign"
-            ? "Sovereign"
+            ? "소버린"
             : player.className;
 
   return (
@@ -115,7 +115,7 @@ export function BottomHUD() {
                 </div>
               </div>
               <div className="rounded-full border border-white/8 bg-white/4 px-2 py-0.5 text-[9px] tracking-[0.2em] text-[#cbb38b]">
-                {connected ? "ONLINE" : "OFFLINE"}
+                {connected ? "온라인" : "오프라인"}
               </div>
             </div>
 
@@ -169,7 +169,7 @@ export function BottomHUD() {
         <Divider />
 
         <div className="relative min-w-[118px] shrink-0">
-          <div className="text-[10px] uppercase tracking-[0.26em] text-[#af9166]">Territory</div>
+          <div className="text-[10px] uppercase tracking-[0.26em] text-[#af9166]">지역</div>
           <div className="mt-1 text-[13px] font-semibold text-[#f5e8c3]">{MAPS[currentMapId]?.name ?? currentMapId}</div>
           <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#9f8560]">{serverName}</div>
           <div className="mt-2 flex items-center gap-1.5">
@@ -187,12 +187,12 @@ export function BottomHUD() {
               title={`${buff.name} (${buff.remaining}s)`}
               className="flex h-[38px] w-[38px] items-center justify-center rounded-[12px] border border-emerald-300/20 bg-[linear-gradient(180deg,rgba(38,84,58,0.48),rgba(8,18,14,0.92))] text-[10px] text-emerald-100 shadow-[0_0_18px_rgba(84,214,145,0.12)]"
             >
-              BF
+              축
             </div>
           ))}
 
-          <HudButton active={ui.inventoryOpen} label="[I] INV" onClick={toggleInventory} />
-          <HudButton active={ui.questWindowOpen} label="[Q] QUEST" onClick={toggleQuestWindow} />
+          <HudButton active={ui.inventoryOpen} label="[I] 인벤" onClick={toggleInventory} />
+          <HudButton active={ui.questWindowOpen} label="[Q] 퀘스트" onClick={toggleQuestWindow} />
         </div>
       </div>
     </div>
