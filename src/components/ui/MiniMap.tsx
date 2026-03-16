@@ -11,7 +11,6 @@ export function MiniMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentMapId = useGameStore((state) => state.currentMapId);
   const worldPlayers = useGameStore((state) => state.worldPlayers);
-  const worldMonsters = useGameStore((state) => state.worldMonsters);
   const selfId = useGameStore((state) => state.selfId);
   const setCurrentMapId = useGameStore((state) => state.setCurrentMapId);
   const updateQuestProgress = useGameStore(
@@ -108,14 +107,33 @@ export function MiniMap() {
       ctx.stroke();
     }
 
-    // 몬스터 점
-    worldMonsters.forEach((m) => {
-      if (m.mapId !== currentMapId) return;
+    // 경로/도로 표시
+    ctx.strokeStyle = "rgba(200,180,130,0.45)";
+    ctx.lineWidth = 1.5;
+    if (currentMapId === "speakingIsland") {
+      // 동서 간선 도로
       ctx.beginPath();
-      ctx.arc(toMapX(m.x), toMapY(m.y), 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = "#fb7260";
-      ctx.fill();
-    });
+      ctx.moveTo(0, toMapY(400));
+      ctx.lineTo(W, toMapY(400));
+      ctx.stroke();
+      // 마을 북쪽 길
+      ctx.beginPath();
+      ctx.moveTo(toMapX(530), 0);
+      ctx.lineTo(toMapX(530), toMapY(610));
+      ctx.stroke();
+      // 남쪽 세로 길
+      ctx.strokeStyle = "rgba(200,180,130,0.25)";
+      ctx.beginPath();
+      ctx.moveTo(toMapX(530), toMapY(610));
+      ctx.lineTo(toMapX(530), H);
+      ctx.stroke();
+      // 동쪽 가로 길
+      ctx.strokeStyle = "rgba(200,180,130,0.25)";
+      ctx.beginPath();
+      ctx.moveTo(toMapX(980), toMapY(400));
+      ctx.lineTo(W, toMapY(400));
+      ctx.stroke();
+    }
 
     // 다른 플레이어 점
     worldPlayers.forEach((p) => {
@@ -144,7 +162,6 @@ export function MiniMap() {
   }, [
     visible,
     worldPlayers,
-    worldMonsters,
     selfPlayer,
     currentMapId,
     map,
@@ -228,7 +245,7 @@ export function MiniMap() {
       <div className="flex items-center justify-between text-[10px] text-amber-100/60">
         <span>📍 {coordLabel}</span>
         <span>
-          👤{worldPlayers.length} 👾{worldMonsters.length}
+          👤{worldPlayers.length}
         </span>
       </div>
 

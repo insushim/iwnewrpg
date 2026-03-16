@@ -114,7 +114,7 @@ const STARTER_TOWN_RECT = new Phaser.Geom.Rectangle(220, 180, 760, 430);
 const MOVE_SPEED = 110;
 const MELEE_RANGE = 92;
 const RANGED_RANGE = 420;
-const WALK_FRAME_COUNT = 4;
+const WALK_FRAME_COUNT = 2;
 const IDLE_FRAME_COUNT = 2;
 const ATTACK_FRAME_COUNT = 4;
 
@@ -325,34 +325,116 @@ export class WorldScene extends Phaser.Scene {
     x: number;
     y: number;
   }> {
-    // 마을 안전구역: x:220~980, y:180~610 → 그 밖에 배치
-    const monsterSpawns: Array<{ monsterId: string; x: number; y: number }> = [
-      // 마을 왼쪽 (입문 구역 - 슬라임, 고블린)
-      { monsterId: "slime", x: 80, y: 300 },
-      { monsterId: "slime", x: 130, y: 460 },
-      { monsterId: "goblin_child", x: 160, y: 560 },
-      { monsterId: "goblin_child", x: 90, y: 650 },
-      // 마을 오른쪽 (중급 구역 - 멧돼지, 거미)
-      { monsterId: "wild_boar", x: 1050, y: 260 },
-      { monsterId: "wild_boar", x: 1150, y: 420 },
-      { monsterId: "poison_spider", x: 1080, y: 580 },
-      { monsterId: "poison_spider", x: 1200, y: 340 },
-      // 마을 아래 (슬라임, 고블린, 개구리)
-      { monsterId: "slime", x: 280, y: 700 },
-      { monsterId: "goblin_child", x: 500, y: 730 },
-      { monsterId: "bog_frog", x: 700, y: 720 },
-      { monsterId: "goblin_child", x: 880, y: 700 },
-      // 맵 상단 (스켈레톤, 오크)
-      { monsterId: "skeleton_warrior", x: 160, y: 110 },
-      { monsterId: "orc_archer", x: 700, y: 100 },
-      { monsterId: "skeleton_warrior", x: 1000, y: 120 },
-      // 맵 외곽 (강적)
-      { monsterId: "kobold_raider", x: 180, y: 820 },
-      { monsterId: "bog_frog", x: 600, y: 850 },
-      { monsterId: "orc_archer", x: 1100, y: 800 },
+    // 리니지 스타일 사냥터 구역 기반 배치
+    // 마을 안전구역: x:220~980, y:180~610
+    const zones: Array<{ monsterId: string; x: number; y: number }> = [
+
+      // ── Zone 1: 슬라임 습지 (서쪽, Lv1) ───────────────────────────────────
+      { monsterId: "slime", x: 55,  y: 270 },
+      { monsterId: "slime", x: 110, y: 330 },
+      { monsterId: "slime", x: 70,  y: 420 },
+      { monsterId: "slime", x: 160, y: 470 },
+      { monsterId: "slime", x: 85,  y: 560 },
+      { monsterId: "slime", x: 140, y: 640 },
+      { monsterId: "slime", x: 65,  y: 730 },
+      { monsterId: "slime", x: 170, y: 800 },
+      { monsterId: "slime", x: 100, y: 870 },
+      { monsterId: "slime", x: 190, y: 930 },
+
+      // ── Zone 2: 고블린 야영지 (남서, Lv2) ────────────────────────────────
+      { monsterId: "goblin_child", x: 130, y: 1000 },
+      { monsterId: "goblin_child", x: 260, y: 950  },
+      { monsterId: "goblin_child", x: 380, y: 1020 },
+      { monsterId: "goblin_child", x: 500, y: 970  },
+      { monsterId: "goblin_child", x: 200, y: 1100 },
+      { monsterId: "goblin_child", x: 350, y: 1150 },
+      { monsterId: "goblin_child", x: 480, y: 1080 },
+      { monsterId: "goblin_child", x: 620, y: 1000 },
+      { monsterId: "goblin_child", x: 280, y: 1240 },
+      { monsterId: "goblin_child", x: 440, y: 1280 },
+
+      // ── Zone 3: 개구리 늪 (남쪽 중앙, Lv4) ───────────────────────────────
+      { monsterId: "bog_frog", x: 650,  y: 1350 },
+      { monsterId: "bog_frog", x: 800,  y: 1280 },
+      { monsterId: "bog_frog", x: 950,  y: 1380 },
+      { monsterId: "bog_frog", x: 1100, y: 1320 },
+      { monsterId: "bog_frog", x: 720,  y: 1480 },
+      { monsterId: "bog_frog", x: 860,  y: 1550 },
+      { monsterId: "bog_frog", x: 1020, y: 1480 },
+      { monsterId: "bog_frog", x: 750,  y: 1650 },
+      { monsterId: "bog_frog", x: 920,  y: 1700 },
+
+      // ── Zone 4: 멧돼지 평원 (동쪽 필드, Lv5) ─────────────────────────────
+      { monsterId: "wild_boar", x: 1200, y: 270 },
+      { monsterId: "wild_boar", x: 1380, y: 360 },
+      { monsterId: "wild_boar", x: 1560, y: 290 },
+      { monsterId: "wild_boar", x: 1740, y: 400 },
+      { monsterId: "wild_boar", x: 1300, y: 500 },
+      { monsterId: "wild_boar", x: 1480, y: 560 },
+      { monsterId: "wild_boar", x: 1650, y: 490 },
+      { monsterId: "wild_boar", x: 1900, y: 330 },
+      { monsterId: "wild_boar", x: 2050, y: 450 },
+      { monsterId: "wild_boar", x: 2200, y: 370 },
+
+      // ── Zone 5: 해골 고원 (북쪽, Lv7) ────────────────────────────────────
+      { monsterId: "skeleton_warrior", x: 180,  y: 85  },
+      { monsterId: "skeleton_warrior", x: 380,  y: 55  },
+      { monsterId: "skeleton_warrior", x: 580,  y: 90  },
+      { monsterId: "skeleton_warrior", x: 780,  y: 60  },
+      { monsterId: "skeleton_warrior", x: 1050, y: 80  },
+      { monsterId: "skeleton_warrior", x: 1280, y: 50  },
+      { monsterId: "skeleton_warrior", x: 1500, y: 85  },
+      { monsterId: "skeleton_warrior", x: 1720, y: 55  },
+      { monsterId: "skeleton_warrior", x: 2000, y: 70  },
+      { monsterId: "skeleton_warrior", x: 2250, y: 90  },
+
+      // ── Zone 6: 오크 부락 (남동, Lv8) ────────────────────────────────────
+      { monsterId: "orc_archer", x: 1100, y: 1850 },
+      { monsterId: "orc_archer", x: 1280, y: 1780 },
+      { monsterId: "orc_archer", x: 1450, y: 1900 },
+      { monsterId: "orc_archer", x: 1620, y: 1820 },
+      { monsterId: "orc_archer", x: 1200, y: 2000 },
+      { monsterId: "orc_archer", x: 1380, y: 2060 },
+      { monsterId: "orc_archer", x: 1560, y: 1980 },
+      { monsterId: "orc_archer", x: 1750, y: 1900 },
+      { monsterId: "orc_archer", x: 1300, y: 2160 },
+      { monsterId: "orc_archer", x: 1500, y: 2200 },
+
+      // ── Zone 7: 코볼드 광산 (심동부, Lv9) ────────────────────────────────
+      { monsterId: "kobold_raider", x: 2400, y: 700  },
+      { monsterId: "kobold_raider", x: 2600, y: 800  },
+      { monsterId: "kobold_raider", x: 2800, y: 720  },
+      { monsterId: "kobold_raider", x: 3000, y: 850  },
+      { monsterId: "kobold_raider", x: 2500, y: 1000 },
+      { monsterId: "kobold_raider", x: 2700, y: 1100 },
+      { monsterId: "kobold_raider", x: 2900, y: 1020 },
+      { monsterId: "kobold_raider", x: 3100, y: 950  },
+      { monsterId: "kobold_raider", x: 2600, y: 1250 },
+      { monsterId: "kobold_raider", x: 2850, y: 1350 },
+      { monsterId: "kobold_raider", x: 3050, y: 1200 },
+      { monsterId: "kobold_raider", x: 3200, y: 1100 },
+
+      // ── Zone 8: 심층 혼합 사냥터 (극동, Lv9-10) ──────────────────────────
+      { monsterId: "kobold_raider",     x: 3400, y: 1600 },
+      { monsterId: "skeleton_warrior",  x: 3600, y: 1500 },
+      { monsterId: "kobold_raider",     x: 3800, y: 1700 },
+      { monsterId: "skeleton_warrior",  x: 3500, y: 1800 },
+      { monsterId: "kobold_raider",     x: 3700, y: 1900 },
+      { monsterId: "skeleton_warrior",  x: 3900, y: 1650 },
+      { monsterId: "orc_archer",        x: 3600, y: 2000 },
+      { monsterId: "orc_archer",        x: 3800, y: 2100 },
+
+      // ── Boss 1: 슬라임 여왕 (Zone1 남쪽 끝, Lv5 보스) ─────────────────────
+      { monsterId: "slime_boss",    x: 120,  y: 1600 },
+
+      // ── Boss 2: 고블린 두목 (Zone2 중심, Lv7 보스) ───────────────────────
+      { monsterId: "goblin_boss",   x: 750,  y: 1800 },
+
+      // ── Boss 3: 해골 군주 (Zone5 동쪽 끝, Lv10 보스) ─────────────────────
+      { monsterId: "skeleton_boss", x: 2500, y: 60   },
     ];
 
-    return monsterSpawns
+    return zones
       .map((spawn, index) => {
         const def = MONSTERS[spawn.monsterId];
         if (!def) return null;
@@ -360,7 +442,7 @@ export class WorldScene extends Phaser.Scene {
         return {
           id: uniqueId,
           mapId: "speakingIsland",
-          name: def.name,
+          name: def.isBoss ? `[보스] ${def.name}` : def.name,
           level: def.level,
           hp: def.hp,
           maxHp: def.maxHp,
@@ -1776,7 +1858,7 @@ export class WorldScene extends Phaser.Scene {
     );
     const bob =
       sprite.animState === "walk"
-        ? [0, -1.8, -2.8, -0.9][sprite.animFrame % 4]
+        ? [0, -2.2][sprite.animFrame % 2]
         : sprite.animState === "attack"
           ? [-1, -3.5, 2, 0][sprite.animFrame % 4]
           : 0;
@@ -1887,6 +1969,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private getMonsterTexture(baseId: string) {
+    if (baseId.includes("goblin")) return "anim_monster_orc";
     if (baseId.includes("slime")) return "anim_monster_slime";
     if (baseId.includes("skeleton")) return "anim_monster_skeleton";
     if (baseId.includes("bog") || baseId.includes("frog"))
@@ -1914,6 +1997,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private getMonsterScale(baseId: string) {
+    if (baseId.includes("boss") || baseId.includes("queen") || baseId.includes("lord")) return 1.4;
     if (baseId.includes("dragon") || baseId.includes("wyvern")) return 1.22;
     if (baseId.includes("golem")) return 1.08;
     if (baseId.includes("boar") || baseId.includes("orc")) return 1;
