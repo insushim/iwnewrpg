@@ -9,7 +9,15 @@
     "build": "node --max-old-space-size=24576 ./node_modules/next/dist/bin/next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "node --max-old-space-size=12288 ./node_modules/typescript/bin/tsc --noEmit && node --max-old-space-size=12288 ./node_modules/typescript/bin/tsc --noEmit -p server/tsconfig.json"
+    "typecheck": "node --max-old-space-size=12288 ./node_modules/typescript/bin/tsc --noEmit && node --max-old-space-size=12288 ./node_modules/typescript/bin/tsc --noEmit -p server/tsconfig.json",
+    "generate:remaster-manifest": "tsx scripts/generate-remaster-manifest.ts",
+    "generate:remaster-atlas-sample": "tsx scripts/generate-remaster-atlas-sample.ts",
+    "generate:remaster-atlas-placeholder": "powershell -ExecutionPolicy Bypass -File scripts/generate-remaster-atlas-placeholder.ps1",
+    "generate:remaster-showcase-guardian": "powershell -ExecutionPolicy Bypass -File scripts/generate-remaster-showcase-guardian.ps1",
+    "generate:remaster-showcase-players": "powershell -ExecutionPolicy Bypass -File scripts/generate-remaster-showcase-players.ps1",
+    "generate:remaster-showcase-npcs": "powershell -ExecutionPolicy Bypass -File scripts/generate-remaster-showcase-npcs.ps1",
+    "generate:remaster-showcase-monsters": "powershell -ExecutionPolicy Bypass -File scripts/generate-remaster-showcase-monsters.ps1",
+    "generate:remaster-runtime-manifest": "tsx scripts/generate-remaster-runtime-manifest.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

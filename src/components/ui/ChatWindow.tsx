@@ -33,15 +33,11 @@ export function ChatWindow() {
 
   if (minimized) {
     return (
-      <div className="panel hud-panel rounded-[28px] p-3">
-        <button
-          type="button"
-          onClick={() => setMinimized(false)}
-          className="flex items-center gap-2"
-        >
-          <span className="text-sm font-semibold text-amber-50">채팅</span>
-          <span className="rounded-lg bg-amber-500/20 px-2 py-1 text-xs text-amber-300">
-            ▲
+      <div className="relative overflow-hidden rounded-[22px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.96))] p-3 shadow-[0_18px_32px_rgba(0,0,0,0.35)]">
+        <button type="button" onClick={() => setMinimized(false)} className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-[#f2e4c2]">채팅</span>
+          <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] tracking-[0.18em] text-[#c7ae83]">
+            OPEN
           </span>
         </button>
       </div>
@@ -49,44 +45,40 @@ export function ChatWindow() {
   }
 
   return (
-    <section className="panel hud-panel flex h-[270px] flex-col rounded-[28px] p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <section className="relative flex h-[284px] flex-col overflow-hidden rounded-[24px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.97))] p-4 shadow-[0_22px_40px_rgba(0,0,0,0.42)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.09),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+
+      <div className="relative mb-3 flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/60">
-            Chat
-          </p>
-          <h3 className="mt-1 text-lg font-semibold text-amber-50">채팅</h3>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-[#b79660]">Chronicle Log</p>
+          <h3 className="mt-1 text-lg font-semibold text-[#f2e4c2]">채팅</h3>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hud-chip px-3 py-1 text-[11px] font-semibold text-amber-100/75">
-            일반
+          <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-[10px] tracking-[0.18em] text-[#c7ae83]">
+            NORMAL
           </span>
           <button
             type="button"
             onClick={() => setMinimized(true)}
-            className="rounded-lg bg-black/30 px-2 py-1 text-xs text-amber-200/60 hover:text-amber-200"
+            className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 text-[10px] text-[#c7ae83] transition hover:text-[#f2e4c2]"
           >
-            ▼
+            MIN
           </button>
         </div>
       </div>
 
-      <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto rounded-[22px] border border-amber-200/10 bg-black/20 p-3 pr-2 text-sm">
+      <div className="scrollbar-thin relative flex-1 space-y-2 overflow-y-auto rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(4,7,12,0.76),rgba(8,12,18,0.92))] p-3 pr-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
         {chat.map((message) => {
-          const getMessageColor = (channel: string) => {
-            switch (channel) {
-              case "system":
-                return "text-yellow-300";
-              case "combat":
-                return "text-orange-300";
-              default:
-                return "text-stone-100";
-            }
-          };
+          const tone =
+            message.channel === "system"
+              ? "text-yellow-300"
+              : message.channel === "trade"
+                ? "text-orange-300"
+                : "text-stone-100";
 
           return (
-            <div key={message.id}>
-              <span className="mr-2 text-amber-200/50">
+            <div key={message.id} className="leading-5">
+              <span className="mr-2 text-[#9f8d72]">
                 {message.timestamp > 0
                   ? new Date(message.timestamp).toLocaleTimeString("ko-KR", {
                       hour: "2-digit",
@@ -94,25 +86,21 @@ export function ChatWindow() {
                     })
                   : "--:--"}
               </span>
-              <span className="mr-1 font-semibold text-amber-50">
-                {message.author}
-              </span>
-              <span className={getMessageColor(message.channel)}>
-                {message.message}
-              </span>
+              <span className="mr-1 font-semibold text-[#f2e4c2]">{message.author}</span>
+              <span className={tone}>{message.message}</span>
             </div>
           );
         })}
       </div>
 
-      <form onSubmit={onSubmit} className="mt-3 flex gap-2">
+      <form onSubmit={onSubmit} className="relative mt-3 flex gap-2">
         <input
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          className="flex-1 rounded-2xl border border-amber-200/10 bg-black/25 px-3 py-2 text-sm text-amber-50 outline-none transition placeholder:text-amber-100/35 focus:border-amber-300/30"
+          className="flex-1 rounded-[16px] border border-white/8 bg-black/30 px-3 py-2 text-sm text-[#f2e4c2] outline-none transition placeholder:text-[#8f7b60] focus:border-[#d4b377]/40"
           placeholder="메시지 입력"
         />
-        <button className="rounded-2xl bg-amber-600 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-500">
+        <button className="rounded-[16px] border border-[#e2c078]/45 bg-[linear-gradient(180deg,#dfbe73,#9e6e25)] px-4 py-2 text-sm font-semibold text-[#140d04] transition hover:brightness-105">
           전송
         </button>
       </form>

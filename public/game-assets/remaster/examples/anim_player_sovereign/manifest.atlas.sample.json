@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "textures": [],
+  "spritesheets": [],
+  "atlases": [
+    {
+      "key": "anim_player_sovereign_atlas",
+      "textureSrc": "/game-assets/remaster/examples/anim_player_sovereign/atlas.png",
+      "atlasSrc": "/game-assets/remaster/examples/anim_player_sovereign/atlas.sample.json",
+      "entries": [
+        {
+          "key": "anim_player_sovereign_idle_n_0",
+          "frame": "anim_player_sovereign_idle_n_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_n_1",
+          "frame": "anim_player_sovereign_idle_n_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_n_0",
+          "frame": "anim_player_sovereign_walk_n_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_n_0",
+          "frame": "anim_player_sovereign_attack_n_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_n_1",
+          "frame": "anim_player_sovereign_walk_n_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_n_1",
+          "frame": "anim_player_sovereign_attack_n_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_n_2",
+          "frame": "anim_player_sovereign_walk_n_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_n_2",
+          "frame": "anim_player_sovereign_attack_n_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_n_3",
+          "frame": "anim_player_sovereign_walk_n_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_n_3",
+          "frame": "anim_player_sovereign_attack_n_3"
+        },
+        {
+          "key": "anim_player_sovereign_idle_ne_0",
+          "frame": "anim_player_sovereign_idle_ne_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_ne_1",
+          "frame": "anim_player_sovereign_idle_ne_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_ne_0",
+          "frame": "anim_player_sovereign_walk_ne_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_ne_0",
+          "frame": "anim_player_sovereign_attack_ne_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_ne_1",
+          "frame": "anim_player_sovereign_walk_ne_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_ne_1",
+          "frame": "anim_player_sovereign_attack_ne_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_ne_2",
+          "frame": "anim_player_sovereign_walk_ne_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_ne_2",
+          "frame": "anim_player_sovereign_attack_ne_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_ne_3",
+          "frame": "anim_player_sovereign_walk_ne_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_ne_3",
+          "frame": "anim_player_sovereign_attack_ne_3"
+        },
+        {
+          "key": "anim_player_sovereign_idle_e_0",
+          "frame": "anim_player_sovereign_idle_e_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_e_1",
+          "frame": "anim_player_sovereign_idle_e_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_e_0",
+          "frame": "anim_player_sovereign_walk_e_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_e_0",
+          "frame": "anim_player_sovereign_attack_e_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_e_1",
+          "frame": "anim_player_sovereign_walk_e_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_e_1",
+          "frame": "anim_player_sovereign_attack_e_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_e_2",
+          "frame": "anim_player_sovereign_walk_e_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_e_2",
+          "frame": "anim_player_sovereign_attack_e_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_e_3",
+          "frame": "anim_player_sovereign_walk_e_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_e_3",
+          "frame": "anim_player_sovereign_attack_e_3"
+        },
+        {
+          "key": "anim_player_sovereign_idle_se_0",
+          "frame": "anim_player_sovereign_idle_se_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_se_1",
+          "frame": "anim_player_sovereign_idle_se_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_se_0",
+          "frame": "anim_player_sovereign_walk_se_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_se_0",
+          "frame": "anim_player_sovereign_attack_se_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_se_1",
+          "frame": "anim_player_sovereign_walk_se_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_se_1",
+          "frame": "anim_player_sovereign_attack_se_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_se_2",
+          "frame": "anim_player_sovereign_walk_se_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_se_2",
+          "frame": "anim_player_sovereign_attack_se_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_se_3",
+          "frame": "anim_player_sovereign_walk_se_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_se_3",
+          "frame": "anim_player_sovereign_attack_se_3"
+        },
+        {
+          "key": "anim_player_sovereign_idle_s_0",
+          "frame": "anim_player_sovereign_idle_s_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_s_1",
+          "frame": "anim_player_sovereign_idle_s_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_s_0",
+          "frame": "anim_player_sovereign_walk_s_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_s_0",
+          "frame": "anim_player_sovereign_attack_s_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_s_1",
+          "frame": "anim_player_sovereign_walk_s_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_s_1",
+          "frame": "anim_player_sovereign_attack_s_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_s_2",
+          "frame": "anim_player_sovereign_walk_s_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_s_2",
+          "frame": "anim_player_sovereign_attack_s_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_s_3",
+          "frame": "anim_player_sovereign_walk_s_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_s_3",
+          "frame": "anim_player_sovereign_attack_s_3"
+        },
+        {
+          "key": "anim_player_sovereign_idle_sw_0",
+          "frame": "anim_player_sovereign_idle_sw_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_sw_1",
+          "frame": "anim_player_sovereign_idle_sw_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_sw_0",
+          "frame": "anim_player_sovereign_walk_sw_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_sw_0",
+          "frame": "anim_player_sovereign_attack_sw_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_sw_1",
+          "frame": "anim_player_sovereign_walk_sw_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_sw_1",
+          "frame": "anim_player_sovereign_attack_sw_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_sw_2",
+          "frame": "anim_player_sovereign_walk_sw_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_sw_2",
+          "frame": "anim_player_sovereign_attack_sw_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_sw_3",
+          "frame": "anim_player_sovereign_walk_sw_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_sw_3",
+          "frame": "anim_player_sovereign_attack_sw_3"
+        },
+        {
+          "key": "anim_player_sovereign_idle_w_0",
+          "frame": "anim_player_sovereign_idle_w_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_w_1",
+          "frame": "anim_player_sovereign_idle_w_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_w_0",
+          "frame": "anim_player_sovereign_walk_w_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_w_0",
+          "frame": "anim_player_sovereign_attack_w_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_w_1",
+          "frame": "anim_player_sovereign_walk_w_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_w_1",
+          "frame": "anim_player_sovereign_attack_w_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_w_2",
+          "frame": "anim_player_sovereign_walk_w_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_w_2",
+          "frame": "anim_player_sovereign_attack_w_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_w_3",
+          "frame": "anim_player_sovereign_walk_w_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_w_3",
+          "frame": "anim_player_sovereign_attack_w_3"
+        },
+        {
+          "key": "anim_player_sovereign_idle_nw_0",
+          "frame": "anim_player_sovereign_idle_nw_0"
+        },
+        {
+          "key": "anim_player_sovereign_idle_nw_1",
+          "frame": "anim_player_sovereign_idle_nw_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_nw_0",
+          "frame": "anim_player_sovereign_walk_nw_0"
+        },
+        {
+          "key": "anim_player_sovereign_attack_nw_0",
+          "frame": "anim_player_sovereign_attack_nw_0"
+        },
+        {
+          "key": "anim_player_sovereign_walk_nw_1",
+          "frame": "anim_player_sovereign_walk_nw_1"
+        },
+        {
+          "key": "anim_player_sovereign_attack_nw_1",
+          "frame": "anim_player_sovereign_attack_nw_1"
+        },
+        {
+          "key": "anim_player_sovereign_walk_nw_2",
+          "frame": "anim_player_sovereign_walk_nw_2"
+        },
+        {
+          "key": "anim_player_sovereign_attack_nw_2",
+          "frame": "anim_player_sovereign_attack_nw_2"
+        },
+        {
+          "key": "anim_player_sovereign_walk_nw_3",
+          "frame": "anim_player_sovereign_walk_nw_3"
+        },
+        {
+          "key": "anim_player_sovereign_attack_nw_3",
+          "frame": "anim_player_sovereign_attack_nw_3"
+        }
+      ]
+    }
+  ]
+}

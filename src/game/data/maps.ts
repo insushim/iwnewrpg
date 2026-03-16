@@ -20,7 +20,7 @@ export const MAPS: Record<string, GameMap> = {
     ],
     safeZone: true,
     bgm: "peaceful_island",
-    description: "모든 모험가가 처음 발을 디디는 시작 지대입니다.",
+    description: "모든 모험가가 처음 발을 디디는 출발 지점입니다.",
     connections: [
       { to: "silverKnightTown", fromPortalName: "대륙행 부두", spawn: { x: 4, y: 20 } },
     ],
@@ -42,7 +42,7 @@ export const MAPS: Record<string, GameMap> = {
     bgm: "medieval_town",
     description: "기사단이 수호하는 첫 번째 대륙 마을입니다.",
     connections: [
-      { to: "speakingIsland", fromPortalName: "입구 부두", spawn: { x: 42, y: 24 } },
+      { to: "speakingIsland", fromPortalName: "항구 부두", spawn: { x: 42, y: 24 } },
       { to: "windwoodForest", fromPortalName: "바람숲 입구", spawn: { x: 50, y: 18 } },
       { to: "orcForest", fromPortalName: "오크 부락지 방면", spawn: { x: 10, y: 48 } },
       { to: "gludioPlain", fromPortalName: "남쪽 평원", spawn: { x: 46, y: 38 } },
@@ -60,7 +60,7 @@ export const MAPS: Record<string, GameMap> = {
     npcs: [],
     safeZone: false,
     bgm: "mystical_forest",
-    description: "거대한 나무와 안개가 숨어 있는 숲입니다.",
+    description: "거대한 나무와 안개가 뒤엉켜 있는 숲입니다.",
     connections: [
       { to: "silverKnightTown", fromPortalName: "마을 귀환길", spawn: { x: 2, y: 12 } },
       { to: "giranTown", fromPortalName: "상단 교역로", spawn: { x: 60, y: 32 } },
@@ -79,7 +79,7 @@ export const MAPS: Record<string, GameMap> = {
     npcs: [],
     safeZone: false,
     bgm: "tribal_drums",
-    description: "전투 북소리가 울려 퍼지는 거친 수렵지입니다.",
+    description: "전투 북소리가 멀리서 울려 퍼지는 거친 사냥터입니다.",
     connections: [
       { to: "silverKnightTown", fromPortalName: "마을 방면", spawn: { x: 4, y: 4 } },
     ],
@@ -96,7 +96,7 @@ export const MAPS: Record<string, GameMap> = {
     npcs: [],
     safeZone: false,
     bgm: "frontier_plain",
-    description: "은기사의 마을 외곽에 펼쳐진 개활지 사냥터입니다.",
+    description: "은기사의 마을 남쪽에 펼쳐진 개활지 사냥터입니다.",
     connections: [
       { to: "silverKnightTown", fromPortalName: "마을 성문", spawn: { x: 6, y: 18 } },
     ],
@@ -113,7 +113,7 @@ export const MAPS: Record<string, GameMap> = {
     npcs: [],
     safeZone: false,
     bgm: "wetland_whispers",
-    description: "달빛과 안개가 뒤섞여 시야를 흐리는 음침한 습지입니다.",
+    description: "늪물과 안개가 뒤섞여 시야를 흐리는 위험한 습지입니다.",
     connections: [
       { to: "windwoodForest", fromPortalName: "숲 가장자리", spawn: { x: 8, y: 14 } },
     ],
@@ -151,7 +151,7 @@ export const MAPS: Record<string, GameMap> = {
     npcs: [],
     safeZone: false,
     bgm: "dragon_roar",
-    description: "용의 흔적과 뜨거운 숨결이 남은 화염의 협곡입니다.",
+    description: "용의 흔적과 화염의 숨결이 남아 있는 고위험 지역입니다.",
     connections: [
       { to: "giranTown", fromPortalName: "기란 방면 길", spawn: { x: 5, y: 30 } },
     ],
@@ -168,7 +168,7 @@ export const MAPS: Record<string, GameMap> = {
     npcs: [],
     safeZone: false,
     bgm: "dungeon_cave",
-    description: "고대의 비밀이 잠든 어둠의 동굴입니다. 강력한 해골 전사들이 배회합니다.",
+    description: "고대의 비밀이 잠든 어두운 동굴입니다. 강력한 언데드 전사가 배회합니다.",
     connections: [
       { to: "speakingIsland", fromPortalName: "동굴 출구", spawn: { x: 13, y: 3 } },
     ],

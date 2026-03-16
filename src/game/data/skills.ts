@@ -117,7 +117,7 @@ export const SKILLS: Skill[] = [
     range: 8,
     damage: "INT x 1.8",
     cooldown: 3,
-    description: "낙뢰를 떨어뜨려 적을 공격합니다.",
+    description: "낙뢰를 불러내 적을 공격합니다.",
   },
   {
     id: "arcanist_fireball",

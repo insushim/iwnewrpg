@@ -60,6 +60,8 @@ type LootPayload = {
 
 type NpcSprite = Phaser.GameObjects.Container & {
   npcId: string;
+  auraRing: Phaser.GameObjects.Ellipse;
+  glowBody: Phaser.GameObjects.Image;
   spriteBody: Phaser.GameObjects.Image;
   facing: DirectionKey;
   animState: AnimState;
@@ -76,6 +78,8 @@ type MonsterSprite = Phaser.GameObjects.Container & {
   hpBack: Phaser.GameObjects.Rectangle;
   label: Phaser.GameObjects.Text;
   ring: Phaser.GameObjects.Ellipse;
+  auraRing: Phaser.GameObjects.Ellipse;
+  glowBody: Phaser.GameObjects.Image;
   spriteBody: Phaser.GameObjects.Image;
   facing: DirectionKey;
   animState: AnimState;
@@ -87,12 +91,15 @@ type MonsterSprite = Phaser.GameObjects.Container & {
   attackUntil: number;
   hitFlash: number;
   prevHp: number;
+  isBoss: boolean;
 };
 
 type PlayerSprite = Phaser.GameObjects.Container & {
   playerId: string;
   label: Phaser.GameObjects.Text;
   ring: Phaser.GameObjects.Ellipse;
+  auraRing: Phaser.GameObjects.Ellipse;
+  glowBody: Phaser.GameObjects.Image;
   spriteBody: Phaser.GameObjects.Image;
   facing: DirectionKey;
   animState: AnimState;
@@ -133,8 +140,12 @@ export class WorldScene extends Phaser.Scene {
   private effectLayer?: Phaser.GameObjects.Container;
   private overlayLayer?: Phaser.GameObjects.Container;
   private waterLayer?: Phaser.GameObjects.Container;
+  private weatherLayer?: Phaser.GameObjects.Container;
   private destinationMarker?: Phaser.GameObjects.Ellipse;
   private targetMarker?: Phaser.GameObjects.Ellipse;
+  private ambientVeil?: Phaser.GameObjects.Rectangle;
+  private ambientBloom?: Phaser.GameObjects.Ellipse;
+  private ambientMoon?: Phaser.GameObjects.Ellipse;
 
   private playerSprites = new Map<string, PlayerSprite>();
   private monsterSprites = new Map<string, MonsterSprite>();
@@ -181,17 +192,19 @@ export class WorldScene extends Phaser.Scene {
   private portalGlows: Phaser.GameObjects.Graphics[] = [];
   private spawnX = 530;
   private spawnY = 400;
+  private serverName = "아스카론 01";
 
   constructor() {
     super("WorldScene");
   }
 
-  create(data?: { mapId?: string; spawnX?: number; spawnY?: number }) {
+  create(data?: { mapId?: string; spawnX?: number; spawnY?: number; serverName?: string }) {
     if (data?.mapId) {
       this.mapId = data.mapId;
       if (data.spawnX !== undefined) this.spawnX = data.spawnX;
       if (data.spawnY !== undefined) this.spawnY = data.spawnY;
     }
+    this.serverName = data?.serverName ?? useGameStore.getState().serverName;
 
     this.cameras.main.setBackgroundColor("#07101a");
     this.cameras.main.setZoom(0.94);
@@ -203,6 +216,8 @@ export class WorldScene extends Phaser.Scene {
     this.actorLayer = this.add.container(0, 0);
     this.effectLayer = this.add.container(0, 0);
     this.overlayLayer = this.add.container(0, 0);
+    this.weatherLayer = this.add.container(0, 0);
+    this.createAtmosphere();
 
     this.destinationMarker = this.add
       .ellipse(0, 0, 30, 18, 0xf6df95, 0.14)
@@ -213,6 +228,7 @@ export class WorldScene extends Phaser.Scene {
       .setStrokeStyle(2, 0xf46f57, 0.85)
       .setVisible(false);
     this.effectLayer.add([this.destinationMarker, this.targetMarker]);
+    this.showEntranceBanner();
 
     this.registerEvents();
     this.attachInput();
@@ -229,6 +245,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
+    this.updateAmbientLighting();
     this.updateAnimatedUnits();
     this.sortActorLayer();
     this.updateNpcProximity();
@@ -241,10 +258,79 @@ export class WorldScene extends Phaser.Scene {
         : null;
       if (target && target.visible) {
         this.targetMarker.setPosition(target.x, target.y + 20);
+        const pulse = 0.76 + Math.sin(this.time.now / 120) * 0.18;
+        this.targetMarker.setScale(pulse, pulse);
       } else {
         this.targetMarker.setVisible(false);
       }
     }
+
+    if (this.destinationMarker?.visible) {
+      const pulse = 0.92 + Math.sin(this.time.now / 140) * 0.08;
+      this.destinationMarker.setScale(pulse, pulse);
+    }
+  }
+
+  private showEntranceBanner() {
+    const player = useGameStore.getState().player;
+    const width = this.scale.width;
+    const banner = this.add.container(width / 2, 94).setDepth(1600).setScrollFactor(0);
+
+    const plate = this.add.graphics();
+    plate.fillStyle(0x091019, 0.88);
+    plate.fillRoundedRect(-220, -34, 440, 68, 22);
+    plate.lineStyle(2, 0xb48a46, 0.42);
+    plate.strokeRoundedRect(-220, -34, 440, 68, 22);
+    plate.lineStyle(1, 0xffffff, 0.06);
+    plate.strokeRoundedRect(-212, -26, 424, 52, 18);
+    banner.add(plate);
+
+    banner.add(
+      this.add
+        .text(0, -12, this.serverName, {
+          color: "#b79660",
+          fontSize: "11px",
+        })
+        .setOrigin(0.5),
+    );
+    banner.add(
+      this.add
+        .text(0, 10, `${player.name} · ${this.formatClassLabel(player.className)} 입장`, {
+          color: "#f2e4c2",
+          fontFamily: "serif",
+          fontSize: "22px",
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5),
+    );
+
+    banner.setAlpha(0);
+    banner.y -= 16;
+    this.tweens.add({
+      targets: banner,
+      alpha: 1,
+      y: banner.y + 16,
+      duration: 260,
+      ease: "Sine.easeOut",
+    });
+    this.tweens.add({
+      targets: banner,
+      alpha: 0,
+      y: banner.y - 10,
+      duration: 420,
+      delay: 2400,
+      ease: "Sine.easeIn",
+      onComplete: () => banner.destroy(),
+    });
+  }
+
+  private formatClassLabel(className: string) {
+    const normalized = className.toLowerCase();
+    if (normalized.includes("guardian")) return "Guardian";
+    if (normalized.includes("ranger")) return "Ranger";
+    if (normalized.includes("arcan")) return "Arcanist";
+    if (normalized.includes("sovereign")) return "Sovereign";
+    return className;
   }
 
   shutdown() {
@@ -982,6 +1068,7 @@ export class WorldScene extends Phaser.Scene {
     this.waterLayer?.removeAll(true);
     this.propLayer?.removeAll(true);
     this.overlayLayer?.removeAll(true);
+    this.weatherLayer?.removeAll(true);
 
     const backdrop = this.add.graphics();
     backdrop.fillGradientStyle(0x0e2033, 0x10263b, 0x07121a, 0x050d14, 1);
@@ -1002,6 +1089,9 @@ export class WorldScene extends Phaser.Scene {
         mapWidth * 0.48,
         mapHeight * 0.32,
       );
+    backdrop
+      .fillStyle(0xf4d693, 0.03)
+      .fillEllipse(mapWidth * 0.34, mapHeight * 0.12, mapWidth * 0.42, 180);
     this.groundLayer?.add(backdrop);
 
     for (let y = 0; y < map.height; y += 1) {
@@ -1024,7 +1114,9 @@ export class WorldScene extends Phaser.Scene {
     this.drawWaterBodies(map.id);
     this.scatterProps(map.id, map.width, map.height);
     this.drawTownFence(map.id);
+    this.drawGroundShade(mapWidth, mapHeight);
     this.drawAtmosphere(mapWidth, mapHeight);
+    this.drawWeatherEffects(map.id, mapWidth, mapHeight);
   }
 
   private drawRoads(mapId: string, mapWidth: number, mapHeight: number) {
@@ -1047,6 +1139,8 @@ export class WorldScene extends Phaser.Scene {
 
     road.fillStyle(0xf3e0b0, 0.08);
     road.fillRoundedRect(180, 372, Math.max(500, mapWidth * 0.35), 18, 10);
+    road.fillStyle(0x2c180d, 0.08);
+    road.fillRoundedRect(180, 430, Math.max(500, mapWidth * 0.35), 12, 8);
     this.groundLayer?.add(road);
   }
 
@@ -1094,6 +1188,24 @@ export class WorldScene extends Phaser.Scene {
       shimmer.fillEllipse(puddle.x, puddle.y, puddle.w, puddle.h);
     });
     this.waterLayer?.add(shimmer);
+
+    const ripples = this.add.graphics();
+    ripples.lineStyle(2, 0xd5f7ff, 0.12);
+    puddles.forEach((puddle) => {
+      ripples.strokeEllipse(
+        puddle.x,
+        puddle.y,
+        puddle.w * 0.72,
+        puddle.h * 0.52,
+      );
+      ripples.strokeEllipse(
+        puddle.x + 18,
+        puddle.y + 12,
+        puddle.w * 0.36,
+        puddle.h * 0.22,
+      );
+    });
+    this.waterLayer?.add(ripples);
   }
 
   private scatterProps(
@@ -1126,6 +1238,16 @@ export class WorldScene extends Phaser.Scene {
       else if (roll < 0.32) texture = "prop_banner";
       else if (roll < 0.34) texture = "prop_fence";
       const image = this.add.image(x, y, texture).setOrigin(0.5, 0.85);
+      const propShadow = this.add
+        .ellipse(
+          x + 2,
+          y + 10,
+          texture === "prop_tree" ? 38 : 24,
+          texture === "prop_tree" ? 12 : 8,
+          0x050709,
+          0.14,
+        )
+        .setScale(0.9 + this.noise(index, 5.1) * 0.2);
       const scale =
         texture === "prop_tree"
           ? 0.95 + this.noise(index, 2.3) * 0.35
@@ -1142,6 +1264,7 @@ export class WorldScene extends Phaser.Scene {
             ? 0.78
             : 0.58,
       );
+      this.propLayer?.add(propShadow);
       this.propLayer?.add(image);
     }
 
@@ -1273,13 +1396,145 @@ export class WorldScene extends Phaser.Scene {
     this.overlayLayer?.add(fenceContainer);
   }
 
+  private drawGroundShade(mapWidth: number, mapHeight: number) {
+    const shade = this.add.graphics();
+    shade.fillStyle(0x061016, 0.12);
+    shade.fillEllipse(
+      mapWidth * 0.58,
+      mapHeight * 0.56,
+      mapWidth * 0.82,
+      mapHeight * 0.46,
+    );
+    shade.fillStyle(0xecd2a2, 0.04);
+    shade.fillEllipse(mapWidth * 0.24, mapHeight * 0.2, 520, 180);
+    this.overlayLayer?.add(shade);
+  }
+
   private drawAtmosphere(mapWidth: number, mapHeight: number) {
     const haze = this.add.graphics();
     haze.fillStyle(0xffd36e, 0.045);
     haze.fillEllipse(mapWidth * 0.28, mapHeight * 0.18, 620, 240);
     haze.fillStyle(0x86d8ff, 0.035);
     haze.fillEllipse(mapWidth * 0.78, mapHeight * 0.3, 520, 180);
+    haze.fillStyle(0xffffff, 0.025);
+    haze.fillEllipse(mapWidth * 0.52, mapHeight * 0.48, mapWidth * 0.74, 120);
     this.overlayLayer?.add(haze);
+  }
+
+  private drawWeatherEffects(mapId: string, mapWidth: number, mapHeight: number) {
+    const layer = this.weatherLayer;
+    if (!layer) {
+      return;
+    }
+
+    const addFloatingParticle = (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      color: number,
+      alpha: number,
+      driftX: number,
+      driftY: number,
+      duration: number,
+    ) => {
+      const particle = this.add
+        .ellipse(x, y, width, height, color, alpha)
+        .setBlendMode(Phaser.BlendModes.SCREEN);
+      layer.add(particle);
+      this.tweens.add({
+        targets: particle,
+        x: x + driftX,
+        y: y + driftY,
+        alpha: alpha * 0.42,
+        duration,
+        repeat: -1,
+        yoyo: true,
+        ease: "Sine.easeInOut",
+      });
+    };
+
+    if (mapId === "moonlitWetland") {
+      for (let index = 0; index < 26; index += 1) {
+        addFloatingParticle(
+          Phaser.Math.Between(120, mapWidth - 120),
+          Phaser.Math.Between(90, mapHeight - 90),
+          Phaser.Math.Between(26, 54),
+          Phaser.Math.Between(10, 18),
+          0xc9fff2,
+          Phaser.Math.FloatBetween(0.05, 0.12),
+          Phaser.Math.Between(-26, 26),
+          Phaser.Math.Between(-18, 18),
+          Phaser.Math.Between(2400, 4400),
+        );
+      }
+      return;
+    }
+
+    if (mapId === "windwoodForest") {
+      for (let index = 0; index < 22; index += 1) {
+        addFloatingParticle(
+          Phaser.Math.Between(120, mapWidth - 120),
+          Phaser.Math.Between(90, mapHeight - 90),
+          Phaser.Math.Between(5, 9),
+          Phaser.Math.Between(5, 9),
+          0xaef7a6,
+          Phaser.Math.FloatBetween(0.18, 0.34),
+          Phaser.Math.Between(-16, 16),
+          Phaser.Math.Between(-24, 12),
+          Phaser.Math.Between(1800, 3200),
+        );
+      }
+      return;
+    }
+
+    if (mapId === "dragonValley") {
+      for (let index = 0; index < 24; index += 1) {
+        addFloatingParticle(
+          Phaser.Math.Between(120, mapWidth - 120),
+          Phaser.Math.Between(90, mapHeight - 90),
+          Phaser.Math.Between(6, 12),
+          Phaser.Math.Between(8, 16),
+          0xffb36b,
+          Phaser.Math.FloatBetween(0.12, 0.24),
+          Phaser.Math.Between(-10, 14),
+          Phaser.Math.Between(-40, -12),
+          Phaser.Math.Between(1400, 2600),
+        );
+      }
+      return;
+    }
+
+    if (mapId === "ancientCave") {
+      for (let index = 0; index < 18; index += 1) {
+        addFloatingParticle(
+          Phaser.Math.Between(120, mapWidth - 120),
+          Phaser.Math.Between(90, mapHeight - 90),
+          Phaser.Math.Between(18, 36),
+          Phaser.Math.Between(8, 14),
+          0x8db7d8,
+          Phaser.Math.FloatBetween(0.04, 0.08),
+          Phaser.Math.Between(-18, 18),
+          Phaser.Math.Between(-10, 10),
+          Phaser.Math.Between(2800, 4200),
+        );
+      }
+      return;
+    }
+
+    for (let index = 0; index < 16; index += 1) {
+      addFloatingParticle(
+        Phaser.Math.Between(120, mapWidth - 120),
+        Phaser.Math.Between(90, mapHeight - 90),
+        Phaser.Math.Between(8, 20),
+        Phaser.Math.Between(8, 20),
+        0xf9df9f,
+        Phaser.Math.FloatBetween(0.05, 0.12),
+        Phaser.Math.Between(-20, 20),
+        Phaser.Math.Between(-14, 14),
+        Phaser.Math.Between(2600, 4200),
+      );
+    }
   }
 
   private drawPortals() {
@@ -1391,6 +1646,13 @@ export class WorldScene extends Phaser.Scene {
       );
       const textureBase = this.getNpcTexture(npc.role);
       const shadow = this.add.ellipse(0, 14, 58, 20, 0x08131b, 0.3);
+      const aura = this.createAuraSigil(0x9ce7db, 0.14, 76, 28, 0.94);
+      const glow = this.createUnitBacklight(
+        this.getFrameKey(textureBase, "idle", "s", 0),
+        0xcaf2ff,
+        0.18,
+        0.98,
+      );
       const sprite = this.add.image(
         0,
         0,
@@ -1419,12 +1681,16 @@ export class WorldScene extends Phaser.Scene {
 
       const container = this.add.container(worldPosition.x, worldPosition.y, [
         shadow,
+        aura,
         ring,
+        glow,
         sprite,
         label,
         hitArea,
       ]) as NpcSprite;
       container.npcId = npc.id;
+      container.auraRing = aura;
+      container.glowBody = glow;
       container.spriteBody = sprite;
       container.facing = "s";
       container.animState = "idle";
@@ -1548,6 +1814,7 @@ export class WorldScene extends Phaser.Scene {
   private upsertPlayer(payload: WorldPlayerPayload) {
     const textureBase = this.getPlayerTexture();
     const existing = this.playerSprites.get(payload.id);
+    const classTone = this.getPlayerClassTone();
 
     if (existing) {
       existing.label.setText(payload.name);
@@ -1564,9 +1831,22 @@ export class WorldScene extends Phaser.Scene {
 
     const isSelf = payload.id === this.selfId;
     const shadow = this.add.ellipse(0, 14, 60, 20, 0x08131b, 0.3);
+    const aura = this.createAuraSigil(
+      isSelf ? classTone.burstTint : classTone.projectileTint,
+      isSelf ? 0.18 : 0.1,
+      isSelf ? 84 : 78,
+      isSelf ? 30 : 26,
+      isSelf ? 1.02 : 0.92,
+    );
     const ring = this.add
       .ellipse(0, 14, 70, 22, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
       .setStrokeStyle(2, isSelf ? 0xffefb2 : 0x89cffd, 0.7);
+    const glow = this.createUnitBacklight(
+      this.getFrameKey(textureBase, "idle", "s", 0),
+      isSelf ? 0xffe5a6 : 0x9fdcff,
+      isSelf ? 0.24 : 0.16,
+      isSelf ? 1.04 : 0.94,
+    );
     const body = this.add
       .image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0))
       .setScale(isSelf ? 0.9 : 0.82)
@@ -1582,13 +1862,17 @@ export class WorldScene extends Phaser.Scene {
 
     const container = this.add.container(payload.x, payload.y, [
       shadow,
+      aura,
       ring,
+      glow,
       body,
       label,
     ]) as PlayerSprite;
     container.playerId = payload.id;
     container.label = label;
     container.ring = ring;
+    container.auraRing = aura;
+    container.glowBody = glow;
     container.spriteBody = body;
     container.facing = "s";
     container.animState = "idle";
@@ -1626,6 +1910,7 @@ export class WorldScene extends Phaser.Scene {
     const baseId = this.getMonsterBaseId(payload.id);
     const textureBase = this.getMonsterTexture(baseId);
     const existing = this.monsterSprites.get(payload.id);
+    const isBoss = this.isBossMonster(baseId);
 
     if (payload.hp <= 0) {
       if (existing && existing.visible) {
@@ -1698,9 +1983,22 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const shadow = this.add.ellipse(0, 16, 62, 22, 0x08131b, 0.3);
+    const aura = this.createAuraSigil(
+      isBoss ? 0xffd37f : 0xff8f74,
+      isBoss ? 0.2 : 0.12,
+      isBoss ? 94 : 78,
+      isBoss ? 36 : 28,
+      isBoss ? 1.08 : 0.94,
+    );
     const ring = this.add
-      .ellipse(0, 16, 70, 24, 0xf57f69, 0.12)
-      .setStrokeStyle(2, 0xff9c88, 0.75);
+      .ellipse(0, 16, isBoss ? 84 : 70, isBoss ? 30 : 24, isBoss ? 0xffc976 : 0xf57f69, isBoss ? 0.16 : 0.12)
+      .setStrokeStyle(2, isBoss ? 0xffe1a8 : 0xff9c88, isBoss ? 0.84 : 0.75);
+    const glow = this.createUnitBacklight(
+      this.getFrameKey(textureBase, "idle", "s", 0),
+      isBoss ? 0xffd18a : 0xffa37f,
+      isBoss ? 0.26 : 0.18,
+      isBoss ? 1 : 0.92,
+    );
     const body = this.add
       .image(0, 2, this.getFrameKey(textureBase, "idle", "s", 0))
       .setOrigin(0.5, 0.92)
@@ -1713,23 +2011,37 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0, 0.5);
     const label = this.add
       .text(0, -82, payload.name, {
-        fontSize: "13px",
-        color: "#ffd9d1",
+        fontSize: isBoss ? "14px" : "13px",
+        color: isBoss ? "#ffe7b4" : "#ffd9d1",
         stroke: "#07101a",
         strokeThickness: 4,
+        fontStyle: isBoss ? "bold" : "normal",
       })
       .setOrigin(0.5);
     const hitArea = this.add
       .zone(0, -20, 112, 112)
       .setInteractive({ useHandCursor: true });
+    const bossCrest = isBoss
+      ? this.add
+          .text(0, -98, "BOSS", {
+            fontSize: "10px",
+            color: "#221508",
+            backgroundColor: "#f6cf83",
+            padding: { x: 6, y: 2 },
+          })
+          .setOrigin(0.5)
+      : null;
 
     const container = this.add.container(payload.x, payload.y, [
       shadow,
+      aura,
       ring,
+      glow,
       body,
       hpBack,
       hpFill,
       label,
+      ...(bossCrest ? [bossCrest] : []),
       hitArea,
     ]) as MonsterSprite;
     container.monsterId = payload.id;
@@ -1737,6 +2049,8 @@ export class WorldScene extends Phaser.Scene {
     container.hpBack = hpBack;
     container.label = label;
     container.ring = ring;
+    container.auraRing = aura;
+    container.glowBody = glow;
     container.spriteBody = body;
     container.facing = "s";
     container.animState = "idle";
@@ -1748,6 +2062,7 @@ export class WorldScene extends Phaser.Scene {
     container.attackUntil = 0;
     container.hitFlash = 0;
     container.prevHp = payload.hp;
+    container.isBoss = isBoss;
 
     hitArea.on(
       "pointerdown",
@@ -1838,18 +2153,28 @@ export class WorldScene extends Phaser.Scene {
       this.localPlayer.facing,
     );
     this.localPlayer.attackUntil = now + 260;
+    const classTone = this.getPlayerClassTone();
 
     if (this.isRangedClass()) {
       const startX = this.localPlayer.x + 10;
       const startY = this.localPlayer.y - 28;
+      this.spawnWeaponTrail(
+        this.localPlayer.x,
+        this.localPlayer.y - 18,
+        monster.x,
+        monster.y - 18,
+        classTone.trailTint,
+      );
       const projectile = this.add
         .image(startX, startY, "projectile_arrow")
         .setOrigin(0.2, 0.5)
         .setScale(1.1);
+      projectile.setTint(classTone.projectileTint);
       projectile.setRotation(
         Phaser.Math.Angle.Between(startX, startY, monster.x, monster.y - 18),
       );
       this.effectLayer?.add(projectile);
+      this.attachProjectileTrail(projectile, classTone.projectileTint);
       this.tweens.add({
         targets: projectile,
         x: monster.x,
@@ -1863,7 +2188,7 @@ export class WorldScene extends Phaser.Scene {
             monster.y - 18,
             22,
             16,
-            0xffe080,
+            classTone.impactTint,
             0.75,
           );
           this.effectLayer?.add(hit);
@@ -1874,14 +2199,19 @@ export class WorldScene extends Phaser.Scene {
             duration: 140,
             onComplete: () => hit.destroy(),
           });
+          this.spawnArcaneBurst(monster.x, monster.y - 18, classTone.burstTint);
+          if (classTone.classId === "ranger") {
+            this.spawnLeafBurst(monster.x, monster.y - 18, classTone.burstTint);
+          }
           projectile.destroy();
         },
       });
     } else {
+      this.spawnMeleeAfterimage(classTone.afterimageTint);
       // Main slash arc
       const slash = this.add
-        .arc(monster.x, monster.y - 8, 32, 200, 340, false, 0xfff0b5, 0.32)
-        .setStrokeStyle(4, 0xffd97b, 0.95);
+        .arc(monster.x, monster.y - 8, 32, 200, 340, false, classTone.slashTint, 0.32)
+        .setStrokeStyle(4, classTone.slashTint, 0.95);
       this.effectLayer?.add(slash);
       this.tweens.add({
         targets: slash,
@@ -1898,7 +2228,7 @@ export class WorldScene extends Phaser.Scene {
         monster.y - 12,
         38,
         28,
-        0xffffff,
+        classTone.impactTint,
         0.45,
       );
       this.effectLayer?.add(impact);
@@ -1918,6 +2248,16 @@ export class WorldScene extends Phaser.Scene {
         duration: 70,
         yoyo: true,
       });
+      this.spawnWeaponTrail(
+        this.localPlayer.x,
+        this.localPlayer.y - 24,
+        monster.x,
+        monster.y - 14,
+        classTone.trailTint,
+      );
+      if (classTone.classId === "guardian") {
+        this.spawnShieldPulse(monster.x, monster.y - 14, classTone.burstTint);
+      }
     }
 
     const socket = getSocket();
@@ -1941,6 +2281,13 @@ export class WorldScene extends Phaser.Scene {
 
       // 데미지 숫자 표시
       if (monsterSprite) {
+        this.showEnhancedHitFeedback(
+          monsterSprite.x,
+          monsterSprite.y,
+          finalDamage,
+          isCrit,
+          classTone.slashTint,
+        );
         this.showDamageNumber(
           monsterSprite.x,
           monsterSprite.y,
@@ -2213,13 +2560,45 @@ export class WorldScene extends Phaser.Scene {
         sprite.animFrame,
       ),
     );
+    sprite.glowBody.setTexture(
+      this.getFrameKey(
+        sprite.textureBase,
+        sprite.animState,
+        sprite.facing,
+        sprite.animFrame,
+      ),
+    );
     const bob =
       sprite.animState === "walk"
         ? [0, -2.2][sprite.animFrame % 2]
         : sprite.animState === "attack"
           ? [-1, -3.5, 2, 0][sprite.animFrame % 4]
           : 0;
+    const pulseBase =
+      "playerId" in sprite && sprite.playerId === this.selfId
+        ? 0.2
+        : "monsterId" in sprite && sprite.monsterId === this.selectedMonsterId
+          ? 0.24
+          : 0.14;
+    const auraPulse =
+      "playerId" in sprite
+        ? sprite.playerId === this.selfId
+          ? 1.06
+          : 0.96
+        : sprite.isBoss
+          ? 1.12
+          : sprite.monsterId === this.selectedMonsterId
+            ? 1.03
+            : 0.95;
     sprite.spriteBody.y = bob;
+    sprite.glowBody.y = bob - 1;
+    sprite.glowBody.alpha = pulseBase + Math.sin(now / 180) * 0.04;
+    sprite.auraRing.y = 10 + bob * 0.2;
+    sprite.auraRing.scaleX = auraPulse + Math.sin(now / 220) * 0.04;
+    sprite.auraRing.scaleY = auraPulse * 0.82 + Math.cos(now / 260) * 0.03;
+    sprite.auraRing.alpha =
+      ("monsterId" in sprite && sprite.isBoss ? 0.18 : 0.1) +
+      Math.sin(now / 200) * 0.025;
     sprite.lastX = sprite.x;
     sprite.lastY = sprite.y;
   }
@@ -2236,8 +2615,111 @@ export class WorldScene extends Phaser.Scene {
           sprite.animFrame,
         ),
       );
+      sprite.glowBody.setTexture(
+        this.getFrameKey(
+          sprite.textureBase,
+          "idle",
+          sprite.facing,
+          sprite.animFrame,
+        ),
+      );
       sprite.spriteBody.y = sprite.animFrame === 0 ? 0 : -0.5;
+      sprite.glowBody.y = sprite.animFrame === 0 ? -1 : -1.5;
     }
+    sprite.auraRing.alpha = 0.1 + Math.sin(now / 240) * 0.02;
+    sprite.auraRing.scaleX = 0.95 + Math.sin(now / 320) * 0.03;
+    sprite.auraRing.scaleY = 0.92 + Math.cos(now / 360) * 0.02;
+  }
+
+  private createAtmosphere() {
+    this.ambientBloom = this.add
+      .ellipse(this.scale.width * 0.24, 118, 420, 210, 0xffc36b, 0.12)
+      .setBlendMode(Phaser.BlendModes.SCREEN)
+      .setScrollFactor(0)
+      .setDepth(1400);
+    this.ambientMoon = this.add
+      .ellipse(this.scale.width * 0.76, 96, 240, 140, 0xc7e7ff, 0.08)
+      .setBlendMode(Phaser.BlendModes.SCREEN)
+      .setScrollFactor(0)
+      .setDepth(1400);
+    this.ambientVeil = this.add
+      .rectangle(
+        this.scale.width / 2,
+        this.scale.height / 2,
+        this.scale.width,
+        this.scale.height,
+        0x07101a,
+        0.08,
+      )
+      .setScrollFactor(0)
+      .setDepth(1401);
+
+    const upperGlow = this.add
+      .ellipse(980, 280, 840, 620, 0x78c9ff, 0.09)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    const lowerGlow = this.add
+      .ellipse(890, 760, 420, 280, 0x9effcf, 0.05)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    const fogBand = this.add
+      .rectangle(920, 300, 1600, 120, 0xd9c9aa, 0.06)
+      .setBlendMode(Phaser.BlendModes.SOFT_LIGHT);
+    const moonPool = this.add
+      .ellipse(980, 320, 190, 92, 0xe8f6ff, 0.18)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    this.overlayLayer?.add([upperGlow, lowerGlow, fogBand, moonPool]);
+  }
+
+  private updateAmbientLighting() {
+    const phase = (Math.sin(this.time.now / 22000) + 1) / 2;
+    if (this.ambientVeil) {
+      this.ambientVeil.alpha = 0.05 + phase * 0.12;
+      this.ambientVeil.fillColor = Phaser.Display.Color.GetColor(
+        Phaser.Math.Linear(7, 14, 1 - phase),
+        Phaser.Math.Linear(16, 34, 1 - phase),
+        Phaser.Math.Linear(26, 56, phase),
+      );
+    }
+
+    if (this.ambientBloom) {
+      this.ambientBloom.alpha = 0.18 - phase * 0.11;
+      this.ambientBloom.setScale(0.94 + Math.sin(this.time.now / 6000) * 0.04);
+      this.ambientBloom.x = this.scale.width * (0.2 + phase * 0.1);
+    }
+
+    if (this.ambientMoon) {
+      this.ambientMoon.alpha = 0.03 + phase * 0.14;
+      this.ambientMoon.setScale(0.92 + Math.cos(this.time.now / 7000) * 0.05);
+      this.ambientMoon.x = this.scale.width * (0.72 + phase * 0.07);
+    }
+  }
+
+  private createUnitBacklight(
+    textureKey: string,
+    tint: number,
+    alpha: number,
+    scale: number,
+  ) {
+    return this.add
+      .image(0, -1, textureKey)
+      .setOrigin(0.5, 0.94)
+      .setTint(tint)
+      .setAlpha(alpha)
+      .setScale(scale)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+  }
+
+  private createAuraSigil(
+    tint: number,
+    alpha: number,
+    width: number,
+    height: number,
+    scale: number,
+  ) {
+    return this.add
+      .ellipse(0, 10, width, height, tint, alpha)
+      .setStrokeStyle(2, tint, Math.min(0.6, alpha + 0.2))
+      .setScale(scale)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
   }
 
   private sortActorLayer() {
@@ -2353,8 +2835,17 @@ export class WorldScene extends Phaser.Scene {
     return "anim_monster_slime";
   }
 
+  private isBossMonster(baseId: string) {
+    return (
+      baseId.includes("boss") ||
+      baseId.includes("queen") ||
+      baseId.includes("lord") ||
+      baseId.includes("king")
+    );
+  }
+
   private getMonsterScale(baseId: string) {
-    if (baseId.includes("boss") || baseId.includes("queen") || baseId.includes("lord")) return 1.08;
+    if (this.isBossMonster(baseId)) return 1.08;
     if (baseId.includes("dragon") || baseId.includes("wyvern")) return 0.98;
     if (baseId.includes("golem")) return 0.92;
     if (baseId.includes("boar") || baseId.includes("orc")) return 0.86;
@@ -2833,6 +3324,263 @@ export class WorldScene extends Phaser.Scene {
         onComplete: () => spark.destroy(),
       });
     }
+  }
+
+  private showEnhancedHitFeedback(
+    x: number,
+    y: number,
+    damage: number,
+    isCrit: boolean,
+    tint = 0xffc98f,
+  ) {
+    const slashTint = isCrit ? 0xfff1a8 : tint;
+    const slash = this.add
+      .arc(x, y - 12, isCrit ? 40 : 30, 210, 338, false, slashTint, 0.18)
+      .setStrokeStyle(isCrit ? 5 : 4, slashTint, 0.95)
+      .setRotation(Phaser.Math.FloatBetween(-0.14, 0.14));
+    this.effectLayer?.add(slash);
+    this.tweens.add({
+      targets: slash,
+      alpha: 0,
+      scaleX: isCrit ? 1.8 : 1.45,
+      scaleY: isCrit ? 1.8 : 1.45,
+      duration: isCrit ? 230 : 180,
+      ease: "Power2.Out",
+      onComplete: () => slash.destroy(),
+    });
+
+    if (isCrit) {
+      this.spawnCriticalBurst(x, y - 16, damage);
+    }
+  }
+
+  private spawnCriticalBurst(x: number, y: number, damage: number) {
+    const burst = this.add
+      .star(x, y, 8, 10, 24, 0xfff2a6, 0.9)
+      .setStrokeStyle(2, 0xffffff, 0.9);
+    this.effectLayer?.add(burst);
+    this.tweens.add({
+      targets: burst,
+      scaleX: 1.9,
+      scaleY: 1.9,
+      alpha: 0,
+      duration: 280,
+      ease: "Cubic.Out",
+      onComplete: () => burst.destroy(),
+    });
+
+    const crit = this.add
+      .text(x, y - 26, `CRIT ${damage}`, {
+        fontSize: "14px",
+        color: "#fff4a3",
+        stroke: "#4a2300",
+        strokeThickness: 4,
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5)
+      .setDepth(9999);
+    this.effectLayer?.add(crit);
+    this.tweens.add({
+      targets: crit,
+      y: y - 58,
+      alpha: 0,
+      duration: 620,
+      ease: "Quad.Out",
+      onComplete: () => crit.destroy(),
+    });
+  }
+
+  private spawnArcaneBurst(x: number, y: number, tint: number) {
+    const ring = this.add
+      .ellipse(x, y, 28, 28, tint, 0.18)
+      .setStrokeStyle(2, 0xffffff, 0.7);
+    this.effectLayer?.add(ring);
+    this.tweens.add({
+      targets: ring,
+      scaleX: 2.2,
+      scaleY: 2.2,
+      alpha: 0,
+      duration: 240,
+      ease: "Sine.Out",
+      onComplete: () => ring.destroy(),
+    });
+  }
+
+  private spawnWeaponTrail(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    tint: number,
+  ) {
+    const angle = Phaser.Math.Angle.Between(startX, startY, endX, endY);
+    const midX = (startX + endX) / 2;
+    const midY = (startY + endY) / 2;
+    const trail = this.add
+      .rectangle(
+        midX,
+        midY,
+        Phaser.Math.Distance.Between(startX, startY, endX, endY),
+        10,
+        tint,
+        0.16,
+      )
+      .setRotation(angle)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    this.effectLayer?.add(trail);
+    this.tweens.add({
+      targets: trail,
+      alpha: 0,
+      scaleY: 0.2,
+      duration: 140,
+      ease: "Quad.Out",
+      onComplete: () => trail.destroy(),
+    });
+  }
+
+  private spawnMeleeAfterimage(tint = 0xffdfab) {
+    if (!this.localPlayer) {
+      return;
+    }
+
+    const ghost = this.add
+      .image(
+        this.localPlayer.x,
+        this.localPlayer.y + this.localPlayer.spriteBody.y,
+        this.localPlayer.spriteBody.texture.key,
+      )
+      .setOrigin(0.5, 0.94)
+      .setScale(this.localPlayer.spriteBody.scaleX, this.localPlayer.spriteBody.scaleY)
+      .setTint(tint)
+      .setAlpha(0.22)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    this.effectLayer?.add(ghost);
+    this.tweens.add({
+      targets: ghost,
+      alpha: 0,
+      x:
+        ghost.x +
+        (this.localPlayer.facing === "e" ||
+        this.localPlayer.facing === "se" ||
+        this.localPlayer.facing === "ne"
+          ? 14
+          : -14),
+      duration: 150,
+      ease: "Quad.Out",
+      onComplete: () => ghost.destroy(),
+    });
+  }
+
+  private attachProjectileTrail(
+    projectile: Phaser.GameObjects.Image,
+    tint: number,
+  ) {
+    this.time.addEvent({
+      delay: 24,
+      repeat: 7,
+      callback: () => {
+        if (!projectile.active) {
+          return;
+        }
+
+        const ember = this.add
+          .ellipse(projectile.x, projectile.y, 10, 6, tint, 0.22)
+          .setRotation(projectile.rotation)
+          .setBlendMode(Phaser.BlendModes.SCREEN);
+        this.effectLayer?.add(ember);
+        this.tweens.add({
+          targets: ember,
+          alpha: 0,
+          scaleX: 0.1,
+          scaleY: 0.1,
+          duration: 180,
+          ease: "Quad.Out",
+          onComplete: () => ember.destroy(),
+        });
+      },
+    });
+  }
+
+  private spawnLeafBurst(x: number, y: number, tint: number) {
+    for (let index = 0; index < 5; index += 1) {
+      const angle = (index / 5) * Math.PI * 2;
+      const leaf = this.add
+        .ellipse(x, y, 10, 5, tint, 0.46)
+        .setRotation(angle)
+        .setBlendMode(Phaser.BlendModes.SCREEN);
+      this.effectLayer?.add(leaf);
+      this.tweens.add({
+        targets: leaf,
+        x: x + Math.cos(angle) * (22 + index * 4),
+        y: y + Math.sin(angle) * (16 + index * 3),
+        alpha: 0,
+        duration: 220 + index * 20,
+        ease: "Quad.Out",
+        onComplete: () => leaf.destroy(),
+      });
+    }
+  }
+
+  private spawnShieldPulse(x: number, y: number, tint: number) {
+    const pulse = this.add
+      .ellipse(x, y, 34, 26, tint, 0.18)
+      .setStrokeStyle(2, tint, 0.8);
+    this.effectLayer?.add(pulse);
+    this.tweens.add({
+      targets: pulse,
+      scaleX: 1.9,
+      scaleY: 1.9,
+      alpha: 0,
+      duration: 220,
+      ease: "Quad.Out",
+      onComplete: () => pulse.destroy(),
+    });
+  }
+
+  private getPlayerClassTone() {
+    const className = useGameStore.getState().player.className.toLowerCase();
+    if (className.includes("ranger")) {
+      return {
+        classId: "ranger",
+        slashTint: 0xc7f19f,
+        impactTint: 0xe6ffd0,
+        trailTint: 0x8fe0a8,
+        projectileTint: 0xe7f7c2,
+        burstTint: 0xa5ee82,
+        afterimageTint: 0xbdf3b8,
+      };
+    }
+    if (className.includes("arcan")) {
+      return {
+        classId: "arcanist",
+        slashTint: 0xe1b4ff,
+        impactTint: 0xf2ddff,
+        trailTint: 0xc494ff,
+        projectileTint: 0xf3dcff,
+        burstTint: 0xcba2ff,
+        afterimageTint: 0xe0b7ff,
+      };
+    }
+    if (className.includes("sovereign")) {
+      return {
+        classId: "sovereign",
+        slashTint: 0xf2cb71,
+        impactTint: 0xffefb8,
+        trailTint: 0xe3ba54,
+        projectileTint: 0xffefb8,
+        burstTint: 0xf0cf85,
+        afterimageTint: 0xf7d88f,
+      };
+    }
+    return {
+      classId: "guardian",
+      slashTint: 0x9fc2ff,
+      impactTint: 0xe0ebff,
+      trailTint: 0x77a2f8,
+      projectileTint: 0xd9e7ff,
+      burstTint: 0x9ab8ff,
+      afterimageTint: 0xb4ceff,
+    };
   }
 
   private showDeathEffect(x: number, y: number) {

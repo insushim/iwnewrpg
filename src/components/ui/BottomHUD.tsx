@@ -1,11 +1,27 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { MAPS } from "@/game/data/maps";
 import { useGameStore } from "@/lib/gameStore";
 
+type QuickSlot = {
+  key: string;
+  itemId: string | null;
+  label: string;
+  color: string;
+  glyph: string;
+};
+
+const QUICK_SLOTS: QuickSlot[] = [
+  { key: "1", itemId: "red_potion", label: "HP", color: "#d84a5a", glyph: "+" },
+  { key: "2", itemId: "blue_potion", label: "MP", color: "#4f7cff", glyph: "M" },
+  { key: "3", itemId: "teleport_scroll", label: "TP", color: "#b27cff", glyph: "T" },
+  { key: "4", itemId: null, label: "EMPTY", color: "#4b5563", glyph: "-" },
+];
+
 export function BottomHUD() {
   const player = useGameStore((state) => state.player);
+  const serverName = useGameStore((state) => state.serverName);
   const connected = useGameStore((state) => state.connected);
   const derived = useGameStore((state) => state.getDerivedStats());
   const currentMapId = useGameStore((state) => state.currentMapId);
@@ -15,39 +31,15 @@ export function BottomHUD() {
   const inventory = useGameStore((state) => state.inventory);
   const consumeItem = useGameStore((state) => state.consumeItem);
 
-  const hpRatio = Math.max(
-    0,
-    Math.min(100, (player.hp / Math.max(1, derived.maxHp)) * 100),
-  );
-  const mpRatio = Math.max(
-    0,
-    Math.min(100, (player.mp / Math.max(1, derived.maxMp)) * 100),
-  );
-  const expRatio = Math.max(
-    0,
-    Math.min(100, (player.exp / Math.max(1, player.expToNext)) * 100),
-  );
-
-  // Quick-use slots: 1=HP포션, 2=MP포션, 3=스크롤, 4=기타소모품
-  const quickSlots = [
-    { key: "1", itemId: "red_potion", label: "HP 포션", color: "#cc2233" },
-    { key: "2", itemId: "blue_potion", label: "MP 포션", color: "#2255cc" },
-    {
-      key: "3",
-      itemId: "teleport_scroll",
-      label: "이동 주문서",
-      color: "#8844cc",
-    },
-    { key: "4", itemId: null, label: "비어 있음", color: "#334455" },
-  ];
+  const hpRatio = Math.max(0, Math.min(100, (player.hp / Math.max(1, derived.maxHp)) * 100));
+  const mpRatio = Math.max(0, Math.min(100, (player.mp / Math.max(1, derived.maxMp)) * 100));
+  const expRatio = Math.max(0, Math.min(100, (player.exp / Math.max(1, player.expToNext)) * 100));
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      )
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
+      }
       if (e.key === "i" || e.key === "I") toggleInventory();
       if (e.key === "q" || e.key === "Q") toggleQuestWindow();
       if (e.key === "1") {
@@ -63,7 +55,7 @@ export function BottomHUD() {
         if (sc && sc.quantity > 0) consumeItem("teleport_scroll");
       }
     },
-    [toggleInventory, toggleQuestWindow, consumeItem, inventory],
+    [consumeItem, inventory, toggleInventory, toggleQuestWindow],
   );
 
   useEffect(() => {
@@ -71,490 +63,205 @@ export function BottomHUD() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  const classInitial = player.className.charAt(0).toUpperCase();
   const classColors: Record<string, string> = {
-    Guardian: "#4488ff",
-    Ranger: "#44cc66",
-    Arcanist: "#cc66ff",
-    Sovereign: "#ffcc44",
+    guardian: "#79a7ff",
+    ranger: "#71d28f",
+    arcanist: "#cb8cff",
+    sovereign: "#f1cb6a",
   };
-  const classColor = classColors[player.className] ?? "#aaaaaa";
+  const normalizedClass = player.className.toLowerCase();
+  const classColor = classColors[normalizedClass] ?? "#b2b2b2";
+  const classLabel =
+    normalizedClass === "guardian"
+      ? "Guardian"
+      : normalizedClass === "ranger"
+        ? "Ranger"
+        : normalizedClass === "arcanist"
+          ? "Arcanist"
+          : normalizedClass === "sovereign"
+            ? "Sovereign"
+            : player.className;
 
   return (
-    <div
-      className="pointer-events-auto fixed bottom-0 left-0 right-0 z-20"
-      style={{
-        height: "88px",
-        background:
-          "linear-gradient(to top, rgba(3,5,10,0.97), rgba(5,10,20,0.92))",
-        borderTop: "1px solid rgba(200,169,110,0.18)",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "0 12px",
-      }}
-    >
-      {/* ─── 캐릭터 초상화 ─── */}
-      <div style={{ flexShrink: 0, position: "relative" }}>
-        {/* 원형 글로우 */}
-        <div
-          style={{
-            position: "absolute",
-            inset: -3,
-            borderRadius: "50%",
-            background: `radial-gradient(circle, ${classColor}33 0%, transparent 70%)`,
-          }}
-        />
-        {/* 초상화 원 */}
-        <div
-          style={{
-            width: 62,
-            height: 62,
-            borderRadius: "50%",
-            border: `2px solid ${classColor}88`,
-            background: `radial-gradient(circle at 40% 35%, #1a1008, #0a0804)`,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "22px",
-              fontWeight: "bold",
-              color: classColor,
-              fontFamily: "serif",
-            }}
-          >
-            {classInitial}
-          </span>
-          <span
-            style={{
-              fontSize: "9px",
-              color: "rgba(200,169,110,0.7)",
-              marginTop: "-2px",
-            }}
-          >
-            Lv.{player.level}
-          </span>
-        </div>
-      </div>
-
-      {/* ─── HP/MP/EXP 바 + 이름 ─── */}
+    <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-20 px-3 pb-2">
       <div
-        style={{
-          flex: "0 0 220px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "5px",
-        }}
+        className="relative flex h-[92px] items-center gap-3 overflow-hidden rounded-[26px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(14,18,28,0.96),rgba(4,6,12,0.98))] px-3 shadow-[0_-10px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,228,168,0.05)]"
       >
-        {/* 이름 + 클래스 */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            marginBottom: "1px",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "12px",
-              fontWeight: "bold",
-              color: "#f0e0b0",
-              fontFamily: "sans-serif",
-            }}
-          >
-            {player.name}
-          </span>
-          <span style={{ fontSize: "9px", color: "rgba(200,169,110,0.55)" }}>
-            {player.className}
-          </span>
-        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,128,0.09),transparent_28%),linear-gradient(90deg,transparent,rgba(119,168,255,0.04),transparent)]" />
 
-        {/* HP 바 */}
-        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-          <span
-            style={{
-              width: "16px",
-              fontSize: "9px",
-              fontWeight: "bold",
-              color: "#cc3344",
-              textAlign: "right",
-            }}
-          >
-            HP
-          </span>
+        <div className="relative flex shrink-0 items-center gap-3">
           <div
+            className="relative flex h-[64px] w-[64px] items-center justify-center rounded-full border text-[22px] font-bold"
             style={{
-              flex: 1,
-              height: "12px",
-              background: "rgba(40,8,8,0.85)",
-              borderRadius: "3px",
-              border: "1px solid rgba(255,255,255,0.06)",
-              overflow: "hidden",
-              position: "relative",
+              borderColor: `${classColor}99`,
+              color: classColor,
+              background: `radial-gradient(circle at 35% 30%, ${classColor}33 0%, rgba(11,10,10,0.96) 60%)`,
+              boxShadow: `0 0 24px ${classColor}22, inset 0 1px 0 rgba(255,255,255,0.08)`,
             }}
           >
-            <div
-              style={{
-                height: "100%",
-                width: `${hpRatio}%`,
-                background:
-                  "linear-gradient(to bottom, #ff4455, #cc2233, #881422)",
-                borderRadius: "2px",
-                transition: "width 0.25s ease",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                top: "1px",
-                left: "2px",
-                right: "2px",
-                height: "3px",
-                background: "rgba(255,255,255,0.18)",
-                borderRadius: "2px",
-                pointerEvents: "none",
-                clipPath: `inset(0 ${100 - hpRatio}% 0 0)`,
-              }}
-            />
-          </div>
-          <span
-            style={{
-              width: "52px",
-              fontSize: "9px",
-              color: "rgba(255,180,180,0.65)",
-              textAlign: "right",
-            }}
-          >
-            {player.hp}/{derived.maxHp}
-          </span>
-        </div>
-
-        {/* MP 바 */}
-        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-          <span
-            style={{
-              width: "16px",
-              fontSize: "9px",
-              fontWeight: "bold",
-              color: "#3366cc",
-              textAlign: "right",
-            }}
-          >
-            MP
-          </span>
-          <div
-            style={{
-              flex: 1,
-              height: "9px",
-              background: "rgba(8,10,40,0.85)",
-              borderRadius: "3px",
-              border: "1px solid rgba(255,255,255,0.06)",
-              overflow: "hidden",
-              position: "relative",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${mpRatio}%`,
-                background:
-                  "linear-gradient(to bottom, #4477ff, #2255cc, #112288)",
-                borderRadius: "2px",
-                transition: "width 0.3s ease",
-              }}
-            />
-          </div>
-          <span
-            style={{
-              width: "52px",
-              fontSize: "9px",
-              color: "rgba(170,200,255,0.65)",
-              textAlign: "right",
-            }}
-          >
-            {player.mp}/{derived.maxMp}
-          </span>
-        </div>
-
-        {/* EXP 바 */}
-        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-          <span
-            style={{
-              width: "16px",
-              fontSize: "9px",
-              fontWeight: "bold",
-              color: "#aa8800",
-              textAlign: "right",
-            }}
-          >
-            EX
-          </span>
-          <div
-            style={{
-              flex: 1,
-              height: "5px",
-              background: "rgba(20,14,0,0.85)",
-              borderRadius: "2px",
-              border: "1px solid rgba(255,255,255,0.05)",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${expRatio}%`,
-                background: "linear-gradient(to right, #aa8800, #ffcc00)",
-                borderRadius: "2px",
-                transition: "width 0.4s ease",
-              }}
-            />
-          </div>
-          <span
-            style={{
-              width: "52px",
-              fontSize: "9px",
-              color: "rgba(255,200,80,0.5)",
-              textAlign: "right",
-            }}
-          >
-            {player.exp}/{player.expToNext}
-          </span>
-        </div>
-      </div>
-
-      {/* ─── 세로 구분선 ─── */}
-      <div
-        style={{
-          width: "1px",
-          height: "60px",
-          background: "rgba(200,169,110,0.12)",
-          flexShrink: 0,
-        }}
-      />
-
-      {/* ─── 퀵슬롯 ─── */}
-      <div style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
-        {quickSlots.map((slot) => {
-          const invItem = slot.itemId
-            ? inventory.find((it) => it.id === slot.itemId)
-            : null;
-          const count = invItem?.quantity ?? 0;
-          return (
-            <div
-              key={slot.key}
-              onClick={() => {
-                if (slot.itemId && count > 0) consumeItem(slot.itemId);
-              }}
-              style={{
-                width: "48px",
-                height: "56px",
-                background:
-                  count > 0
-                    ? `linear-gradient(145deg, ${slot.color}30, rgba(0,0,0,0.6))`
-                    : "rgba(10,10,15,0.6)",
-                border: `1px solid ${count > 0 ? slot.color + "55" : "rgba(50,50,60,0.5)"}`,
-                borderRadius: "6px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "4px 2px",
-                cursor: count > 0 ? "pointer" : "default",
-                transition: "border-color 0.15s",
-                position: "relative",
-              }}
-            >
-              <span style={{ fontSize: "9px", color: "rgba(200,169,110,0.5)" }}>
-                {slot.key}
-              </span>
-              <div style={{ textAlign: "center" }}>
-                {count > 0 ? (
-                  <>
-                    <div
-                      style={{
-                        width: "22px",
-                        height: "22px",
-                        borderRadius: "4px",
-                        background: `${slot.color}44`,
-                        margin: "0 auto 2px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <span style={{ fontSize: "13px" }}>
-                        {slot.itemId === "red_potion"
-                          ? "🔴"
-                          : slot.itemId === "blue_potion"
-                            ? "🔵"
-                            : slot.itemId === "teleport_scroll"
-                              ? "📜"
-                              : "•"}
-                      </span>
-                    </div>
-                    <span
-                      style={{
-                        fontSize: "9px",
-                        color: "rgba(200,200,200,0.7)",
-                      }}
-                    >
-                      x{count}
-                    </span>
-                  </>
-                ) : (
-                  <span
-                    style={{ fontSize: "18px", color: "rgba(100,100,120,0.3)" }}
-                  >
-                    —
-                  </span>
-                )}
-              </div>
-              <div style={{ height: "8px" }} />
+            <div className="absolute inset-[5px] rounded-full border border-white/8" />
+            <div className="text-center leading-none">
+              <div>{player.className.charAt(0).toUpperCase()}</div>
+              <div className="mt-1 text-[9px] font-medium text-[#d4b37b]">Lv {player.level}</div>
             </div>
-          );
-        })}
-      </div>
+          </div>
 
-      {/* ─── 세로 구분선 ─── */}
-      <div
-        style={{
-          width: "1px",
-          height: "60px",
-          background: "rgba(200,169,110,0.12)",
-          flexShrink: 0,
-        }}
-      />
+          <div className="w-[240px]">
+            <div className="mb-1 flex items-end justify-between">
+              <div>
+                <div className="text-[13px] font-semibold text-[#f5e8c3]">{player.name}</div>
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#b79660]">
+                  {classLabel}
+                </div>
+              </div>
+              <div className="rounded-full border border-white/8 bg-white/4 px-2 py-0.5 text-[9px] tracking-[0.2em] text-[#cbb38b]">
+                {connected ? "ONLINE" : "OFFLINE"}
+              </div>
+            </div>
 
-      {/* ─── 골드 + 맵 ─── */}
-      <div style={{ flexShrink: 0, textAlign: "center", minWidth: "70px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            justifyContent: "center",
-          }}
-        >
-          <span style={{ fontSize: "14px" }}>🪙</span>
-          <span
-            style={{
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: "#ffe060",
-              fontFamily: "monospace",
-            }}
-          >
-            {player.gold.toLocaleString()}
-          </span>
+            <Gauge label="HP" ratio={hpRatio} color="linear-gradient(90deg,#ff6b6b,#c2263e)" text={`${player.hp}/${derived.maxHp}`} />
+            <Gauge label="MP" ratio={mpRatio} color="linear-gradient(90deg,#68a6ff,#2b58d8)" text={`${player.mp}/${derived.maxMp}`} />
+            <Gauge label="EXP" ratio={expRatio} color="linear-gradient(90deg,#c9a13d,#f0d16c)" text={`${player.exp}/${player.expToNext}`} small />
+          </div>
         </div>
-        <div
-          style={{
-            fontSize: "9px",
-            color: "rgba(200,169,110,0.45)",
-            marginTop: "2px",
-          }}
-        >
-          {MAPS[currentMapId]?.name ?? currentMapId}
+
+        <Divider />
+
+        <div className="relative flex shrink-0 gap-2">
+          {QUICK_SLOTS.map((slot) => {
+            const invItem = slot.itemId ? inventory.find((it) => it.id === slot.itemId) : null;
+            const count = invItem?.quantity ?? 0;
+            const active = !!slot.itemId && count > 0;
+            return (
+              <button
+                key={slot.key}
+                type="button"
+                onClick={() => {
+                  if (slot.itemId && count > 0) consumeItem(slot.itemId);
+                }}
+                className="group relative flex h-[62px] w-[52px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[14px] border px-1 py-1.5 text-[9px] transition"
+                style={{
+                  cursor: active ? "pointer" : "default",
+                  borderColor: active ? `${slot.color}77` : "rgba(120,120,140,0.24)",
+                  background: active
+                    ? `linear-gradient(180deg, ${slot.color}26, rgba(10,10,18,0.92))`
+                    : "linear-gradient(180deg, rgba(26,28,34,0.88), rgba(10,10,16,0.94))",
+                  boxShadow: active ? `inset 0 1px 0 rgba(255,255,255,0.08), 0 0 18px ${slot.color}18` : "none",
+                }}
+              >
+                <span className="text-[#af9166]">{slot.key}</span>
+                <div
+                  className="flex h-[24px] w-[24px] items-center justify-center rounded-[8px] border text-[12px] font-bold"
+                  style={{
+                    background: active ? `${slot.color}40` : "rgba(255,255,255,0.04)",
+                    borderColor: active ? `${slot.color}88` : "rgba(255,255,255,0.06)",
+                    color: active ? "#fff3d6" : "#6b7280",
+                  }}
+                >
+                  {slot.glyph}
+                </div>
+                <span className="text-[8px] tracking-[0.12em] text-[#e9dcc0]/75">{active ? `x${count}` : slot.label}</span>
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* ─── 빈공간 ─── */}
-      <div style={{ flex: 1 }} />
+        <Divider />
 
-      {/* ─── 버프 표시 ─── */}
-      {player.buffs.length > 0 && (
-        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+        <div className="relative min-w-[118px] shrink-0">
+          <div className="text-[10px] uppercase tracking-[0.26em] text-[#af9166]">Territory</div>
+          <div className="mt-1 text-[13px] font-semibold text-[#f5e8c3]">{MAPS[currentMapId]?.name ?? currentMapId}</div>
+          <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#9f8560]">{serverName}</div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="text-[14px] text-[#f2c45d]">G</span>
+            <span className="font-mono text-[15px] font-semibold text-[#f7db86]">
+              {player.gold.toLocaleString()}
+            </span>
+          </div>
+        </div>
+
+        <div className="relative ml-auto flex items-center gap-2">
           {player.buffs.slice(0, 4).map((buff) => (
             <div
               key={buff.id}
               title={`${buff.name} (${buff.remaining}s)`}
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "6px",
-                background: "rgba(80,160,100,0.2)",
-                border: "1px solid rgba(80,200,120,0.4)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "18px",
-              }}
+              className="flex h-[38px] w-[38px] items-center justify-center rounded-[12px] border border-emerald-300/20 bg-[linear-gradient(180deg,rgba(38,84,58,0.48),rgba(8,18,14,0.92))] text-[10px] text-emerald-100 shadow-[0_0_18px_rgba(84,214,145,0.12)]"
             >
-              ✨
+              BF
             </div>
           ))}
+
+          <HudButton active={ui.inventoryOpen} label="[I] INV" onClick={toggleInventory} />
+          <HudButton active={ui.questWindowOpen} label="[Q] QUEST" onClick={toggleQuestWindow} />
         </div>
-      )}
-
-      {/* ─── 메뉴 버튼 ─── */}
-      <div style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
-        <button
-          type="button"
-          onClick={toggleInventory}
-          style={{
-            padding: "6px 10px",
-            borderRadius: "6px",
-            fontSize: "10px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            border: "1px solid",
-            transition: "all 0.15s",
-            background: ui.inventoryOpen ? "#c8a96e" : "rgba(10,8,5,0.7)",
-            borderColor: ui.inventoryOpen
-              ? "#c8a96e"
-              : "rgba(200,169,110,0.25)",
-            color: ui.inventoryOpen ? "#1a0e00" : "#f0e0b0",
-          }}
-        >
-          [I] 인벤
-        </button>
-        <button
-          type="button"
-          onClick={toggleQuestWindow}
-          style={{
-            padding: "6px 10px",
-            borderRadius: "6px",
-            fontSize: "10px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            border: "1px solid",
-            transition: "all 0.15s",
-            background: ui.questWindowOpen ? "#c8a96e" : "rgba(10,8,5,0.7)",
-            borderColor: ui.questWindowOpen
-              ? "#c8a96e"
-              : "rgba(200,169,110,0.25)",
-            color: ui.questWindowOpen ? "#1a0e00" : "#f0e0b0",
-          }}
-        >
-          [Q] 퀘스트
-        </button>
-      </div>
-
-      {/* ─── 연결 상태 ─── */}
-      <div style={{ flexShrink: 0 }}>
-        <span
-          style={{
-            padding: "4px 8px",
-            borderRadius: "6px",
-            fontSize: "9px",
-            fontWeight: "bold",
-            background: connected
-              ? "rgba(40,120,60,0.3)"
-              : "rgba(60,60,70,0.3)",
-            color: connected ? "#66dd88" : "#888899",
-            border: `1px solid ${connected ? "rgba(80,180,100,0.3)" : "rgba(80,80,100,0.3)"}`,
-          }}
-        >
-          {connected ? "온라인" : "오프라인"}
-        </span>
       </div>
     </div>
+  );
+}
+
+function Gauge({
+  label,
+  ratio,
+  color,
+  text,
+  small = false,
+}: {
+  label: string;
+  ratio: number;
+  color: string;
+  text: string;
+  small?: boolean;
+}) {
+  return (
+    <div className={`flex items-center gap-2 ${small ? "mt-1" : "mt-1.5"}`}>
+      <span className={`w-7 text-right font-semibold ${small ? "text-[8px]" : "text-[9px]"} text-[#bea277]`}>
+        {label}
+      </span>
+      <div className={`relative flex-1 overflow-hidden rounded-full border border-white/6 bg-black/50 ${small ? "h-[6px]" : "h-[10px]"}`}>
+        <div
+          className="absolute inset-y-0 left-0 rounded-full"
+          style={{ width: `${ratio}%`, background: color, transition: "width 220ms ease" }}
+        />
+        <div
+          className="absolute left-1 right-1 top-[1px] h-[2px] rounded-full bg-white/20"
+          style={{ clipPath: `inset(0 ${100 - ratio}% 0 0)` }}
+        />
+      </div>
+      <span className={`w-[58px] text-right font-mono ${small ? "text-[8px]" : "text-[9px]"} text-[#d8c3a1]/70`}>
+        {text}
+      </span>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="h-[58px] w-px shrink-0 bg-[linear-gradient(180deg,transparent,rgba(201,160,95,0.4),transparent)]" />;
+}
+
+function HudButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-[12px] border px-3 py-2 text-[10px] font-semibold tracking-[0.14em] transition"
+      style={{
+        background: active
+          ? "linear-gradient(180deg, rgba(226,193,120,0.95), rgba(165,121,49,0.95))"
+          : "linear-gradient(180deg, rgba(26,30,38,0.92), rgba(10,12,18,0.96))",
+        color: active ? "#120b03" : "#efdfc0",
+        borderColor: active ? "rgba(255,232,179,0.6)" : "rgba(210,171,106,0.22)",
+        boxShadow: active ? "0 0 18px rgba(232,191,97,0.22)" : "none",
+      }}
+    >
+      {label}
+    </button>
   );
 }

@@ -1,0 +1,205 @@
+{
+  "generatedAt": "2026-03-16T03:12:45.832Z",
+  "units": [
+    {
+      "base": "anim_player_guardian",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_player_guardian/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_player_guardian/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_player_guardian/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_player_guardian/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_player_guardian/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_player_guardian/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_player_ranger",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_player_ranger/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_player_ranger/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_player_ranger/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_player_ranger/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_player_ranger/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_player_ranger/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_player_arcanist",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_player_arcanist/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_player_arcanist/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_player_arcanist/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_player_arcanist/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_player_arcanist/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_player_arcanist/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_player_sovereign",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_player_sovereign/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_player_sovereign/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_player_sovereign/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_player_sovereign/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_player_sovereign/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_player_sovereign/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_npc_weapon",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_npc_weapon/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_npc_weapon/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_npc_weapon/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_npc_weapon/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_npc_weapon/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_npc_weapon/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_npc_armor",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_npc_armor/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_npc_armor/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_npc_armor/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_npc_armor/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_npc_armor/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_npc_armor/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_npc_magic",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_npc_magic/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_npc_magic/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_npc_magic/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_npc_magic/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_npc_magic/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_npc_magic/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_npc_inn",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_npc_inn/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_npc_inn/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_npc_inn/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_npc_inn/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_npc_inn/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_npc_inn/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_npc_blacksmith",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_npc_blacksmith/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_npc_blacksmith/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_npc_blacksmith/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_npc_blacksmith/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_npc_blacksmith/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_npc_blacksmith/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_npc_default",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_npc_default/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_npc_default/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_npc_default/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_npc_default/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_npc_default/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_npc_default/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_slime",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_slime/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_slime/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_slime/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_slime/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_slime/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_slime/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_bog",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_bog/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_bog/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_bog/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_bog/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_bog/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_bog/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_spider",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_spider/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_spider/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_spider/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_spider/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_spider/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_spider/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_wolf",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_wolf/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_wolf/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_wolf/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_wolf/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_wolf/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_wolf/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_orc",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_orc/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_orc/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_orc/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_orc/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_orc/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_orc/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_boar",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_boar/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_boar/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_boar/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_boar/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_boar/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_boar/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_wisp",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_wisp/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_wisp/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_wisp/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_wisp/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_wisp/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_wisp/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_dragon",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_dragon/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_dragon/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_dragon/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_dragon/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_dragon/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_dragon/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_rock_golem",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_rock_golem/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_rock_golem/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_rock_golem/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_rock_golem/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_rock_golem/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_rock_golem/manifest.atlas.sample.json"
+    },
+    {
+      "base": "anim_monster_skeleton",
+      "frameCount": 80,
+      "atlasJson": "/game-assets/remaster/examples/anim_monster_skeleton/atlas.sample.json",
+      "atlasMockup": "/game-assets/remaster/examples/anim_monster_skeleton/atlas.mock.svg",
+      "atlasPng": "/game-assets/remaster/examples/anim_monster_skeleton/atlas.png",
+      "placeholderPng": "/game-assets/remaster/examples/anim_monster_skeleton/atlas.placeholder.png",
+      "frameOrder": "/game-assets/remaster/examples/anim_monster_skeleton/frame-order.txt",
+      "manifestSnippet": "/game-assets/remaster/examples/anim_monster_skeleton/manifest.atlas.sample.json"
+    }
+  ]
+}

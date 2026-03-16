@@ -246,6 +246,7 @@ export function GameSocketBridge() {
     addChat,
     addDroppedLoot,
     openDeath,
+    player.className,
     player.name,
     removeDroppedLoot,
     removeWorldPlayer,

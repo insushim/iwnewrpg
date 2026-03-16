@@ -1,0 +1,969 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="2612" viewBox="0 0 512 2612">
+  <rect width="512" height="2612" fill="#06080e" />
+  <rect x="0" y="0" width="512" height="52" fill="#0d1320" />
+  <text x="18" y="22" font-size="16" font-weight="700" fill="#f2e6c8" font-family="monospace">anim_npc_inn atlas mockup</text>
+  <text x="18" y="40" font-size="11" fill="#b79b69" font-family="monospace">Frame size 128x128 | 80 frames | 4 columns</text>
+  <g transform="translate(0, 52)">
+
+  <g transform="translate(0, 0)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">000</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE N 0</text>
+  </g>
+
+  <g transform="translate(128, 0)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">001</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE N 1</text>
+  </g>
+
+  <g transform="translate(256, 0)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">002</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK N 0</text>
+  </g>
+
+  <g transform="translate(384, 0)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">003</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK N 0</text>
+  </g>
+
+  <g transform="translate(0, 128)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">004</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK N 1</text>
+  </g>
+
+  <g transform="translate(128, 128)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">005</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK N 1</text>
+  </g>
+
+  <g transform="translate(256, 128)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">006</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK N 2</text>
+  </g>
+
+  <g transform="translate(384, 128)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">007</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK N 2</text>
+  </g>
+
+  <g transform="translate(0, 256)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">008</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK N 3</text>
+  </g>
+
+  <g transform="translate(128, 256)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">009</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK N 3</text>
+  </g>
+
+  <g transform="translate(256, 256)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">010</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE NE 0</text>
+  </g>
+
+  <g transform="translate(384, 256)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">011</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE NE 1</text>
+  </g>
+
+  <g transform="translate(0, 384)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">012</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NE 0</text>
+  </g>
+
+  <g transform="translate(128, 384)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">013</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NE 0</text>
+  </g>
+
+  <g transform="translate(256, 384)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">014</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NE 1</text>
+  </g>
+
+  <g transform="translate(384, 384)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">015</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NE 1</text>
+  </g>
+
+  <g transform="translate(0, 512)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">016</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NE 2</text>
+  </g>
+
+  <g transform="translate(128, 512)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">017</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NE 2</text>
+  </g>
+
+  <g transform="translate(256, 512)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">018</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NE 3</text>
+  </g>
+
+  <g transform="translate(384, 512)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">019</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NE 3</text>
+  </g>
+
+  <g transform="translate(0, 640)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">020</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE E 0</text>
+  </g>
+
+  <g transform="translate(128, 640)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">021</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE E 1</text>
+  </g>
+
+  <g transform="translate(256, 640)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">022</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK E 0</text>
+  </g>
+
+  <g transform="translate(384, 640)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">023</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK E 0</text>
+  </g>
+
+  <g transform="translate(0, 768)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">024</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK E 1</text>
+  </g>
+
+  <g transform="translate(128, 768)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">025</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK E 1</text>
+  </g>
+
+  <g transform="translate(256, 768)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">026</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK E 2</text>
+  </g>
+
+  <g transform="translate(384, 768)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">027</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK E 2</text>
+  </g>
+
+  <g transform="translate(0, 896)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">028</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK E 3</text>
+  </g>
+
+  <g transform="translate(128, 896)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">029</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK E 3</text>
+  </g>
+
+  <g transform="translate(256, 896)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">030</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE SE 0</text>
+  </g>
+
+  <g transform="translate(384, 896)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">031</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE SE 1</text>
+  </g>
+
+  <g transform="translate(0, 1024)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">032</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SE 0</text>
+  </g>
+
+  <g transform="translate(128, 1024)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">033</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SE 0</text>
+  </g>
+
+  <g transform="translate(256, 1024)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">034</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SE 1</text>
+  </g>
+
+  <g transform="translate(384, 1024)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">035</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SE 1</text>
+  </g>
+
+  <g transform="translate(0, 1152)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">036</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SE 2</text>
+  </g>
+
+  <g transform="translate(128, 1152)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">037</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SE 2</text>
+  </g>
+
+  <g transform="translate(256, 1152)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">038</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SE 3</text>
+  </g>
+
+  <g transform="translate(384, 1152)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">039</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SE 3</text>
+  </g>
+
+  <g transform="translate(0, 1280)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">040</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE S 0</text>
+  </g>
+
+  <g transform="translate(128, 1280)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">041</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE S 1</text>
+  </g>
+
+  <g transform="translate(256, 1280)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">042</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK S 0</text>
+  </g>
+
+  <g transform="translate(384, 1280)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">043</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK S 0</text>
+  </g>
+
+  <g transform="translate(0, 1408)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">044</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK S 1</text>
+  </g>
+
+  <g transform="translate(128, 1408)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">045</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK S 1</text>
+  </g>
+
+  <g transform="translate(256, 1408)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">046</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK S 2</text>
+  </g>
+
+  <g transform="translate(384, 1408)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">047</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK S 2</text>
+  </g>
+
+  <g transform="translate(0, 1536)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">048</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK S 3</text>
+  </g>
+
+  <g transform="translate(128, 1536)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">049</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK S 3</text>
+  </g>
+
+  <g transform="translate(256, 1536)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">050</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE SW 0</text>
+  </g>
+
+  <g transform="translate(384, 1536)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">051</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE SW 1</text>
+  </g>
+
+  <g transform="translate(0, 1664)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">052</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SW 0</text>
+  </g>
+
+  <g transform="translate(128, 1664)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">053</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SW 0</text>
+  </g>
+
+  <g transform="translate(256, 1664)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">054</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SW 1</text>
+  </g>
+
+  <g transform="translate(384, 1664)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">055</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SW 1</text>
+  </g>
+
+  <g transform="translate(0, 1792)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">056</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SW 2</text>
+  </g>
+
+  <g transform="translate(128, 1792)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">057</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SW 2</text>
+  </g>
+
+  <g transform="translate(256, 1792)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">058</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK SW 3</text>
+  </g>
+
+  <g transform="translate(384, 1792)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">059</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK SW 3</text>
+  </g>
+
+  <g transform="translate(0, 1920)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">060</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE W 0</text>
+  </g>
+
+  <g transform="translate(128, 1920)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">061</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE W 1</text>
+  </g>
+
+  <g transform="translate(256, 1920)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">062</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK W 0</text>
+  </g>
+
+  <g transform="translate(384, 1920)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">063</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK W 0</text>
+  </g>
+
+  <g transform="translate(0, 2048)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">064</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK W 1</text>
+  </g>
+
+  <g transform="translate(128, 2048)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">065</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK W 1</text>
+  </g>
+
+  <g transform="translate(256, 2048)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">066</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK W 2</text>
+  </g>
+
+  <g transform="translate(384, 2048)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">067</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK W 2</text>
+  </g>
+
+  <g transform="translate(0, 2176)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">068</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK W 3</text>
+  </g>
+
+  <g transform="translate(128, 2176)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">069</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK W 3</text>
+  </g>
+
+  <g transform="translate(256, 2176)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">070</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE NW 0</text>
+  </g>
+
+  <g transform="translate(384, 2176)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#7aa2ff" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#7aa2ff" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#7aa2ff" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">071</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">IDLE NW 1</text>
+  </g>
+
+  <g transform="translate(0, 2304)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">072</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NW 0</text>
+  </g>
+
+  <g transform="translate(128, 2304)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">073</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NW 0</text>
+  </g>
+
+  <g transform="translate(256, 2304)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">074</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NW 1</text>
+  </g>
+
+  <g transform="translate(384, 2304)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">075</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NW 1</text>
+  </g>
+
+  <g transform="translate(0, 2432)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">076</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NW 2</text>
+  </g>
+
+  <g transform="translate(128, 2432)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">077</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NW 2</text>
+  </g>
+
+  <g transform="translate(256, 2432)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#72d796" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#72d796" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#72d796" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">078</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">WALK NW 3</text>
+  </g>
+
+  <g transform="translate(384, 2432)">
+    <rect x="0" y="0" width="128" height="128" fill="#0f1420" stroke="rgba(255,255,255,0.1)" />
+    <rect x="8" y="8" width="112" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="#f2c46b" stroke-opacity="0.28" />
+    <line x1="64" y1="18" x2="64" y2="110" stroke="rgba(255,255,255,0.08)" />
+    <line x1="18" y1="64" x2="110" y2="64" stroke="rgba(255,255,255,0.08)" />
+    <ellipse cx="64" cy="104" rx="22" ry="7" fill="rgba(0,0,0,0.24)" />
+    <circle cx="64" cy="40" r="11" fill="#f2c46b" fill-opacity="0.28" />
+    <rect x="50" y="54" width="28" height="30" rx="10" fill="#f2c46b" fill-opacity="0.18" />
+    <text x="10" y="18" font-size="10" fill="#d2b47c" font-family="monospace">079</text>
+    <text x="10" y="110" font-size="10" fill="#f2e6c8" font-family="monospace">ATTACK NW 3</text>
+  </g>
+  </g>
+</svg>

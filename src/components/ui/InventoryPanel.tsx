@@ -16,13 +16,9 @@ const rarityClass = {
 export function InventoryPanel() {
   const items = useGameStore((state) => state.inventory);
   const equipment = useGameStore((state) => state.equipment);
-  const selectedInventoryItemId = useGameStore(
-    (state) => state.ui.selectedInventoryItemId,
-  );
+  const selectedInventoryItemId = useGameStore((state) => state.ui.selectedInventoryItemId);
   const inventoryOpen = useGameStore((state) => state.ui.inventoryOpen);
-  const selectInventoryItem = useGameStore(
-    (state) => state.selectInventoryItem,
-  );
+  const selectInventoryItem = useGameStore((state) => state.selectInventoryItem);
   const consumeItem = useGameStore((state) => state.consumeItem);
   const equipItem = useGameStore((state) => state.equipItem);
   const unequipItem = useGameStore((state) => state.unequipItem);
@@ -32,18 +28,17 @@ export function InventoryPanel() {
     ? (items.find((item) => item.id === selectedInventoryItemId) ?? null)
     : null;
   const selectedItemData = selectedItem ? ITEMS[selectedItem.id] : null;
-  const equippable =
-    selectedItemData?.type === "weapon" || selectedItemData?.type === "armor";
+  const equippable = selectedItemData?.type === "weapon" || selectedItemData?.type === "armor";
   const usable =
     selectedItemData?.type === "consumable" ||
     selectedItemData?.id === "return_scroll" ||
     selectedItemData?.id === "teleport_scroll";
 
   const gearSlots = [
-    ["weapon", "무기"],
-    ["armor", "갑옷"],
-    ["helmet", "투구"],
-    ["ring1", "반지"],
+    ["weapon", "WEAPON"],
+    ["armor", "ARMOR"],
+    ["helmet", "HELM"],
+    ["ring1", "RING"],
   ] as const;
 
   if (!inventoryOpen) {
@@ -51,26 +46,29 @@ export function InventoryPanel() {
   }
 
   return (
-    <section className="panel hud-panel w-[300px] rounded-2xl p-3 shadow-2xl">
-      {/* 헤더 */}
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-amber-50">인벤토리</h3>
-        <div className="flex items-center gap-1">
-          <span className="hud-chip px-2 py-0.5 text-[10px] text-amber-100/60">
+    <section className="relative w-[316px] overflow-hidden rounded-[24px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(16,20,28,0.95),rgba(7,9,15,0.97))] p-3 shadow-[0_24px_44px_rgba(0,0,0,0.45)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.08),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+
+      <div className="relative mb-3 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-[#b79660]">Armory</p>
+          <h3 className="mt-1 text-sm font-semibold text-[#f2e4c2]">인벤토리</h3>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="rounded-full border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] text-[#c7ae83]">
             {items.length}/28
           </span>
           <button
             type="button"
             onClick={toggleInventory}
-            className="rounded bg-black/30 px-1.5 py-0.5 text-xs text-amber-200/60 hover:text-amber-200"
+            className="rounded-full border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] text-[#c7ae83] transition hover:text-[#f2e4c2]"
           >
-            ✕
+            CLOSE
           </button>
         </div>
       </div>
 
-      {/* 장비 슬롯 - 가로 한 줄 */}
-      <div className="mb-2 grid grid-cols-4 gap-1">
+      <div className="relative mb-3 grid grid-cols-4 gap-1.5">
         {gearSlots.map(([slot, label]) => {
           const equipped = equipment[slot];
           const icon = equipped ? (ITEMS[equipped.id]?.icon ?? "unknown") : "unknown";
@@ -80,17 +78,16 @@ export function InventoryPanel() {
               type="button"
               onClick={() => equipped && unequipItem(slot)}
               title={equipped?.name ?? label}
-              className="flex flex-col items-center gap-0.5 rounded-lg border border-amber-200/10 bg-black/20 p-1.5 text-center transition hover:border-amber-300/20 hover:bg-black/30"
+              className="flex flex-col items-center gap-1 rounded-[14px] border border-white/8 bg-[linear-gradient(180deg,rgba(22,26,34,0.9),rgba(8,10,16,0.92))] p-2 text-center transition hover:border-[#d4b377]/28"
             >
               <ItemIcon icon={icon} size="sm" />
-              <span className="text-[9px] text-amber-200/50">{label}</span>
+              <span className="text-[8px] tracking-[0.18em] text-[#a98e67]">{label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* 아이템 슬롯 - 7열 × 4행 = 28칸 */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="relative grid grid-cols-7 gap-1.5">
         {Array.from({ length: 28 }).map((_, index) => {
           const item = items[index];
           const itemData = item ? ITEMS[item.id] : null;
@@ -99,8 +96,7 @@ export function InventoryPanel() {
             itemData?.type === "consumable" ||
             itemData?.id === "return_scroll" ||
             itemData?.id === "teleport_scroll";
-          const canEquip =
-            itemData?.type === "weapon" || itemData?.type === "armor";
+          const canEquip = itemData?.type === "weapon" || itemData?.type === "armor";
 
           return (
             <button
@@ -109,14 +105,17 @@ export function InventoryPanel() {
               onClick={() => selectInventoryItem(item?.id ?? null)}
               onDoubleClick={() => {
                 if (!item) return;
-                if (canEquip) { equipItem(item.id); return; }
+                if (canEquip) {
+                  equipItem(item.id);
+                  return;
+                }
                 if (canUse) consumeItem(item.id);
               }}
               title={item?.name}
-              className={`relative aspect-square rounded-lg border bg-black/25 text-xs transition ${
+              className={`relative aspect-square rounded-[12px] border bg-[linear-gradient(180deg,rgba(18,22,28,0.86),rgba(8,10,16,0.96))] text-xs transition ${
                 active
-                  ? "border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.25)]"
-                  : "border-amber-200/10 hover:border-amber-200/25"
+                  ? "border-[#e2bf74] shadow-[0_0_14px_rgba(255,204,102,0.22)]"
+                  : "border-white/8 hover:border-[#d4b377]/24"
               }`}
             >
               {item && itemData ? (
@@ -124,11 +123,11 @@ export function InventoryPanel() {
                   <span className="flex h-full items-center justify-center">
                     <ItemIcon icon={itemData.icon} size="sm" />
                   </span>
-                  {item.quantity > 1 && (
-                    <span className="absolute bottom-0 right-0.5 text-[8px] leading-none text-amber-100/70">
+                  {item.quantity > 1 ? (
+                    <span className="absolute bottom-0.5 right-1 text-[8px] leading-none text-[#ead8b2]/72">
                       {item.quantity}
                     </span>
-                  )}
+                  ) : null}
                 </>
               ) : null}
             </button>
@@ -136,45 +135,44 @@ export function InventoryPanel() {
         })}
       </div>
 
-      {/* 선택 아이템 상세 */}
       {selectedItem && selectedItemData ? (
-        <div className="mt-2 rounded-xl border border-amber-200/10 bg-black/25 p-2.5">
+        <div className="relative mt-3 rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(9,12,18,0.88),rgba(15,18,24,0.96))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
           <div className="flex items-center gap-2">
             <span className="text-xl">{selectedItemData.icon}</span>
             <div className="min-w-0 flex-1">
-              <p className={`text-xs font-semibold ${rarityClass[selectedItem.rarity]}`}>
-                {selectedItem.name}
-              </p>
-              <p className="truncate text-[10px] text-amber-100/50">
-                {selectedItemData.description}
-              </p>
+              <p className={`text-xs font-semibold ${rarityClass[selectedItem.rarity]}`}>{selectedItem.name}</p>
+              <p className="truncate text-[10px] text-[#b7a282]">{selectedItemData.description}</p>
             </div>
           </div>
-          <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] text-amber-200/80">
+
+          <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-[#dfca9f]">
             {selectedItemData.stats.hp ? <span>HP +{selectedItemData.stats.hp}</span> : null}
             {selectedItemData.stats.mp ? <span>MP +{selectedItemData.stats.mp}</span> : null}
             {selectedItemData.stats.minAttack ? (
-              <span>공격 {selectedItemData.stats.minAttack}-{selectedItemData.stats.maxAttack}</span>
+              <span>
+                ATK {selectedItemData.stats.minAttack}-{selectedItemData.stats.maxAttack}
+              </span>
             ) : null}
             {selectedItemData.stats.ac ? <span>AC {selectedItemData.stats.ac}</span> : null}
           </div>
-          <div className="mt-2 flex gap-1.5">
+
+          <div className="mt-3 flex gap-2">
             {usable ? (
               <button
                 type="button"
                 onClick={() => consumeItem(selectedItem.id)}
-                className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-500"
+                className="rounded-[12px] border border-emerald-300/24 bg-[linear-gradient(180deg,#3e8b5f,#205438)] px-3 py-1.5 text-[11px] font-semibold text-white transition hover:brightness-110"
               >
-                사용
+                USE
               </button>
             ) : null}
             {equippable ? (
               <button
                 type="button"
                 onClick={() => equipItem(selectedItem.id)}
-                className="rounded-lg bg-amber-600 px-2.5 py-1 text-[11px] font-semibold text-black transition hover:bg-amber-500"
+                className="rounded-[12px] border border-[#e2bf74]/45 bg-[linear-gradient(180deg,#dfbe73,#9e6e25)] px-3 py-1.5 text-[11px] font-semibold text-[#140d04] transition hover:brightness-105"
               >
-                장착
+                EQUIP
               </button>
             ) : null}
           </div>

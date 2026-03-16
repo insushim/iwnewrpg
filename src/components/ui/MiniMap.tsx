@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MAPS } from "@/game/data/maps";
 import { useGameStore } from "@/lib/gameStore";
 import { getSocket } from "@/lib/socket";
@@ -13,44 +13,35 @@ export function MiniMap() {
   const worldPlayers = useGameStore((state) => state.worldPlayers);
   const selfId = useGameStore((state) => state.selfId);
   const setCurrentMapId = useGameStore((state) => state.setCurrentMapId);
-  const updateQuestProgress = useGameStore(
-    (state) => state.updateQuestProgress,
-  );
+  const updateQuestProgress = useGameStore((state) => state.updateQuestProgress);
 
   const map = MAPS[currentMapId] ?? MAPS.speakingIsland;
-  const selfPlayer = worldPlayers.find((p) => p.id === selfId);
+  const selfPlayer = worldPlayers.find((player) => player.id === selfId);
 
-  // M 키 토글
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
-      if (e.key === "m" || e.key === "M") setVisible((v) => !v);
+    const handler = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement) return;
+      if (event.key === "m" || event.key === "M") setVisible((value) => !value);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Canvas 렌더링
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !visible) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const W = canvas.width;
-    const H = canvas.height;
+    const width = canvas.width;
+    const height = canvas.height;
+    const tileWidth = 72;
+    const tileHeight = 52;
+    const worldWidth = map.width * tileWidth + 320;
+    const worldHeight = map.height * tileHeight + 260;
+    const toMapX = (worldX: number) => (worldX / worldWidth) * width;
+    const toMapY = (worldY: number) => (worldY / worldHeight) * height;
 
-    // 맵 월드 범위 (WorldScene과 동일)
-    const TILE_W = 72;
-    const TILE_H = 52;
-    const worldW = map.width * TILE_W + 320;
-    const worldH = map.height * TILE_H + 260;
-
-    // 좌표 변환 함수
-    const toMapX = (wx: number) => (wx / worldW) * W;
-    const toMapY = (wy: number) => (wy / worldH) * H;
-
-    // 배경 - 맵 종류별 색상
     const bgColor =
       currentMapId === "moonlitWetland"
         ? "#1a2e1a"
@@ -60,13 +51,10 @@ export function MiniMap() {
             ? "#0a0a1a"
             : "#1a2a1a";
     ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, width, height);
 
-    // 수역 표시
     if (
-      ["speakingIsland", "moonlitWetland", "windwoodForest"].includes(
-        currentMapId,
-      )
+      ["speakingIsland", "moonlitWetland", "windwoodForest"].includes(currentMapId)
     ) {
       ctx.fillStyle = "rgba(43,131,170,0.55)";
       if (currentMapId === "speakingIsland") {
@@ -96,7 +84,6 @@ export function MiniMap() {
       }
     }
 
-    // 마을 안전구역 표시 (speakingIsland)
     if (currentMapId === "speakingIsland") {
       ctx.fillStyle = "rgba(180,150,100,0.22)";
       ctx.beginPath();
@@ -107,44 +94,39 @@ export function MiniMap() {
       ctx.stroke();
     }
 
-    // 경로/도로 표시
     ctx.strokeStyle = "rgba(200,180,130,0.45)";
     ctx.lineWidth = 1.5;
     if (currentMapId === "speakingIsland") {
-      // 동서 간선 도로
       ctx.beginPath();
       ctx.moveTo(0, toMapY(400));
-      ctx.lineTo(W, toMapY(400));
+      ctx.lineTo(width, toMapY(400));
       ctx.stroke();
-      // 마을 북쪽 길
+
       ctx.beginPath();
       ctx.moveTo(toMapX(530), 0);
       ctx.lineTo(toMapX(530), toMapY(610));
       ctx.stroke();
-      // 남쪽 세로 길
+
       ctx.strokeStyle = "rgba(200,180,130,0.25)";
       ctx.beginPath();
       ctx.moveTo(toMapX(530), toMapY(610));
-      ctx.lineTo(toMapX(530), H);
+      ctx.lineTo(toMapX(530), height);
       ctx.stroke();
-      // 동쪽 가로 길
-      ctx.strokeStyle = "rgba(200,180,130,0.25)";
+
       ctx.beginPath();
       ctx.moveTo(toMapX(980), toMapY(400));
-      ctx.lineTo(W, toMapY(400));
+      ctx.lineTo(width, toMapY(400));
       ctx.stroke();
     }
 
-    // 다른 플레이어 점
-    worldPlayers.forEach((p) => {
-      if (p.id === selfId) return;
+    worldPlayers.forEach((player) => {
+      if (player.id === selfId) return;
       ctx.beginPath();
-      ctx.arc(toMapX(p.x), toMapY(p.y), 2.5, 0, Math.PI * 2);
+      ctx.arc(toMapX(player.x), toMapY(player.y), 2.5, 0, Math.PI * 2);
       ctx.fillStyle = "#89cffd";
       ctx.fill();
     });
 
-    // 내 플레이어 (흰색 + 글로우)
     if (selfPlayer) {
       ctx.shadowColor = "#fff4ba";
       ctx.shadowBlur = 6;
@@ -155,18 +137,10 @@ export function MiniMap() {
       ctx.shadowBlur = 0;
     }
 
-    // 테두리
     ctx.strokeStyle = "rgba(246,223,149,0.25)";
     ctx.lineWidth = 1;
-    ctx.strokeRect(0, 0, W, H);
-  }, [
-    visible,
-    worldPlayers,
-    selfPlayer,
-    currentMapId,
-    map,
-    selfId,
-  ]);
+    ctx.strokeRect(0, 0, width, height);
+  }, [visible, worldPlayers, selfPlayer, currentMapId, map, selfId]);
 
   const travel = (nextMapId: string) => {
     const socket = getSocket();
@@ -175,16 +149,18 @@ export function MiniMap() {
       setShowTravel(false);
       return;
     }
+
     setCurrentMapId(nextMapId);
     const travelQuest = useGameStore
       .getState()
       .getNpcQuests("elder")
       .find(
-        (q) =>
-          (q.objectives[0]?.type === "travel" ||
-            q.objectives[0]?.type === "reach") &&
-          q.objectives[0]?.target === nextMapId,
+        (quest) =>
+          (quest.objectives[0]?.type === "travel" ||
+            quest.objectives[0]?.type === "reach") &&
+          quest.objectives[0]?.target === nextMapId,
       );
+
     if (travelQuest?.status === "in_progress") {
       updateQuestProgress(travelQuest.id, travelQuest.goal);
     }
@@ -208,19 +184,20 @@ export function MiniMap() {
   }
 
   return (
-    <div className="relative flex w-[200px] flex-col gap-1 rounded-2xl border border-amber-200/20 bg-black/70 p-2 shadow-lg backdrop-blur-sm">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between">
+    <div className="relative flex w-[208px] flex-col gap-2 overflow-hidden rounded-[22px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.96))] p-2.5 shadow-[0_20px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.1),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+
+      <div className="relative flex items-center justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-amber-200/50">
             Field Map
           </p>
           <button
             type="button"
-            onClick={() => setShowTravel((v) => !v)}
+            onClick={() => setShowTravel((value) => !value)}
             className="text-left text-sm font-semibold text-amber-50 hover:text-amber-200"
           >
-            {map.name} ▾
+            {map.name} →
           </button>
         </div>
         <button
@@ -232,44 +209,39 @@ export function MiniMap() {
         </button>
       </div>
 
-      {/* 미니맵 캔버스 */}
       <canvas
         ref={canvasRef}
         width={184}
         height={110}
-        className="rounded-xl"
-        style={{ imageRendering: "pixelated" }}
+        className="rounded-[16px] border border-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+        style={{ imageRendering: "pixelated", background: "rgba(4,7,10,0.7)" }}
       />
 
-      {/* 좌표 + 통계 */}
-      <div className="flex items-center justify-between text-[10px] text-amber-100/60">
-        <span>📍 {coordLabel}</span>
-        <span>
-          👤{worldPlayers.length}
-        </span>
+      <div className="relative flex items-center justify-between text-[10px] text-amber-100/60">
+        <span>좌표 {coordLabel}</span>
+        <span>인원 {worldPlayers.length}</span>
       </div>
 
-      {/* 이동 가능 맵 드롭다운 */}
-      {showTravel && map.connections.length > 0 && (
+      {showTravel && map.connections.length > 0 ? (
         <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-xl border border-amber-200/20 bg-black/90 p-1.5 shadow-xl">
           <p className="mb-1 text-[10px] uppercase tracking-widest text-amber-200/50">
             이동
           </p>
-          {map.connections.map((conn) => (
+          {map.connections.map((connection) => (
             <button
-              key={`${map.id}-${conn.to}`}
+              key={`${map.id}-${connection.to}`}
               type="button"
-              onClick={() => travel(conn.to)}
+              onClick={() => travel(connection.to)}
               className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs text-amber-50 hover:bg-amber-200/10"
             >
-              <span>{conn.fromPortalName}</span>
+              <span>{connection.fromPortalName}</span>
               <span className="text-amber-200/60">
-                {MAPS[conn.to]?.name ?? conn.to}
+                {MAPS[connection.to]?.name ?? connection.to}
               </span>
             </button>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

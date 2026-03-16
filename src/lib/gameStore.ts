@@ -157,6 +157,7 @@ type NpcQuestView = QuestData & {
 
 type GameStore = {
   player: PlayerSnapshot;
+  serverName: string;
   currentMapId: string;
   inventory: InventoryItem[];
   equipment: EquipmentState;
@@ -170,6 +171,7 @@ type GameStore = {
   worldMonsters: WorldMonster[];
   quiz: QuizState;
   setPlayer: (player: Partial<PlayerSnapshot>) => void;
+  setServerName: (serverName: string) => void;
   setInventory: (items: InventoryItem[]) => void;
   setEquipment: (equipment: EquipmentState) => void;
   setQuests: (quests: QuestProgress[]) => void;
@@ -276,6 +278,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     alignment: 0,
     buffs: [{ id: "starter-blessing", name: "초심자의 축복", remaining: 1200 }],
   },
+  serverName: "아스카론 01",
   currentMapId: "speakingIsland",
   inventory: INITIAL_INVENTORY,
   equipment: {},
@@ -329,6 +332,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...player,
       },
     })),
+  setServerName: (serverName) => set(() => ({ serverName })),
   setInventory: (items) => set(() => ({ inventory: items })),
   setEquipment: (equipment) => set(() => ({ equipment })),
   setQuests: (quests) => set(() => ({ quests })),
