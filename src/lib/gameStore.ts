@@ -411,13 +411,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
       },
     })),
   closeDeath: () =>
-    set((state) => ({
-      ui: {
-        ...state.ui,
-        deathOpen: false,
-        expLostOnDeath: 0,
-      },
-    })),
+    set((state) => {
+      const derived = getDerivedStatsFromState(state.player, state.equipment);
+      return {
+        player: {
+          ...state.player,
+          hp: derived.maxHp,
+          mp: derived.maxMp,
+        },
+        ui: {
+          ...state.ui,
+          deathOpen: false,
+          expLostOnDeath: 0,
+        },
+      };
+    }),
   acceptQuest: (questId) => {
     const socket = getSocket();
     if (socket.connected) {

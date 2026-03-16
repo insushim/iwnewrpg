@@ -172,6 +172,7 @@ export class WorldScene extends Phaser.Scene {
       wanderTargetY: number;
       wanderTimer: number;
       lastChaseAt: number;
+      lastAttackAt: number;
     }
   >();
 
@@ -278,7 +279,7 @@ export class WorldScene extends Phaser.Scene {
       this.offlineMonsterHp.set(monster.id, {
         hp: monster.hp,
         maxHp: monster.maxHp,
-        atk: 4,
+        atk: monster.atk,
         exp: 10 * monster.level,
         goldMin: 5,
         goldMax: 15,
@@ -291,6 +292,7 @@ export class WorldScene extends Phaser.Scene {
         wanderTargetY: monster.y,
         wanderTimer: 0,
         lastChaseAt: 0,
+        lastAttackAt: 0,
       });
       this.upsertMonster(monster);
     });
@@ -319,6 +321,7 @@ export class WorldScene extends Phaser.Scene {
     level: number;
     hp: number;
     maxHp: number;
+    atk: number;
     x: number;
     y: number;
   }> {
@@ -361,6 +364,7 @@ export class WorldScene extends Phaser.Scene {
           level: def.level,
           hp: def.hp,
           maxHp: def.maxHp,
+          atk: def.atk,
           x: spawn.x,
           y: spawn.y,
         };
@@ -372,6 +376,7 @@ export class WorldScene extends Phaser.Scene {
       level: number;
       hp: number;
       maxHp: number;
+      atk: number;
       x: number;
       y: number;
     }>;
@@ -2188,6 +2193,38 @@ export class WorldScene extends Phaser.Scene {
           } else {
             ai.state = "idle";
             ai.lastChaseAt = 0;
+          }
+        } else {
+          // Within attack range — deal damage to player
+          const ATTACK_INTERVAL = 1500;
+          if (now - ai.lastAttackAt >= ATTACK_INTERVAL) {
+            const store = useGameStore.getState();
+            if (store.ui.deathOpen || store.player.hp <= 0) return;
+
+            const monsterData = this.offlineMonsterHp.get(monsterId);
+            if (!monsterData) return;
+
+            const dmg = Math.max(1, monsterData.atk + Phaser.Math.Between(-1, 2));
+            const newHp = Math.max(0, store.player.hp - dmg);
+            store.setPlayer({ hp: newHp });
+            ai.lastAttackAt = now;
+
+            if (this.localPlayer) {
+              this.showDamageNumber(this.localPlayer.x, this.localPlayer.y, dmg, false);
+              this.tweens.add({
+                targets: this.localPlayer.spriteBody,
+                alpha: 0.15,
+                duration: 60,
+                yoyo: true,
+                repeat: 2,
+                ease: "Linear",
+              });
+            }
+
+            if (newHp <= 0) {
+              const expLost = Math.floor(store.player.exp * 0.05);
+              store.openDeath(expLost);
+            }
           }
         }
       } else {
