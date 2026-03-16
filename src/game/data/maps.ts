@@ -156,6 +156,23 @@ export const MAPS: Record<string, GameMap> = {
       { to: "giranTown", fromPortalName: "기란 방면 길", spawn: { x: 5, y: 30 } },
     ],
   },
+  ancientCave: {
+    id: "ancientCave",
+    name: "고대 동굴",
+    level: "8~15",
+    type: "dungeon",
+    width: 55,
+    height: 45,
+    tiles: [TileType.DARK_STONE, TileType.VOLCANIC_ROCK],
+    monsters: ["skeleton_warrior", "skeleton_boss", "goblin_boss"],
+    npcs: [],
+    safeZone: false,
+    bgm: "dungeon_cave",
+    description: "고대의 비밀이 잠든 어둠의 동굴입니다. 강력한 해골 전사들이 배회합니다.",
+    connections: [
+      { to: "speakingIsland", fromPortalName: "동굴 출구", spawn: { x: 13, y: 3 } },
+    ],
+  },
 };
 
 export const MAP_LIST = Object.values(MAPS);

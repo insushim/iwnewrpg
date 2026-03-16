@@ -121,8 +121,8 @@ export function InventoryPanel() {
             >
               {item && itemData ? (
                 <>
-                  <span className="flex h-full items-center justify-center text-base leading-none">
-                    {itemData.icon}
+                  <span className="flex h-full items-center justify-center">
+                    <ItemIcon icon={itemData.icon} size="sm" />
                   </span>
                   {item.quantity > 1 && (
                     <span className="absolute bottom-0 right-0.5 text-[8px] leading-none text-amber-100/70">

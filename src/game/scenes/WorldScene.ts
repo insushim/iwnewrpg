@@ -617,6 +617,24 @@ export class WorldScene extends Phaser.Scene {
       { monsterId:"red_dragon", x:3500, y:1400 },
     ];
 
+    // ──────────────────────────────────────────────────────────────────────
+    // 고대 동굴 (ancientCave) Lv 8-15 던전
+    // ──────────────────────────────────────────────────────────────────────
+    const ancientCave: SpawnEntry[] = [
+      { monsterId:"skeleton_warrior", x:300,y:400 }, { monsterId:"skeleton_warrior", x:500,y:350 },
+      { monsterId:"skeleton_warrior", x:700,y:430 }, { monsterId:"skeleton_warrior", x:400,y:600 },
+      { monsterId:"skeleton_warrior", x:600,y:650 }, { monsterId:"skeleton_warrior", x:800,y:580 },
+      { monsterId:"skeleton_warrior", x:350,y:800 }, { monsterId:"skeleton_warrior", x:550,y:850 },
+      { monsterId:"skeleton_warrior", x:1200,y:350 }, { monsterId:"skeleton_warrior", x:1400,y:450 },
+      { monsterId:"skeleton_warrior", x:1600,y:380 }, { monsterId:"skeleton_warrior", x:1300,y:600 },
+      { monsterId:"skeleton_warrior", x:1500,y:680 }, { monsterId:"skeleton_warrior", x:1700,y:620 },
+      { monsterId:"skeleton_warrior", x:2200,y:400 }, { monsterId:"skeleton_warrior", x:2500,y:480 },
+      { monsterId:"skeleton_warrior", x:2800,y:420 }, { monsterId:"skeleton_warrior", x:2300,y:700 },
+      { monsterId:"skeleton_warrior", x:3100,y:500 }, { monsterId:"skeleton_warrior", x:3300,y:620 },
+      { monsterId:"goblin_boss", x:3500, y:700 },
+      { monsterId:"skeleton_boss", x:3800, y:650 },
+    ];
+
     const mapSpawns: Record<string, SpawnEntry[]> = {
       speakingIsland,
       silverKnightTown,
@@ -626,6 +644,7 @@ export class WorldScene extends Phaser.Scene {
       moonlitWetland,
       giranTown,
       dragonValley,
+      ancientCave,
     };
 
     const zones = mapSpawns[this.mapId] ?? speakingIsland;
@@ -1274,6 +1293,10 @@ export class WorldScene extends Phaser.Scene {
     switch (this.mapId) {
       case "speakingIsland":
         portals.push({ x: mapW - 150, y: 400, label: "은기사의 마을 →" });
+        portals.push({ x: 900, y: 162, label: "↑ 고대 동굴" });
+        break;
+      case "ancientCave":
+        portals.push({ x: mapW * 0.5, y: mapH - 120, label: "↓ 동굴 출구" });
         break;
       case "silverKnightTown":
         portals.push({ x: 150, y: 400, label: "← 이야기의 섬" });
@@ -1304,10 +1327,10 @@ export class WorldScene extends Phaser.Scene {
         break;
     }
 
-    portals.forEach(({ x, y, label }) => this.createPortalAt(x, y, label, ""));
+    portals.forEach(({ x, y, label }) => this.createPortalAt(x, y, label));
   }
 
-  private createPortalAt(x: number, y: number, label: string, _dir: string) {
+  private createPortalAt(x: number, y: number, label: string) {
     const gfx = this.add.graphics();
 
     // 포탈 바닥 빛
@@ -1367,17 +1390,17 @@ export class WorldScene extends Phaser.Scene {
         npc.position.y,
       );
       const textureBase = this.getNpcTexture(npc.role);
-      const shadow = this.add.ellipse(0, 10, 44, 18, 0x08131b, 0.35);
+      const shadow = this.add.ellipse(0, 14, 58, 20, 0x08131b, 0.3);
       const sprite = this.add.image(
         0,
         0,
         this.getFrameKey(textureBase, "idle", "s", 0),
       );
-      sprite.setOrigin(0.5, 0.92);
-      sprite.setScale(1.28);
+      sprite.setOrigin(0.5, 0.94);
+      sprite.setScale(0.86);
 
       const label = this.add
-        .text(0, -48, npc.name, {
+        .text(0, -62, npc.name, {
           fontSize: "14px",
           color: "#fff4d5",
           fontFamily: "sans-serif",
@@ -1387,10 +1410,10 @@ export class WorldScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       const ring = this.add
-        .ellipse(0, 12, 52, 18, 0x8fe8d3, 0.12)
+        .ellipse(0, 14, 64, 22, 0x8fe8d3, 0.12)
         .setStrokeStyle(2, 0x8fe8d3, 0.55);
       const hitArea = this.add
-        .zone(0, -18, 72, 92)
+        .zone(0, -24, 92, 118)
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
 
@@ -1540,16 +1563,16 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const isSelf = payload.id === this.selfId;
-    const shadow = this.add.ellipse(0, 10, 44, 18, 0x08131b, 0.32);
+    const shadow = this.add.ellipse(0, 14, 60, 20, 0x08131b, 0.3);
     const ring = this.add
-      .ellipse(0, 12, 62, 20, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
+      .ellipse(0, 14, 70, 22, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
       .setStrokeStyle(2, isSelf ? 0xffefb2 : 0x89cffd, 0.7);
     const body = this.add
       .image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0))
-      .setScale(isSelf ? 1.24 : 1.1)
-      .setOrigin(0.5, 0.92);
+      .setScale(isSelf ? 0.9 : 0.82)
+      .setOrigin(0.5, 0.94);
     const label = this.add
-      .text(0, -58, payload.name, {
+      .text(0, -68, payload.name, {
         fontSize: "14px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
@@ -1638,7 +1661,7 @@ export class WorldScene extends Phaser.Scene {
         existing.setAlpha(0);
         existing.setVisible(true);
         existing.hpFill.width =
-          42 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
+          50 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
         existing.label.setText(payload.name);
         existing.textureBase = textureBase;
         existing.prevHp = payload.hp;
@@ -1667,29 +1690,29 @@ export class WorldScene extends Phaser.Scene {
 
       existing.setAlpha(1);
       existing.hpFill.width =
-        42 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
+        50 * Phaser.Math.Clamp(payload.hp / Math.max(1, payload.maxHp), 0, 1);
       existing.label.setText(payload.name);
       existing.textureBase = textureBase;
       this.tweenActor(existing, payload.x, payload.y, 300);
       return;
     }
 
-    const shadow = this.add.ellipse(0, 10, 48, 18, 0x08131b, 0.32);
+    const shadow = this.add.ellipse(0, 16, 62, 22, 0x08131b, 0.3);
     const ring = this.add
-      .ellipse(0, 12, 58, 20, 0xf57f69, 0.12)
+      .ellipse(0, 16, 70, 24, 0xf57f69, 0.12)
       .setStrokeStyle(2, 0xff9c88, 0.75);
     const body = this.add
       .image(0, 2, this.getFrameKey(textureBase, "idle", "s", 0))
-      .setOrigin(0.5, 0.86)
+      .setOrigin(0.5, 0.92)
       .setScale(this.getMonsterScale(baseId));
     const hpBack = this.add
-      .rectangle(0, -54, 44, 6, 0x160808, 0.78)
+      .rectangle(0, -64, 52, 7, 0x160808, 0.78)
       .setOrigin(0.5);
     const hpFill = this.add
-      .rectangle(-21, -54, 42, 4, 0xfb7260, 0.95)
+      .rectangle(-25, -64, 50, 5, 0xfb7260, 0.95)
       .setOrigin(0, 0.5);
     const label = this.add
-      .text(0, -70, payload.name, {
+      .text(0, -82, payload.name, {
         fontSize: "13px",
         color: "#ffd9d1",
         stroke: "#07101a",
@@ -1697,7 +1720,7 @@ export class WorldScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const hitArea = this.add
-      .zone(0, -14, 94, 88)
+      .zone(0, -20, 112, 112)
       .setInteractive({ useHandCursor: true });
 
     const container = this.add.container(payload.x, payload.y, [
@@ -2331,11 +2354,11 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private getMonsterScale(baseId: string) {
-    if (baseId.includes("boss") || baseId.includes("queen") || baseId.includes("lord")) return 1.4;
-    if (baseId.includes("dragon") || baseId.includes("wyvern")) return 1.22;
-    if (baseId.includes("golem")) return 1.08;
-    if (baseId.includes("boar") || baseId.includes("orc")) return 1;
-    return 0.94;
+    if (baseId.includes("boss") || baseId.includes("queen") || baseId.includes("lord")) return 1.08;
+    if (baseId.includes("dragon") || baseId.includes("wyvern")) return 0.98;
+    if (baseId.includes("golem")) return 0.92;
+    if (baseId.includes("boar") || baseId.includes("orc")) return 0.86;
+    return 0.8;
   }
 
   private isRangedClass() {
@@ -2575,6 +2598,14 @@ export class WorldScene extends Phaser.Scene {
       case "speakingIsland":
         if (px > mapW - 180 && py > 320 && py < 480)
           this.handleMapTransition("silverKnightTown", 240, 400);
+        // 고대 동굴 입구 (픽셀 900, 162)
+        if (Math.abs(px - 900) < 55 && Math.abs(py - 162) < 55)
+          this.handleMapTransition("ancientCave", 300, 1200);
+        break;
+      case "ancientCave":
+        // 동굴 출구 (맵 하단 중앙)
+        if (py > mapH - 150 && px > mapW * 0.35 && px < mapW * 0.65)
+          this.handleMapTransition("speakingIsland", 900, 200);
         break;
       case "silverKnightTown":
         if (px < 180 && py > 320 && py < 480)
