@@ -51,56 +51,46 @@ export function InventoryPanel() {
   }
 
   return (
-    <section className="panel hud-panel rounded-[28px] p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-amber-200/60">
-            Inventory
-          </p>
-          <h3 className="mt-1 text-lg font-semibold text-amber-50">인벤토리</h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="hud-chip px-3 py-1 text-[11px] font-semibold text-amber-100/75">
-            28칸
+    <section className="panel hud-panel w-[300px] rounded-2xl p-3 shadow-2xl">
+      {/* 헤더 */}
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-amber-50">인벤토리</h3>
+        <div className="flex items-center gap-1">
+          <span className="hud-chip px-2 py-0.5 text-[10px] text-amber-100/60">
+            {items.length}/28
           </span>
           <button
             type="button"
             onClick={toggleInventory}
-            className="rounded-lg bg-black/30 px-2 py-1 text-xs text-amber-200/60 hover:text-amber-200"
+            className="rounded bg-black/30 px-1.5 py-0.5 text-xs text-amber-200/60 hover:text-amber-200"
           >
             ✕
           </button>
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
+      {/* 장비 슬롯 - 가로 한 줄 */}
+      <div className="mb-2 grid grid-cols-4 gap-1">
         {gearSlots.map(([slot, label]) => {
           const equipped = equipment[slot];
-          const icon = equipped
-            ? (ITEMS[equipped.id]?.icon ?? "unknown")
-            : "unknown";
+          const icon = equipped ? (ITEMS[equipped.id]?.icon ?? "unknown") : "unknown";
           return (
             <button
               key={slot}
               type="button"
               onClick={() => equipped && unequipItem(slot)}
-              className="rounded-2xl border border-amber-200/10 bg-black/20 p-3 text-left transition hover:border-amber-300/20 hover:bg-black/30"
+              title={equipped?.name ?? label}
+              className="flex flex-col items-center gap-0.5 rounded-lg border border-amber-200/10 bg-black/20 p-1.5 text-center transition hover:border-amber-300/20 hover:bg-black/30"
             >
-              <div className="flex items-center gap-2">
-                <ItemIcon icon={icon} size="sm" />
-                <div className="min-w-0">
-                  <div className="text-amber-200/55">{label}</div>
-                  <div className="mt-1 truncate text-amber-50">
-                    {equipped?.name ?? "비어 있음"}
-                  </div>
-                </div>
-              </div>
+              <ItemIcon icon={icon} size="sm" />
+              <span className="text-[9px] text-amber-200/50">{label}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      {/* 아이템 슬롯 - 7열 × 4행 = 28칸 */}
+      <div className="grid grid-cols-7 gap-1">
         {Array.from({ length: 28 }).map((_, index) => {
           const item = items[index];
           const itemData = item ? ITEMS[item.id] : null;
@@ -119,83 +109,61 @@ export function InventoryPanel() {
               onClick={() => selectInventoryItem(item?.id ?? null)}
               onDoubleClick={() => {
                 if (!item) return;
-                if (canEquip) {
-                  equipItem(item.id);
-                  return;
-                }
-                if (canUse) {
-                  consumeItem(item.id);
-                }
+                if (canEquip) { equipItem(item.id); return; }
+                if (canUse) consumeItem(item.id);
               }}
-              className={`aspect-square rounded-2xl border bg-black/25 p-2 text-left text-xs transition ${
+              title={item?.name}
+              className={`relative aspect-square rounded-lg border bg-black/25 text-xs transition ${
                 active
-                  ? "border-amber-400 shadow-[0_0_24px_rgba(251,191,36,0.18)]"
+                  ? "border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.25)]"
                   : "border-amber-200/10 hover:border-amber-200/25"
               }`}
             >
               {item && itemData ? (
-                <div className="flex h-full flex-col justify-between">
-                  <div className="flex items-start justify-between gap-2">
-                    <ItemIcon icon={itemData.icon} size="sm" />
-                    <div
-                      className={`line-clamp-2 text-right font-medium leading-4 ${rarityClass[item.rarity]}`}
-                    >
-                      {item.name}
-                    </div>
-                  </div>
-                  <div className="text-right text-amber-100/60">
-                    x{item.quantity}
-                  </div>
-                </div>
+                <>
+                  <span className="flex h-full items-center justify-center text-base leading-none">
+                    {itemData.icon}
+                  </span>
+                  {item.quantity > 1 && (
+                    <span className="absolute bottom-0 right-0.5 text-[8px] leading-none text-amber-100/70">
+                      {item.quantity}
+                    </span>
+                  )}
+                </>
               ) : null}
             </button>
           );
         })}
       </div>
 
+      {/* 선택 아이템 상세 */}
       {selectedItem && selectedItemData ? (
-        <div className="mt-4 rounded-[24px] border border-amber-200/10 bg-black/25 p-4">
-          <div className="flex items-center gap-3">
-            <ItemIcon icon={selectedItemData.icon} />
-            <div>
-              <p
-                className={`text-base font-semibold ${rarityClass[selectedItem.rarity]}`}
-              >
+        <div className="mt-2 rounded-xl border border-amber-200/10 bg-black/25 p-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{selectedItemData.icon}</span>
+            <div className="min-w-0 flex-1">
+              <p className={`text-xs font-semibold ${rarityClass[selectedItem.rarity]}`}>
                 {selectedItem.name}
               </p>
-              <p className="text-xs text-amber-100/50">
-                {selectedItemData.icon}
+              <p className="truncate text-[10px] text-amber-100/50">
+                {selectedItemData.description}
               </p>
             </div>
           </div>
-          <p className="mt-2 text-xs leading-5 text-amber-100/70">
-            {selectedItemData.description}
-          </p>
-
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-amber-200/80">
-            {selectedItemData.stats.hp ? (
-              <span>HP +{selectedItemData.stats.hp}</span>
-            ) : null}
-            {selectedItemData.stats.mp ? (
-              <span>MP +{selectedItemData.stats.mp}</span>
-            ) : null}
+          <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] text-amber-200/80">
+            {selectedItemData.stats.hp ? <span>HP +{selectedItemData.stats.hp}</span> : null}
+            {selectedItemData.stats.mp ? <span>MP +{selectedItemData.stats.mp}</span> : null}
             {selectedItemData.stats.minAttack ? (
-              <span>
-                공격 {selectedItemData.stats.minAttack}-
-                {selectedItemData.stats.maxAttack}
-              </span>
+              <span>공격 {selectedItemData.stats.minAttack}-{selectedItemData.stats.maxAttack}</span>
             ) : null}
-            {selectedItemData.stats.ac ? (
-              <span>AC {selectedItemData.stats.ac}</span>
-            ) : null}
+            {selectedItemData.stats.ac ? <span>AC {selectedItemData.stats.ac}</span> : null}
           </div>
-
-          <div className="mt-4 flex gap-2">
+          <div className="mt-2 flex gap-1.5">
             {usable ? (
               <button
                 type="button"
                 onClick={() => consumeItem(selectedItem.id)}
-                className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500"
+                className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-500"
               >
                 사용
               </button>
@@ -204,7 +172,7 @@ export function InventoryPanel() {
               <button
                 type="button"
                 onClick={() => equipItem(selectedItem.id)}
-                className="rounded-xl bg-amber-600 px-3 py-2 text-xs font-semibold text-black transition hover:bg-amber-500"
+                className="rounded-lg bg-amber-600 px-2.5 py-1 text-[11px] font-semibold text-black transition hover:bg-amber-500"
               >
                 장착
               </button>

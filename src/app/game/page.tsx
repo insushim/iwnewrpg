@@ -40,8 +40,8 @@ export default function GamePage() {
         <MiniMap />
       </div>
 
-      {/* 우측 인벤토리 (토글) */}
-      <div className="pointer-events-auto absolute bottom-[96px] right-3 z-10">
+      {/* 우측 인벤토리 (토글) - 미니맵 아래 */}
+      <div className="pointer-events-auto absolute right-3 top-[216px] z-10">
         <InventoryPanel />
       </div>
 
