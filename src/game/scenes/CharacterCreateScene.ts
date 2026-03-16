@@ -60,7 +60,7 @@ export class CharacterCreateScene extends Phaser.Scene {
   private nameBuffer = "견습 모험가";
   private pendingJob: JobConfig | null = null;
   private gateOverlay?: Phaser.GameObjects.Container;
-  private readonly servers = ["아스카론 01", "엘모어 02", "기란 03"];
+  private readonly servers = ["아스카론 01"];
 
   constructor() {
     super("CharacterCreateScene");
