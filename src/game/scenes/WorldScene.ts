@@ -176,11 +176,23 @@ export class WorldScene extends Phaser.Scene {
     }
   >();
 
+  // 맵 전환 시스템
+  private isTransitioning = false;
+  private portalGlows: Phaser.GameObjects.Graphics[] = [];
+  private spawnX = 530;
+  private spawnY = 400;
+
   constructor() {
     super("WorldScene");
   }
 
-  create() {
+  create(data?: { mapId?: string; spawnX?: number; spawnY?: number }) {
+    if (data?.mapId) {
+      this.mapId = data.mapId;
+      if (data.spawnX !== undefined) this.spawnX = data.spawnX;
+      if (data.spawnY !== undefined) this.spawnY = data.spawnY;
+    }
+
     this.cameras.main.setBackgroundColor("#07101a");
     this.cameras.main.setZoom(0.94);
     this.cameras.main.roundPixels = true;
@@ -208,6 +220,7 @@ export class WorldScene extends Phaser.Scene {
     this.drawMap();
     this.spawnStaticNpcs();
     this.spawnLootFromStore();
+    this.drawPortals();
   }
 
   update() {
@@ -220,6 +233,7 @@ export class WorldScene extends Phaser.Scene {
     this.sortActorLayer();
     this.updateNpcProximity();
     this.updateMonsterAI();
+    this.checkPortalTransitions();
 
     if (this.targetMarker.visible) {
       const target = this.selectedMonsterId
@@ -245,8 +259,8 @@ export class WorldScene extends Phaser.Scene {
     const offlineId = `offline-${Date.now()}`;
     const playerName = useGameStore.getState().player.name;
 
-    const startX = 530;
-    const startY = 400;
+    const startX = this.spawnX;
+    const startY = this.spawnY;
 
     const offlineMonsters = this.generateOfflineMonsters();
 
@@ -256,7 +270,7 @@ export class WorldScene extends Phaser.Scene {
         {
           id: offlineId,
           name: playerName,
-          mapId: "speakingIsland",
+          mapId: this.mapId,
           x: startX,
           y: startY,
         },
@@ -265,12 +279,11 @@ export class WorldScene extends Phaser.Scene {
     });
 
     this.selfId = offlineId;
-    this.mapId = "speakingIsland";
 
     this.upsertPlayer({
       id: offlineId,
       name: playerName,
-      mapId: "speakingIsland",
+      mapId: this.mapId,
       x: startX,
       y: startY,
     });
@@ -325,123 +338,86 @@ export class WorldScene extends Phaser.Scene {
     x: number;
     y: number;
   }> {
-    // 리니지 스타일 사냥터 구역 기반 배치
-    // 마을 안전구역: x:220~980, y:180~610
-    const zones: Array<{ monsterId: string; x: number; y: number }> = [
+    const currentMap = this.mapId;
 
-      // ── Zone 1: 슬라임 습지 (서쪽, Lv1) ───────────────────────────────────
-      { monsterId: "slime", x: 55,  y: 270 },
-      { monsterId: "slime", x: 110, y: 330 },
-      { monsterId: "slime", x: 70,  y: 420 },
-      { monsterId: "slime", x: 160, y: 470 },
-      { monsterId: "slime", x: 85,  y: 560 },
-      { monsterId: "slime", x: 140, y: 640 },
-      { monsterId: "slime", x: 65,  y: 730 },
-      { monsterId: "slime", x: 170, y: 800 },
-      { monsterId: "slime", x: 100, y: 870 },
-      { monsterId: "slime", x: 190, y: 930 },
-
-      // ── Zone 2: 고블린 야영지 (남서, Lv2) ────────────────────────────────
-      { monsterId: "goblin_child", x: 130, y: 1000 },
-      { monsterId: "goblin_child", x: 260, y: 950  },
-      { monsterId: "goblin_child", x: 380, y: 1020 },
-      { monsterId: "goblin_child", x: 500, y: 970  },
-      { monsterId: "goblin_child", x: 200, y: 1100 },
-      { monsterId: "goblin_child", x: 350, y: 1150 },
-      { monsterId: "goblin_child", x: 480, y: 1080 },
-      { monsterId: "goblin_child", x: 620, y: 1000 },
-      { monsterId: "goblin_child", x: 280, y: 1240 },
-      { monsterId: "goblin_child", x: 440, y: 1280 },
-
-      // ── Zone 3: 개구리 늪 (남쪽 중앙, Lv4) ───────────────────────────────
-      { monsterId: "bog_frog", x: 650,  y: 1350 },
-      { monsterId: "bog_frog", x: 800,  y: 1280 },
-      { monsterId: "bog_frog", x: 950,  y: 1380 },
-      { monsterId: "bog_frog", x: 1100, y: 1320 },
-      { monsterId: "bog_frog", x: 720,  y: 1480 },
-      { monsterId: "bog_frog", x: 860,  y: 1550 },
-      { monsterId: "bog_frog", x: 1020, y: 1480 },
-      { monsterId: "bog_frog", x: 750,  y: 1650 },
-      { monsterId: "bog_frog", x: 920,  y: 1700 },
-
-      // ── Zone 4: 멧돼지 평원 (동쪽 필드, Lv5) ─────────────────────────────
+    // speakingIsland 몬스터 (맵 시작 120px + 최소 20px 여백 = 140 최소값)
+    const speakingIslandZones: Array<{ monsterId: string; x: number; y: number }> = [
+      // Zone 1: 슬라임 습지 (서쪽, 140~210 x)
+      { monsterId: "slime", x: 150, y: 270 },
+      { monsterId: "slime", x: 185, y: 380 },
+      { monsterId: "slime", x: 160, y: 500 },
+      { monsterId: "slime", x: 195, y: 650 },
+      { monsterId: "slime", x: 150, y: 780 },
+      // Zone 2: 고블린 야영지 (남서)
+      { monsterId: "goblin_child", x: 200, y: 950 },
+      { monsterId: "goblin_child", x: 350, y: 980 },
+      { monsterId: "goblin_child", x: 500, y: 920 },
+      { monsterId: "goblin_child", x: 650, y: 1000 },
+      { monsterId: "goblin_child", x: 300, y: 1100 },
+      // Zone 3: 멧돼지 평원 (동쪽)
       { monsterId: "wild_boar", x: 1200, y: 270 },
-      { monsterId: "wild_boar", x: 1380, y: 360 },
-      { monsterId: "wild_boar", x: 1560, y: 290 },
-      { monsterId: "wild_boar", x: 1740, y: 400 },
-      { monsterId: "wild_boar", x: 1300, y: 500 },
-      { monsterId: "wild_boar", x: 1480, y: 560 },
-      { monsterId: "wild_boar", x: 1650, y: 490 },
-      { monsterId: "wild_boar", x: 1900, y: 330 },
-      { monsterId: "wild_boar", x: 2050, y: 450 },
-      { monsterId: "wild_boar", x: 2200, y: 370 },
-
-      // ── Zone 5: 해골 고원 (북쪽, Lv7) ────────────────────────────────────
-      { monsterId: "skeleton_warrior", x: 180,  y: 85  },
-      { monsterId: "skeleton_warrior", x: 380,  y: 55  },
-      { monsterId: "skeleton_warrior", x: 580,  y: 90  },
-      { monsterId: "skeleton_warrior", x: 780,  y: 60  },
-      { monsterId: "skeleton_warrior", x: 1050, y: 80  },
-      { monsterId: "skeleton_warrior", x: 1280, y: 50  },
-      { monsterId: "skeleton_warrior", x: 1500, y: 85  },
-      { monsterId: "skeleton_warrior", x: 1720, y: 55  },
-      { monsterId: "skeleton_warrior", x: 2000, y: 70  },
-      { monsterId: "skeleton_warrior", x: 2250, y: 90  },
-
-      // ── Zone 6: 오크 부락 (남동, Lv8) ────────────────────────────────────
-      { monsterId: "orc_archer", x: 1100, y: 1850 },
-      { monsterId: "orc_archer", x: 1280, y: 1780 },
-      { monsterId: "orc_archer", x: 1450, y: 1900 },
-      { monsterId: "orc_archer", x: 1620, y: 1820 },
-      { monsterId: "orc_archer", x: 1200, y: 2000 },
-      { monsterId: "orc_archer", x: 1380, y: 2060 },
-      { monsterId: "orc_archer", x: 1560, y: 1980 },
-      { monsterId: "orc_archer", x: 1750, y: 1900 },
-      { monsterId: "orc_archer", x: 1300, y: 2160 },
-      { monsterId: "orc_archer", x: 1500, y: 2200 },
-
-      // ── Zone 7: 코볼드 광산 (심동부, Lv9) ────────────────────────────────
-      { monsterId: "kobold_raider", x: 2400, y: 700  },
-      { monsterId: "kobold_raider", x: 2600, y: 800  },
-      { monsterId: "kobold_raider", x: 2800, y: 720  },
-      { monsterId: "kobold_raider", x: 3000, y: 850  },
-      { monsterId: "kobold_raider", x: 2500, y: 1000 },
-      { monsterId: "kobold_raider", x: 2700, y: 1100 },
-      { monsterId: "kobold_raider", x: 2900, y: 1020 },
-      { monsterId: "kobold_raider", x: 3100, y: 950  },
-      { monsterId: "kobold_raider", x: 2600, y: 1250 },
-      { monsterId: "kobold_raider", x: 2850, y: 1350 },
-      { monsterId: "kobold_raider", x: 3050, y: 1200 },
-      { monsterId: "kobold_raider", x: 3200, y: 1100 },
-
-      // ── Zone 8: 심층 혼합 사냥터 (극동, Lv9-10) ──────────────────────────
-      { monsterId: "kobold_raider",     x: 3400, y: 1600 },
-      { monsterId: "skeleton_warrior",  x: 3600, y: 1500 },
-      { monsterId: "kobold_raider",     x: 3800, y: 1700 },
-      { monsterId: "skeleton_warrior",  x: 3500, y: 1800 },
-      { monsterId: "kobold_raider",     x: 3700, y: 1900 },
-      { monsterId: "skeleton_warrior",  x: 3900, y: 1650 },
-      { monsterId: "orc_archer",        x: 3600, y: 2000 },
-      { monsterId: "orc_archer",        x: 3800, y: 2100 },
-
-      // ── Boss 1: 슬라임 여왕 (Zone1 남쪽 끝, Lv5 보스) ─────────────────────
-      { monsterId: "slime_boss",    x: 120,  y: 1600 },
-
-      // ── Boss 2: 고블린 두목 (Zone2 중심, Lv7 보스) ───────────────────────
-      { monsterId: "goblin_boss",   x: 750,  y: 1800 },
-
-      // ── Boss 3: 해골 군주 (Zone5 동쪽 끝, Lv10 보스) ─────────────────────
-      { monsterId: "skeleton_boss", x: 2500, y: 60   },
+      { monsterId: "wild_boar", x: 1450, y: 350 },
+      { monsterId: "wild_boar", x: 1700, y: 280 },
+      { monsterId: "wild_boar", x: 1300, y: 480 },
+      { monsterId: "wild_boar", x: 1600, y: 520 },
+      // Zone 4: 해골 고원 (북쪽)
+      { monsterId: "skeleton_warrior", x: 300, y: 145 },
+      { monsterId: "skeleton_warrior", x: 600, y: 150 },
+      { monsterId: "skeleton_warrior", x: 950, y: 145 },
+      { monsterId: "skeleton_warrior", x: 1300, y: 150 },
+      { monsterId: "skeleton_warrior", x: 1700, y: 145 },
+      // Zone 5: 개구리 늪 (남쪽)
+      { monsterId: "bog_frog", x: 700, y: 1200 },
+      { monsterId: "bog_frog", x: 900, y: 1300 },
+      { monsterId: "bog_frog", x: 1100, y: 1250 },
+      // Zone 6: 오크 (동남)
+      { monsterId: "orc_archer", x: 1200, y: 1700 },
+      { monsterId: "orc_archer", x: 1500, y: 1750 },
+      { monsterId: "orc_archer", x: 1800, y: 1680 },
+      // Zone 7: 코볼드 (극동)
+      { monsterId: "kobold_raider", x: 2400, y: 700 },
+      { monsterId: "kobold_raider", x: 2700, y: 850 },
+      { monsterId: "kobold_raider", x: 3000, y: 750 },
+      { monsterId: "kobold_raider", x: 2500, y: 1050 },
+      { monsterId: "kobold_raider", x: 2800, y: 1200 },
+      // Boss 몬스터 (각 구역 보스)
+      { monsterId: "slime_boss",    x: 180,  y: 1500 },
+      { monsterId: "goblin_boss",   x: 800,  y: 1800 },
+      { monsterId: "skeleton_boss", x: 2600, y: 160  },
     ];
+
+    // silverKnightTown 몬스터 (좌표는 silverKnightTown 맵 기준)
+    const silverKnightZones: Array<{ monsterId: string; x: number; y: number }> = [
+      // 마을 외곽 - 늑대 무리
+      { monsterId: "werewolf", x: 300,  y: 900  },
+      { monsterId: "werewolf", x: 500,  y: 980  },
+      { monsterId: "werewolf", x: 700,  y: 920  },
+      // 동쪽 숲
+      { monsterId: "poison_spider", x: 1800, y: 400 },
+      { monsterId: "poison_spider", x: 2000, y: 550 },
+      { monsterId: "poison_spider", x: 1900, y: 700 },
+      // 남쪽 평원
+      { monsterId: "wild_boar", x: 600, y: 1400 },
+      { monsterId: "wild_boar", x: 900, y: 1500 },
+      { monsterId: "wild_boar", x: 1200, y: 1420 },
+      // 북쪽 폐허
+      { monsterId: "skeleton_warrior", x: 400,  y: 200 },
+      { monsterId: "skeleton_warrior", x: 700,  y: 180 },
+      { monsterId: "skeleton_warrior", x: 1100, y: 210 },
+      // 보스
+      { monsterId: "orc_chief", x: 2000, y: 1200 },
+    ];
+
+    const zones = currentMap === "silverKnightTown" ? silverKnightZones : speakingIslandZones;
+    const mapId = currentMap;
 
     return zones
       .map((spawn, index) => {
         const def = MONSTERS[spawn.monsterId];
         if (!def) return null;
-        const uniqueId = `${spawn.monsterId}-offline-${index}`;
         return {
-          id: uniqueId,
-          mapId: "speakingIsland",
+          id: `${spawn.monsterId}-offline-${index}`,
+          mapId,
           name: def.isBoss ? `[보스] ${def.name}` : def.name,
           level: def.level,
           hp: def.hp,
@@ -751,6 +727,7 @@ export class WorldScene extends Phaser.Scene {
     payload.players.forEach((player) => this.upsertPlayer(player));
     payload.monsters.forEach((monster) => this.upsertMonster(monster));
     this.spawnLootFromStore();
+    this.drawPortals();
   }
 
   private drawMap() {
@@ -904,9 +881,10 @@ export class WorldScene extends Phaser.Scene {
       let texture = "prop_tree";
       if (roll < 0.16) texture = "prop_rock";
       else if (roll < 0.24) texture = "prop_ruin";
-      else if (roll < 0.29 && mapId !== "speakingIsland")
+      else if (roll < 0.28 && mapId !== "speakingIsland")
         texture = "prop_crystal";
-      else if (roll < 0.33) texture = "prop_banner";
+      else if (roll < 0.32) texture = "prop_banner";
+      else if (roll < 0.34) texture = "prop_fence";
       const image = this.add.image(x, y, texture).setOrigin(0.5, 0.85);
       const scale =
         texture === "prop_tree"
@@ -925,6 +903,41 @@ export class WorldScene extends Phaser.Scene {
             : 0.58,
       );
       this.propLayer?.add(image);
+    }
+
+    // 특수 지형지물 고정 배치
+    if (mapId === "speakingIsland") {
+      // 동굴 입구 (북쪽 해골 구역)
+      const cave1 = this.add.graphics();
+      cave1.fillStyle(0x1a0d00, 0.9);
+      cave1.fillEllipse(900, 155, 80, 50);
+      cave1.lineStyle(3, 0x5a3a10, 0.8);
+      cave1.strokeEllipse(900, 155, 80, 50);
+      cave1.fillStyle(0x000000, 1);
+      cave1.fillEllipse(900, 162, 50, 32);
+      this.propLayer?.add(cave1);
+      this.add.text(900, 130, "고대 동굴", {
+        fontSize: "10px", color: "#aa8855",
+        stroke: "#000000", strokeThickness: 3,
+      }).setOrigin(0.5);
+
+      // 폐허 던전 입구 (동쪽 코볼드 구역)
+      const cave2 = this.add.graphics();
+      cave2.fillStyle(0x100800, 0.9);
+      cave2.fillEllipse(2700, 500, 90, 56);
+      cave2.lineStyle(3, 0x6a3a08, 0.9);
+      cave2.strokeEllipse(2700, 500, 90, 56);
+      cave2.fillStyle(0x000000, 1);
+      cave2.fillEllipse(2700, 508, 58, 36);
+      // 바위 장식
+      cave2.fillStyle(0x4a3820, 0.8);
+      cave2.fillRect(2658, 478, 14, 24);
+      cave2.fillRect(2726, 478, 14, 24);
+      this.propLayer?.add(cave2);
+      this.add.text(2700, 474, "코볼드 소굴", {
+        fontSize: "10px", color: "#aa8855",
+        stroke: "#000000", strokeThickness: 3,
+      }).setOrigin(0.5);
     }
   }
 
@@ -1027,6 +1040,72 @@ export class WorldScene extends Phaser.Scene {
     haze.fillStyle(0x86d8ff, 0.035);
     haze.fillEllipse(mapWidth * 0.78, mapHeight * 0.3, 520, 180);
     this.overlayLayer?.add(haze);
+  }
+
+  private drawPortals() {
+    const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
+    const mapWidth = map.width * TILE_WIDTH + 320;
+    const mapHeight = map.height * TILE_HEIGHT + 260;
+
+    this.portalGlows = [];
+
+    if (this.mapId === "speakingIsland") {
+      // 동쪽 포탈 → 은기사의 마을
+      this.createPortalAt(mapWidth - 160, 395, "은기사의 마을 →", "east");
+    } else if (this.mapId === "silverKnightTown") {
+      // 서쪽 포탈 → 이야기의 섬
+      this.createPortalAt(160, 395, "← 이야기의 섬", "west");
+      // 북쪽 포탈 → 바람숲
+      this.createPortalAt(mapWidth * 0.5, 160, "바람숲 ↑", "north");
+    }
+  }
+
+  private createPortalAt(x: number, y: number, label: string, _dir: string) {
+    const gfx = this.add.graphics();
+
+    // 포탈 바닥 빛
+    gfx.fillStyle(0x44aaff, 0.15);
+    gfx.fillEllipse(x, y + 30, 120, 40);
+
+    // 포탈 링 (외부)
+    gfx.lineStyle(4, 0x88ccff, 0.8);
+    gfx.strokeEllipse(x, y, 64, 90);
+
+    // 포탈 링 (내부)
+    gfx.lineStyle(2, 0xaaddff, 0.6);
+    gfx.strokeEllipse(x, y, 48, 72);
+
+    // 포탈 내부 채우기
+    gfx.fillStyle(0x2266cc, 0.25);
+    gfx.fillEllipse(x, y, 48, 72);
+
+    // 포탈 상단 크리스탈
+    gfx.lineStyle(3, 0x66ddff, 0.9);
+    gfx.strokeTriangle(x - 8, y - 40, x + 8, y - 40, x, y - 56);
+    gfx.fillStyle(0x88eeff, 0.7);
+    gfx.fillTriangle(x - 8, y - 40, x + 8, y - 40, x, y - 56);
+
+    this.overlayLayer?.add(gfx);
+    this.portalGlows.push(gfx);
+
+    // 포탈 레이블
+    const text = this.add.text(x, y + 52, label, {
+      fontSize: "11px",
+      color: "#88ccff",
+      stroke: "#001833",
+      strokeThickness: 3,
+    }).setOrigin(0.5);
+    this.overlayLayer?.add(text);
+
+    // 깜빡임 효과
+    this.tweens.add({
+      targets: gfx,
+      alpha: { from: 0.9, to: 0.5 },
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
   }
 
   private spawnStaticNpcs() {
@@ -2226,6 +2305,57 @@ export class WorldScene extends Phaser.Scene {
         setActiveShop(npc.id);
         if (!ui.shopOpen) toggleShop();
       }
+    });
+  }
+
+  private checkPortalTransitions() {
+    if (!this.isOfflineMode || !this.localPlayer || this.isTransitioning) return;
+    const px = this.localPlayer.x;
+    const py = this.localPlayer.y;
+    const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
+    const mapWidth = map.width * TILE_WIDTH + 320;
+
+    if (this.mapId === "speakingIsland") {
+      // 동쪽 포탈 도달
+      if (px > mapWidth - 200 && py > 340 && py < 460) {
+        this.handleMapTransition("silverKnightTown", 220, 400);
+      }
+    } else if (this.mapId === "silverKnightTown") {
+      // 서쪽 포탈 도달
+      if (px < 200 && py > 340 && py < 460) {
+        this.handleMapTransition("speakingIsland", mapWidth - 250, 400);
+      }
+      // 북쪽 포탈 (바람숲)
+      if (py < 180 && px > mapWidth * 0.4 && px < mapWidth * 0.6) {
+        this.handleMapTransition("windwoodForest", 300, 400);
+      }
+    } else if (this.mapId === "windwoodForest") {
+      // 남쪽 포탈 (silverKnightTown)
+      const windMap = MAPS.windwoodForest;
+      const windH = windMap.height * TILE_HEIGHT + 260;
+      if (py > windH - 200 && px > 200 && px < 600) {
+        this.handleMapTransition("silverKnightTown", 400, 200);
+      }
+    }
+  }
+
+  private handleMapTransition(newMapId: string, spawnX: number, spawnY: number) {
+    this.isTransitioning = true;
+    this.stopAutoAttack();
+
+    // 채팅 알림
+    useGameStore.getState().addChat({
+      id: `transition-${Date.now()}`,
+      author: "시스템",
+      channel: "system",
+      message: `${MAPS[newMapId]?.name ?? newMapId}(으)로 이동합니다...`,
+      timestamp: Date.now(),
+    });
+
+    this.cameras.main.fadeOut(500, 0, 0, 0);
+    this.cameras.main.once("camerafadeoutcomplete", () => {
+      useGameStore.getState().setCurrentMapId(newMapId);
+      this.scene.restart({ mapId: newMapId, spawnX, spawnY });
     });
   }
 

@@ -7,8 +7,8 @@ export const MAPS: Record<string, GameMap> = {
     name: "이야기의 섬",
     level: "1~10",
     type: "starter",
-    width: 56,
-    height: 56,
+    width: 72,
+    height: 68,
     tiles: [TileType.GRASS, TileType.SAND, TileType.WATER, TileType.STONE_PATH],
     monsters: ["slime", "goblin_child", "wild_boar", "skeleton_warrior"],
     npcs: [
