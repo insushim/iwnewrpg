@@ -224,6 +224,8 @@ type GameStore = {
   tickQuiz: () => void;
   resolveQuiz: (payload: QuizFeedback) => void;
   closeQuiz: () => void;
+  inCombat: boolean;
+  setInCombat: (v: boolean) => void;
   applyOfflineReward: (reward: {
     gold: number;
     exp: number;
@@ -309,6 +311,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     minimapOpen: true,
   },
   connected: false,
+  inCombat: false,
   selfId: null,
   worldPlayers: [],
   worldMonsters: [],
@@ -715,6 +718,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return getDerivedStatsFromState(player, equipment);
   },
   setConnected: (connected) => set(() => ({ connected })),
+  setInCombat: (v) => set({ inCombat: v }),
   setWorld: (payload) =>
     set(() => ({
       selfId: payload.selfId,

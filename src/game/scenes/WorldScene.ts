@@ -132,6 +132,7 @@ export class WorldScene extends Phaser.Scene {
   private selectedMonsterId: string | null = null;
   private autoAttackEvent?: Phaser.Time.TimerEvent;
   private lastAttackAt = 0;
+  private combatEndTimer?: Phaser.Time.TimerEvent;
   private unsubscribe: Array<() => void> = [];
 
   private groundLayer?: Phaser.GameObjects.Container;
@@ -419,306 +420,177 @@ export class WorldScene extends Phaser.Scene {
   }> {
     type SpawnEntry = { monsterId: string; x: number; y: number };
 
-    // ──────────────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════
+    // 리니지 클래식 스타일 사냥터: 맵당 2-4개 존, 존당 5-7마리
+    // 몬스터 간격 180-250px, 깊이 따라 강해지는 구조
+    // ══════════════════════════════════════════════════════════════════════
+
     // 이야기의 섬 (speakingIsland) Lv 1-10
-    // 맵: 120x100 타일 → ~8960x5460 px, 마을 x:220-980, y:180-610
-    // ──────────────────────────────────────────────────────────────────────
     const speakingIsland: SpawnEntry[] = [
-      // Zone 1 - 슬라임 습지 (서쪽, lv1)
-      { monsterId:"slime", x:160,y:280 }, { monsterId:"slime", x:200,y:380 },
-      { monsterId:"slime", x:155,y:480 }, { monsterId:"slime", x:210,y:580 },
-      { monsterId:"slime", x:160,y:700 }, { monsterId:"slime", x:205,y:820 },
-      { monsterId:"slime", x:155,y:950 }, { monsterId:"slime", x:200,y:1080 },
-      { monsterId:"slime", x:160,y:1200 }, { monsterId:"slime", x:205,y:1320 },
-      // Zone 2 - 고블린 야영지 (남서, lv2)
-      { monsterId:"goblin_child", x:300,y:900 }, { monsterId:"goblin_child", x:500,y:850 },
-      { monsterId:"goblin_child", x:700,y:920 }, { monsterId:"goblin_child", x:400,y:1050 },
-      { monsterId:"goblin_child", x:600,y:1100 }, { monsterId:"goblin_child", x:800,y:1030 },
-      { monsterId:"goblin_child", x:350,y:1200 }, { monsterId:"goblin_child", x:550,y:1250 },
-      { monsterId:"goblin_child", x:750,y:1180 }, { monsterId:"goblin_child", x:900,y:1260 },
-      // Zone 3 - 멧돼지 평원 (동쪽, lv5)
-      { monsterId:"wild_boar", x:1200,y:250 }, { monsterId:"wild_boar", x:1500,y:320 },
-      { monsterId:"wild_boar", x:1800,y:260 }, { monsterId:"wild_boar", x:2100,y:340 },
-      { monsterId:"wild_boar", x:1350,y:480 }, { monsterId:"wild_boar", x:1650,y:550 },
-      { monsterId:"wild_boar", x:1950,y:480 }, { monsterId:"wild_boar", x:2300,y:400 },
-      { monsterId:"wild_boar", x:1400,y:680 }, { monsterId:"wild_boar", x:1700,y:720 },
-      // Zone 4 - 해골 고원 (북쪽, lv7)
-      { monsterId:"skeleton_warrior", x:300,y:155 }, { monsterId:"skeleton_warrior", x:600,y:148 },
-      { monsterId:"skeleton_warrior", x:900,y:155 }, { monsterId:"skeleton_warrior", x:1200,y:148 },
-      { monsterId:"skeleton_warrior", x:1500,y:155 }, { monsterId:"skeleton_warrior", x:1800,y:148 },
-      { monsterId:"skeleton_warrior", x:2100,y:155 }, { monsterId:"skeleton_warrior", x:2400,y:148 },
-      { monsterId:"skeleton_warrior", x:2700,y:155 }, { monsterId:"skeleton_warrior", x:3000,y:148 },
-      // Zone 5 - 개구리 늪 (남쪽 중앙, lv4)
-      { monsterId:"bog_frog", x:600,y:1500 }, { monsterId:"bog_frog", x:850,y:1580 },
-      { monsterId:"bog_frog", x:1100,y:1520 }, { monsterId:"bog_frog", x:1350,y:1600 },
-      { monsterId:"bog_frog", x:700,y:1750 }, { monsterId:"bog_frog", x:950,y:1820 },
-      { monsterId:"bog_frog", x:1200,y:1760 }, { monsterId:"bog_frog", x:1500,y:1680 },
-      // Zone 6 - 코볼드 광산 (극동, lv9)
-      { monsterId:"kobold_raider", x:2600,y:650 }, { monsterId:"kobold_raider", x:2900,y:750 },
-      { monsterId:"kobold_raider", x:3200,y:680 }, { monsterId:"kobold_raider", x:3500,y:800 },
-      { monsterId:"kobold_raider", x:2750,y:950 }, { monsterId:"kobold_raider", x:3050,y:1050 },
-      { monsterId:"kobold_raider", x:3350,y:980 }, { monsterId:"kobold_raider", x:3650,y:880 },
-      { monsterId:"kobold_raider", x:2850,y:1200 }, { monsterId:"kobold_raider", x:3150,y:1280 },
-      { monsterId:"kobold_raider", x:3450,y:1180 }, { monsterId:"kobold_raider", x:3800,y:1050 },
-      // Zone 7 - 오크 진지 (남동, lv8)
-      { monsterId:"orc_archer", x:1200,y:2100 }, { monsterId:"orc_archer", x:1500,y:2200 },
-      { monsterId:"orc_archer", x:1800,y:2150 }, { monsterId:"orc_archer", x:2100,y:2250 },
-      { monsterId:"orc_archer", x:1350,y:2380 }, { monsterId:"orc_archer", x:1650,y:2450 },
-      { monsterId:"orc_archer", x:1950,y:2400 }, { monsterId:"orc_archer", x:2250,y:2300 },
+      // Zone 1 - 슬라임 습지 (서쪽 출구, lv1) ── 초보 사냥터
+      { monsterId:"slime", x:140,y:680 }, { monsterId:"slime", x:160,y:900 },
+      { monsterId:"slime", x:145,y:1120 }, { monsterId:"slime", x:165,y:1340 },
+      { monsterId:"slime", x:130,y:1560 }, { monsterId:"slime", x:155,y:1780 },
+      // Zone 2 - 고블린 야영지 (남서 계곡, lv2-3)
+      { monsterId:"goblin_child", x:350,y:1000 }, { monsterId:"goblin_child", x:580,y:1080 },
+      { monsterId:"goblin_child", x:820,y:1020 }, { monsterId:"goblin_child", x:450,y:1260 },
+      { monsterId:"goblin_child", x:700,y:1300 }, { monsterId:"goblin_child", x:960,y:1220 },
+      // Zone 3 - 멧돼지 평원 (동쪽 마을 너머, lv5)
+      { monsterId:"wild_boar", x:1200,y:280 }, { monsterId:"wild_boar", x:1480,y:360 },
+      { monsterId:"wild_boar", x:1760,y:290 }, { monsterId:"wild_boar", x:1350,y:520 },
+      { monsterId:"wild_boar", x:1640,y:580 }, { monsterId:"wild_boar", x:1920,y:510 },
+      // Zone 4 - 해골 고원 (북쪽 능선, lv7) ── 고위험 사냥터
+      { monsterId:"skeleton_warrior", x:400,y:150 }, { monsterId:"skeleton_warrior", x:750,y:145 },
+      { monsterId:"skeleton_warrior", x:1100,y:150 }, { monsterId:"skeleton_warrior", x:1500,y:145 },
+      { monsterId:"skeleton_warrior", x:1900,y:150 },
       // Boss
-      { monsterId:"slime_boss",    x:180,  y:1600 },
-      { monsterId:"goblin_boss",   x:900,  y:2100 },
-      { monsterId:"skeleton_boss", x:3200, y:160  },
+      { monsterId:"slime_boss",  x:155, y:2100 },
+      { monsterId:"goblin_boss", x:1050, y:1700 },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────
     // 은기사의 마을 (silverKnightTown) Lv 10-20
-    // 맵: 110x90 타일 → ~8240x4940 px, 마을 중심 x:300-1200, y:200-700
-    // ──────────────────────────────────────────────────────────────────────
     const silverKnightTown: SpawnEntry[] = [
-      // Zone 1 - 늑대 무리 (남서 숲, lv13)
-      { monsterId:"werewolf", x:350,y:900 }, { monsterId:"werewolf", x:600,y:980 },
-      { monsterId:"werewolf", x:850,y:920 }, { monsterId:"werewolf", x:1100,y:1000 },
-      { monsterId:"werewolf", x:450,y:1150 }, { monsterId:"werewolf", x:700,y:1220 },
-      { monsterId:"werewolf", x:950,y:1160 }, { monsterId:"werewolf", x:1200,y:1080 },
-      { monsterId:"werewolf", x:550,y:1380 }, { monsterId:"werewolf", x:800,y:1450 },
-      { monsterId:"werewolf", x:1050,y:1380 }, { monsterId:"werewolf", x:1300,y:1300 },
-      // Zone 2 - 독거미 숲 (동쪽, lv17)
-      { monsterId:"poison_spider", x:1900,y:350 }, { monsterId:"poison_spider", x:2200,y:450 },
-      { monsterId:"poison_spider", x:2500,y:380 }, { monsterId:"poison_spider", x:2800,y:500 },
-      { monsterId:"poison_spider", x:2050,y:650 }, { monsterId:"poison_spider", x:2350,y:720 },
-      { monsterId:"poison_spider", x:2650,y:660 }, { monsterId:"poison_spider", x:2950,y:580 },
-      { monsterId:"poison_spider", x:2150,y:900 }, { monsterId:"poison_spider", x:2450,y:950 },
-      // Zone 3 - 도마뱀 척후대 (남쪽 평원, lv16)
-      { monsterId:"lizard_scout", x:500,y:1700 }, { monsterId:"lizard_scout", x:800,y:1780 },
-      { monsterId:"lizard_scout", x:1100,y:1720 }, { monsterId:"lizard_scout", x:1400,y:1800 },
-      { monsterId:"lizard_scout", x:650,y:1950 }, { monsterId:"lizard_scout", x:950,y:2020 },
-      { monsterId:"lizard_scout", x:1250,y:1970 }, { monsterId:"lizard_scout", x:1550,y:1880 },
-      { monsterId:"lizard_scout", x:750,y:2200 }, { monsterId:"lizard_scout", x:1050,y:2250 },
-      // Zone 4 - 해골 폐허 (북쪽, lv7)
-      { monsterId:"skeleton_warrior", x:350,y:160 }, { monsterId:"skeleton_warrior", x:700,y:150 },
-      { monsterId:"skeleton_warrior", x:1050,y:160 }, { monsterId:"skeleton_warrior", x:1400,y:150 },
-      { monsterId:"skeleton_warrior", x:1750,y:160 }, { monsterId:"skeleton_warrior", x:500,y:260 },
-      { monsterId:"skeleton_warrior", x:900,y:250 }, { monsterId:"skeleton_warrior", x:1300,y:260 },
-      // Zone 5 - 석상 골렘 (동북 폐허, lv24)
-      { monsterId:"stone_golem", x:2200,y:200 }, { monsterId:"stone_golem", x:2600,y:180 },
-      { monsterId:"stone_golem", x:3000,y:210 }, { monsterId:"stone_golem", x:2400,y:380 },
-      { monsterId:"stone_golem", x:2800,y:400 }, { monsterId:"stone_golem", x:3200,y:300 },
-      // Zone 6 - 포레스트 스프라이트 (동쪽 깊은 숲, lv19)
-      { monsterId:"forest_sprite", x:3300,y:600 }, { monsterId:"forest_sprite", x:3600,y:700 },
-      { monsterId:"forest_sprite", x:3900,y:650 }, { monsterId:"forest_sprite", x:3450,y:900 },
-      { monsterId:"forest_sprite", x:3750,y:950 }, { monsterId:"forest_sprite", x:4050,y:850 },
+      // Zone 1 - 워울프 남서 숲 (lv20)
+      { monsterId:"werewolf", x:380,y:950 }, { monsterId:"werewolf", x:620,y:1040 },
+      { monsterId:"werewolf", x:870,y:980 }, { monsterId:"werewolf", x:470,y:1220 },
+      { monsterId:"werewolf", x:730,y:1300 }, { monsterId:"werewolf", x:1000,y:1230 },
+      // Zone 2 - 독거미 동쪽 숲 (lv17)
+      { monsterId:"poison_spider", x:1950,y:380 }, { monsterId:"poison_spider", x:2260,y:480 },
+      { monsterId:"poison_spider", x:2560,y:410 }, { monsterId:"poison_spider", x:2120,y:680 },
+      { monsterId:"poison_spider", x:2420,y:750 }, { monsterId:"poison_spider", x:2720,y:660 },
+      // Zone 3 - 도마뱀 남쪽 평원 (lv16)
+      { monsterId:"lizard_scout", x:520,y:1780 }, { monsterId:"lizard_scout", x:820,y:1860 },
+      { monsterId:"lizard_scout", x:1120,y:1800 }, { monsterId:"lizard_scout", x:680,y:2050 },
+      { monsterId:"lizard_scout", x:980,y:2120 },
+      // Zone 4 - 해골 북쪽 폐허 (lv7)
+      { monsterId:"skeleton_warrior", x:380,y:155 }, { monsterId:"skeleton_warrior", x:750,y:148 },
+      { monsterId:"skeleton_warrior", x:1120,y:155 }, { monsterId:"skeleton_warrior", x:1500,y:148 },
+      { monsterId:"skeleton_warrior", x:1870,y:155 },
       // Boss
-      { monsterId:"orc_chief", x:4000, y:1600 },
+      { monsterId:"orc_chief", x:3200, y:1800 },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────
     // 바람숲 (windwoodForest) Lv 15-25
-    // 맵: 140x110 타일 → ~10400x5980 px
-    // ──────────────────────────────────────────────────────────────────────
     const windwoodForest: SpawnEntry[] = [
-      // Zone 1 - 독거미 서쪽 숲
-      { monsterId:"poison_spider", x:250,y:300 }, { monsterId:"poison_spider", x:500,y:380 },
-      { monsterId:"poison_spider", x:750,y:320 }, { monsterId:"poison_spider", x:1000,y:400 },
-      { monsterId:"poison_spider", x:350,y:550 }, { monsterId:"poison_spider", x:650,y:620 },
-      { monsterId:"poison_spider", x:900,y:580 }, { monsterId:"poison_spider", x:1200,y:500 },
-      { monsterId:"poison_spider", x:450,y:800 }, { monsterId:"poison_spider", x:750,y:880 },
-      { monsterId:"poison_spider", x:1050,y:820 }, { monsterId:"poison_spider", x:1350,y:720 },
-      // Zone 2 - 워울프 중앙
-      { monsterId:"werewolf", x:1800,y:600 }, { monsterId:"werewolf", x:2100,y:700 },
-      { monsterId:"werewolf", x:2400,y:640 }, { monsterId:"werewolf", x:2700,y:750 },
-      { monsterId:"werewolf", x:1950,y:900 }, { monsterId:"werewolf", x:2250,y:980 },
-      { monsterId:"werewolf", x:2550,y:920 }, { monsterId:"werewolf", x:2850,y:830 },
-      { monsterId:"werewolf", x:2050,y:1150 }, { monsterId:"werewolf", x:2350,y:1220 },
-      { monsterId:"werewolf", x:2650,y:1160 }, { monsterId:"werewolf", x:2950,y:1080 },
-      // Zone 3 - 포레스트 스프라이트 동쪽
-      { monsterId:"forest_sprite", x:3500,y:450 }, { monsterId:"forest_sprite", x:3800,y:550 },
-      { monsterId:"forest_sprite", x:4100,y:480 }, { monsterId:"forest_sprite", x:4400,y:600 },
-      { monsterId:"forest_sprite", x:3650,y:750 }, { monsterId:"forest_sprite", x:3950,y:820 },
-      { monsterId:"forest_sprite", x:4250,y:760 }, { monsterId:"forest_sprite", x:4550,y:680 },
-      // Zone 4 - 코볼드 남쪽 (wanderers)
-      { monsterId:"kobold_raider", x:600,y:1800 }, { monsterId:"kobold_raider", x:1000,y:1900 },
-      { monsterId:"kobold_raider", x:1400,y:1850 }, { monsterId:"kobold_raider", x:1800,y:1950 },
-      { monsterId:"kobold_raider", x:800,y:2100 }, { monsterId:"kobold_raider", x:1200,y:2180 },
-      { monsterId:"kobold_raider", x:1600,y:2120 }, { monsterId:"kobold_raider", x:2000,y:2050 },
+      // Zone 1 - 독거미 서쪽 입구 (lv17)
+      { monsterId:"poison_spider", x:280,y:320 }, { monsterId:"poison_spider", x:520,y:420 },
+      { monsterId:"poison_spider", x:780,y:360 }, { monsterId:"poison_spider", x:380,y:580 },
+      { monsterId:"poison_spider", x:650,y:650 }, { monsterId:"poison_spider", x:920,y:580 },
+      // Zone 2 - 워울프 중앙 숲 (lv20)
+      { monsterId:"werewolf", x:1820,y:640 }, { monsterId:"werewolf", x:2120,y:740 },
+      { monsterId:"werewolf", x:2420,y:670 }, { monsterId:"werewolf", x:1980,y:940 },
+      { monsterId:"werewolf", x:2280,y:1020 }, { monsterId:"werewolf", x:2580,y:950 },
+      // Zone 3 - 포레스트 스프라이트 동쪽 (lv19) ── 고위험
+      { monsterId:"forest_sprite", x:3520,y:480 }, { monsterId:"forest_sprite", x:3820,y:580 },
+      { monsterId:"forest_sprite", x:4120,y:510 }, { monsterId:"forest_sprite", x:3680,y:780 },
+      { monsterId:"forest_sprite", x:3980,y:860 },
       // Boss
-      { monsterId:"stone_golem", x:4800, y:1200 },
+      { monsterId:"stone_golem", x:4600, y:1300 },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────
     // 오크 부락지 (orcForest) Lv 18-28
-    // 맵: 130x100 타일 → ~9680x5460 px
-    // ──────────────────────────────────────────────────────────────────────
     const orcForest: SpawnEntry[] = [
-      // Zone 1 - 오크 궁수 서쪽 야영지
-      { monsterId:"orc_archer", x:250,y:300 }, { monsterId:"orc_archer", x:500,y:380 },
-      { monsterId:"orc_archer", x:750,y:320 }, { monsterId:"orc_archer", x:1000,y:400 },
-      { monsterId:"orc_archer", x:350,y:550 }, { monsterId:"orc_archer", x:650,y:620 },
-      { monsterId:"orc_archer", x:900,y:580 }, { monsterId:"orc_archer", x:1200,y:500 },
-      { monsterId:"orc_archer", x:450,y:800 }, { monsterId:"orc_archer", x:750,y:880 },
-      { monsterId:"orc_archer", x:1050,y:820 }, { monsterId:"orc_archer", x:1350,y:720 },
-      // Zone 2 - 코볼드 광부 중앙
-      { monsterId:"kobold_raider", x:1700,y:400 }, { monsterId:"kobold_raider", x:2000,y:500 },
-      { monsterId:"kobold_raider", x:2300,y:440 }, { monsterId:"kobold_raider", x:2600,y:560 },
-      { monsterId:"kobold_raider", x:1850,y:700 }, { monsterId:"kobold_raider", x:2150,y:780 },
-      { monsterId:"kobold_raider", x:2450,y:720 }, { monsterId:"kobold_raider", x:2750,y:640 },
-      { monsterId:"kobold_raider", x:1950,y:950 }, { monsterId:"kobold_raider", x:2250,y:1020 },
-      // Zone 3 - 오크 궁수 동쪽 요새
-      { monsterId:"orc_archer", x:3000,y:350 }, { monsterId:"orc_archer", x:3300,y:450 },
-      { monsterId:"orc_archer", x:3600,y:380 }, { monsterId:"orc_archer", x:3900,y:500 },
-      { monsterId:"orc_archer", x:3150,y:600 }, { monsterId:"orc_archer", x:3450,y:680 },
-      { monsterId:"orc_archer", x:3750,y:620 }, { monsterId:"orc_archer", x:4050,y:540 },
-      // Zone 4 - 도마뱀 정찰대 남쪽
-      { monsterId:"lizard_scout", x:500,y:1400 }, { monsterId:"lizard_scout", x:900,y:1480 },
-      { monsterId:"lizard_scout", x:1300,y:1420 }, { monsterId:"lizard_scout", x:1700,y:1500 },
-      { monsterId:"lizard_scout", x:700,y:1650 }, { monsterId:"lizard_scout", x:1100,y:1720 },
-      { monsterId:"lizard_scout", x:1500,y:1660 }, { monsterId:"lizard_scout", x:1900,y:1580 },
-      // Boss x2
-      { monsterId:"orc_chief", x:4500, y:800 },
-      { monsterId:"orc_chief", x:2500, y:1400 },
+      // Zone 1 - 오크 궁수 서쪽 야영지 (lv18)
+      { monsterId:"orc_archer", x:280,y:320 }, { monsterId:"orc_archer", x:540,y:420 },
+      { monsterId:"orc_archer", x:800,y:350 }, { monsterId:"orc_archer", x:380,y:570 },
+      { monsterId:"orc_archer", x:660,y:650 }, { monsterId:"orc_archer", x:940,y:580 },
+      // Zone 2 - 코볼드 광산 중앙 (lv19)
+      { monsterId:"kobold_raider", x:1740,y:430 }, { monsterId:"kobold_raider", x:2040,y:530 },
+      { monsterId:"kobold_raider", x:2340,y:460 }, { monsterId:"kobold_raider", x:1890,y:720 },
+      { monsterId:"kobold_raider", x:2190,y:800 }, { monsterId:"kobold_raider", x:2490,y:730 },
+      // Zone 3 - 오크 동쪽 요새 (lv18, 보스 근처)
+      { monsterId:"orc_archer", x:3020,y:370 }, { monsterId:"orc_archer", x:3320,y:470 },
+      { monsterId:"orc_archer", x:3620,y:400 }, { monsterId:"orc_archer", x:3180,y:620 },
+      { monsterId:"orc_archer", x:3480,y:700 },
+      // Boss
+      { monsterId:"orc_chief", x:4200, y:900 },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────
     // 글루디오 평원 (gludioPlain) Lv 10-18
-    // 맵: 150x120 타일 → ~11120x6500 px
-    // ──────────────────────────────────────────────────────────────────────
     const gludioPlain: SpawnEntry[] = [
-      // Zone 1 - 멧돼지 무리 북쪽
-      { monsterId:"wild_boar", x:300,y:300 }, { monsterId:"wild_boar", x:600,y:380 },
-      { monsterId:"wild_boar", x:900,y:320 }, { monsterId:"wild_boar", x:1200,y:400 },
-      { monsterId:"wild_boar", x:1500,y:350 }, { monsterId:"wild_boar", x:1800,y:430 },
-      { monsterId:"wild_boar", x:450,y:550 }, { monsterId:"wild_boar", x:750,y:620 },
-      { monsterId:"wild_boar", x:1050,y:580 }, { monsterId:"wild_boar", x:1350,y:660 },
-      { monsterId:"wild_boar", x:1650,y:600 }, { monsterId:"wild_boar", x:1950,y:540 },
-      // Zone 2 - 꼬마 고블린 서쪽 캠프
-      { monsterId:"goblin_child", x:250,y:900 }, { monsterId:"goblin_child", x:500,y:980 },
-      { monsterId:"goblin_child", x:750,y:920 }, { monsterId:"goblin_child", x:1000,y:1000 },
-      { monsterId:"goblin_child", x:350,y:1150 }, { monsterId:"goblin_child", x:650,y:1220 },
-      { monsterId:"goblin_child", x:900,y:1160 }, { monsterId:"goblin_child", x:1200,y:1080 },
-      // Zone 3 - 도마뱀 정찰대 동쪽
-      { monsterId:"lizard_scout", x:2000,y:400 }, { monsterId:"lizard_scout", x:2300,y:500 },
-      { monsterId:"lizard_scout", x:2600,y:440 }, { monsterId:"lizard_scout", x:2900,y:560 },
-      { monsterId:"lizard_scout", x:2150,y:700 }, { monsterId:"lizard_scout", x:2450,y:780 },
-      { monsterId:"lizard_scout", x:2750,y:720 }, { monsterId:"lizard_scout", x:3050,y:640 },
-      { monsterId:"lizard_scout", x:2250,y:950 }, { monsterId:"lizard_scout", x:2550,y:1020 },
-      { monsterId:"lizard_scout", x:2850,y:960 }, { monsterId:"lizard_scout", x:3150,y:880 },
-      // Zone 4 - 독거미 남쪽 덤불
-      { monsterId:"poison_spider", x:500,y:1600 }, { monsterId:"poison_spider", x:900,y:1680 },
-      { monsterId:"poison_spider", x:1300,y:1620 }, { monsterId:"poison_spider", x:1700,y:1700 },
-      { monsterId:"poison_spider", x:700,y:1850 }, { monsterId:"poison_spider", x:1100,y:1920 },
-      { monsterId:"poison_spider", x:1500,y:1860 }, { monsterId:"poison_spider", x:1900,y:1780 },
-      // Boss
-      { monsterId:"goblin_boss", x:1500, y:1500 },
+      // Zone 1 - 멧돼지 북쪽 개활지 (lv5)
+      { monsterId:"wild_boar", x:320,y:310 }, { monsterId:"wild_boar", x:600,y:400 },
+      { monsterId:"wild_boar", x:880,y:340 }, { monsterId:"wild_boar", x:480,y:560 },
+      { monsterId:"wild_boar", x:760,y:640 }, { monsterId:"wild_boar", x:1040,y:570 },
+      // Zone 2 - 고블린 서쪽 캠프 (lv2-3)
+      { monsterId:"goblin_child", x:270,y:960 }, { monsterId:"goblin_child", x:530,y:1040 },
+      { monsterId:"goblin_child", x:790,y:980 }, { monsterId:"goblin_child", x:380,y:1200 },
+      { monsterId:"goblin_child", x:650,y:1280 }, { monsterId:"goblin_child", x:920,y:1200 },
+      // Zone 3 - 도마뱀 동쪽 척후대 (lv16)
+      { monsterId:"lizard_scout", x:2020,y:420 }, { monsterId:"lizard_scout", x:2320,y:520 },
+      { monsterId:"lizard_scout", x:2620,y:460 }, { monsterId:"lizard_scout", x:2180,y:720 },
+      { monsterId:"lizard_scout", x:2480,y:800 },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────
     // 달안개 습지 (moonlitWetland) Lv 20-28
-    // 맵: 150x120 타일 → ~11120x6500 px
-    // ──────────────────────────────────────────────────────────────────────
     const moonlitWetland: SpawnEntry[] = [
-      // Zone 1 - 개구리 늪 서쪽
-      { monsterId:"bog_frog", x:250,y:400 }, { monsterId:"bog_frog", x:500,y:500 },
-      { monsterId:"bog_frog", x:750,y:440 }, { monsterId:"bog_frog", x:1000,y:560 },
-      { monsterId:"bog_frog", x:350,y:700 }, { monsterId:"bog_frog", x:650,y:780 },
-      { monsterId:"bog_frog", x:900,y:720 }, { monsterId:"bog_frog", x:1200,y:640 },
-      { monsterId:"bog_frog", x:450,y:950 }, { monsterId:"bog_frog", x:750,y:1020 },
-      { monsterId:"bog_frog", x:1050,y:960 }, { monsterId:"bog_frog", x:1350,y:880 },
-      // Zone 2 - 독거미 중앙 습지
-      { monsterId:"poison_spider", x:1700,y:350 }, { monsterId:"poison_spider", x:2000,y:450 },
-      { monsterId:"poison_spider", x:2300,y:380 }, { monsterId:"poison_spider", x:2600,y:500 },
-      { monsterId:"poison_spider", x:1850,y:650 }, { monsterId:"poison_spider", x:2150,y:720 },
-      { monsterId:"poison_spider", x:2450,y:660 }, { monsterId:"poison_spider", x:2750,y:580 },
-      { monsterId:"poison_spider", x:1950,y:900 }, { monsterId:"poison_spider", x:2250,y:970 },
-      // Zone 3 - 워울프 동쪽 안개 지대
-      { monsterId:"werewolf", x:3100,y:400 }, { monsterId:"werewolf", x:3400,y:500 },
-      { monsterId:"werewolf", x:3700,y:440 }, { monsterId:"werewolf", x:4000,y:560 },
-      { monsterId:"werewolf", x:3250,y:700 }, { monsterId:"werewolf", x:3550,y:780 },
-      { monsterId:"werewolf", x:3850,y:720 }, { monsterId:"werewolf", x:4150,y:640 },
-      // Zone 4 - 석상 골렘 북쪽 고지대
-      { monsterId:"stone_golem", x:600,y:200 }, { monsterId:"stone_golem", x:1200,y:180 },
-      { monsterId:"stone_golem", x:1800,y:200 }, { monsterId:"stone_golem", x:2400,y:180 },
-      { monsterId:"stone_golem", x:3000,y:200 }, { monsterId:"stone_golem", x:3600,y:180 },
-      // Boss x2
-      { monsterId:"stone_golem", x:4500, y:1200 },
-      { monsterId:"orc_chief",   x:2000, y:1500 },
+      // Zone 1 - 개구리 서쪽 늪 (lv21)
+      { monsterId:"bog_frog", x:270,y:420 }, { monsterId:"bog_frog", x:530,y:520 },
+      { monsterId:"bog_frog", x:790,y:460 }, { monsterId:"bog_frog", x:380,y:700 },
+      { monsterId:"bog_frog", x:660,y:780 }, { monsterId:"bog_frog", x:940,y:700 },
+      // Zone 2 - 독거미 중앙 습지 (lv17)
+      { monsterId:"poison_spider", x:1720,y:370 }, { monsterId:"poison_spider", x:2020,y:470 },
+      { monsterId:"poison_spider", x:2320,y:400 }, { monsterId:"poison_spider", x:1870,y:670 },
+      { monsterId:"poison_spider", x:2170,y:750 },
+      // Zone 3 - 워울프 동쪽 안개 지대 (lv20)
+      { monsterId:"werewolf", x:3120,y:420 }, { monsterId:"werewolf", x:3420,y:520 },
+      { monsterId:"werewolf", x:3720,y:460 }, { monsterId:"werewolf", x:3280,y:720 },
+      { monsterId:"werewolf", x:3580,y:800 },
+      // Zone 4 - 골렘 북쪽 고지대 (lv24) ── 고위험
+      { monsterId:"stone_golem", x:650,y:195 }, { monsterId:"stone_golem", x:1350,y:185 },
+      { monsterId:"stone_golem", x:2050,y:195 }, { monsterId:"stone_golem", x:2750,y:185 },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────
     // 기란 도시 (giranTown) Lv 30-40
-    // 맵: 130x100 타일 → ~9680x5460 px, 도시 중심 safe zone
-    // ──────────────────────────────────────────────────────────────────────
     const giranTown: SpawnEntry[] = [
-      // Zone 1 - 드레이크 북쪽 황무지
-      { monsterId:"drake", x:400,y:200 }, { monsterId:"drake", x:800,y:180 },
-      { monsterId:"drake", x:1200,y:210 }, { monsterId:"drake", x:1600,y:190 },
-      { monsterId:"drake", x:600,y:350 }, { monsterId:"drake", x:1000,y:370 },
-      { monsterId:"drake", x:1400,y:340 }, { monsterId:"drake", x:1800,y:360 },
-      // Zone 2 - 석상 골렘 동쪽 평원
-      { monsterId:"stone_golem", x:2200,y:400 }, { monsterId:"stone_golem", x:2600,y:480 },
-      { monsterId:"stone_golem", x:3000,y:420 }, { monsterId:"stone_golem", x:3400,y:500 },
-      { monsterId:"stone_golem", x:2400,y:700 }, { monsterId:"stone_golem", x:2800,y:780 },
-      { monsterId:"stone_golem", x:3200,y:720 }, { monsterId:"stone_golem", x:3600,y:640 },
-      // Zone 3 - 포레스트 스프라이트 서쪽 숲
-      { monsterId:"forest_sprite", x:250,y:900 }, { monsterId:"forest_sprite", x:500,y:980 },
-      { monsterId:"forest_sprite", x:750,y:920 }, { monsterId:"forest_sprite", x:1000,y:1000 },
-      { monsterId:"forest_sprite", x:350,y:1150 }, { monsterId:"forest_sprite", x:650,y:1220 },
-      { monsterId:"forest_sprite", x:900,y:1160 }, { monsterId:"forest_sprite", x:1200,y:1080 },
-      // Zone 4 - 드레이크 동쪽 협곡
-      { monsterId:"drake", x:3800,y:600 }, { monsterId:"drake", x:4200,y:700 },
-      { monsterId:"drake", x:4600,y:640 }, { monsterId:"drake", x:4000,y:900 },
-      { monsterId:"drake", x:4400,y:980 }, { monsterId:"drake", x:4800,y:920 },
-      // Boss
-      { monsterId:"orc_chief", x:5000, y:1400 },
+      // Zone 1 - 드레이크 북쪽 황무지 (lv38)
+      { monsterId:"drake", x:420,y:205 }, { monsterId:"drake", x:820,y:190 },
+      { monsterId:"drake", x:1220,y:210 }, { monsterId:"drake", x:620,y:370 },
+      { monsterId:"drake", x:1020,y:390 }, { monsterId:"drake", x:1420,y:355 },
+      // Zone 2 - 골렘 동쪽 평원 (lv24)
+      { monsterId:"stone_golem", x:2220,y:420 }, { monsterId:"stone_golem", x:2620,y:500 },
+      { monsterId:"stone_golem", x:3020,y:440 }, { monsterId:"stone_golem", x:2420,y:720 },
+      { monsterId:"stone_golem", x:2820,y:800 },
+      // Zone 3 - 스프라이트 서쪽 숲 (lv19)
+      { monsterId:"forest_sprite", x:270,y:950 }, { monsterId:"forest_sprite", x:540,y:1030 },
+      { monsterId:"forest_sprite", x:810,y:970 }, { monsterId:"forest_sprite", x:380,y:1200 },
+      { monsterId:"forest_sprite", x:660,y:1280 },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────
     // 용의 계곡 (dragonValley) Lv 35-50
-    // 맵: 170x130 타일 → ~12560x6820 px
-    // ──────────────────────────────────────────────────────────────────────
     const dragonValley: SpawnEntry[] = [
-      // Zone 1 - 드레이크 서쪽 협곡 (대규모)
-      { monsterId:"drake", x:250,y:350 }, { monsterId:"drake", x:500,y:450 },
-      { monsterId:"drake", x:750,y:380 }, { monsterId:"drake", x:1000,y:500 },
-      { monsterId:"drake", x:1250,y:430 }, { monsterId:"drake", x:1500,y:550 },
-      { monsterId:"drake", x:350,y:650 }, { monsterId:"drake", x:650,y:720 },
-      { monsterId:"drake", x:950,y:660 }, { monsterId:"drake", x:1200,y:780 },
-      { monsterId:"drake", x:1450,y:700 }, { monsterId:"drake", x:1700,y:620 },
-      { monsterId:"drake", x:450,y:950 }, { monsterId:"drake", x:750,y:1020 },
-      { monsterId:"drake", x:1050,y:960 }, { monsterId:"drake", x:1350,y:1040 },
-      // Zone 2 - 드레이크 중앙 화염지대
-      { monsterId:"drake", x:2000,y:450 }, { monsterId:"drake", x:2300,y:550 },
-      { monsterId:"drake", x:2600,y:480 }, { monsterId:"drake", x:2900,y:600 },
-      { monsterId:"drake", x:2150,y:750 }, { monsterId:"drake", x:2450,y:820 },
-      { monsterId:"drake", x:2750,y:760 }, { monsterId:"drake", x:3050,y:680 },
-      // Zone 3 - 레드 드래곤 동쪽 둥지 (극강)
-      { monsterId:"red_dragon", x:4000,y:400 }, { monsterId:"red_dragon", x:4500,y:500 },
-      { monsterId:"red_dragon", x:5000,y:450 }, { monsterId:"red_dragon", x:4250,y:700 },
-      { monsterId:"red_dragon", x:4750,y:780 }, { monsterId:"red_dragon", x:5250,y:720 },
-      // Zone 4 - 드레이크 남쪽 잔해
-      { monsterId:"drake", x:800,y:1500 }, { monsterId:"drake", x:1200,y:1600 },
-      { monsterId:"drake", x:1600,y:1540 }, { monsterId:"drake", x:2000,y:1620 },
-      { monsterId:"drake", x:2400,y:1560 }, { monsterId:"drake", x:2800,y:1640 },
-      // Boss x2
-      { monsterId:"red_dragon", x:6000, y:1200 },
-      { monsterId:"red_dragon", x:3500, y:1400 },
+      // Zone 1 - 드레이크 서쪽 협곡 (lv38)
+      { monsterId:"drake", x:270,y:370 }, { monsterId:"drake", x:540,y:470 },
+      { monsterId:"drake", x:810,y:400 }, { monsterId:"drake", x:380,y:660 },
+      { monsterId:"drake", x:660,y:740 }, { monsterId:"drake", x:940,y:670 },
+      // Zone 2 - 와이번 중앙 화염지대 (lv42) ── 고위험
+      { monsterId:"ash_wyvern", x:2020,y:470 }, { monsterId:"ash_wyvern", x:2340,y:570 },
+      { monsterId:"ash_wyvern", x:2660,y:500 }, { monsterId:"ash_wyvern", x:2180,y:770 },
+      { monsterId:"ash_wyvern", x:2500,y:850 },
+      // Zone 3 - 드레이크 동쪽 잔해 (lv38)
+      { monsterId:"drake", x:3520,y:420 }, { monsterId:"drake", x:3820,y:520 },
+      { monsterId:"drake", x:4120,y:455 }, { monsterId:"drake", x:3680,y:720 },
+      { monsterId:"drake", x:3980,y:800 },
+      // Boss (레이드)
+      { monsterId:"red_dragon", x:5800, y:1300 },
     ];
 
     // ──────────────────────────────────────────────────────────────────────
     // 고대 동굴 (ancientCave) Lv 8-15 던전
     // ──────────────────────────────────────────────────────────────────────
+    // 고대 동굴 (ancientCave) Lv 8-15 던전
     const ancientCave: SpawnEntry[] = [
-      { monsterId:"skeleton_warrior", x:300,y:400 }, { monsterId:"skeleton_warrior", x:500,y:350 },
-      { monsterId:"skeleton_warrior", x:700,y:430 }, { monsterId:"skeleton_warrior", x:400,y:600 },
-      { monsterId:"skeleton_warrior", x:600,y:650 }, { monsterId:"skeleton_warrior", x:800,y:580 },
-      { monsterId:"skeleton_warrior", x:350,y:800 }, { monsterId:"skeleton_warrior", x:550,y:850 },
-      { monsterId:"skeleton_warrior", x:1200,y:350 }, { monsterId:"skeleton_warrior", x:1400,y:450 },
-      { monsterId:"skeleton_warrior", x:1600,y:380 }, { monsterId:"skeleton_warrior", x:1300,y:600 },
-      { monsterId:"skeleton_warrior", x:1500,y:680 }, { monsterId:"skeleton_warrior", x:1700,y:620 },
-      { monsterId:"skeleton_warrior", x:2200,y:400 }, { monsterId:"skeleton_warrior", x:2500,y:480 },
-      { monsterId:"skeleton_warrior", x:2800,y:420 }, { monsterId:"skeleton_warrior", x:2300,y:700 },
-      { monsterId:"skeleton_warrior", x:3100,y:500 }, { monsterId:"skeleton_warrior", x:3300,y:620 },
-      { monsterId:"goblin_boss", x:3500, y:700 },
-      { monsterId:"skeleton_boss", x:3800, y:650 },
+      // Hall 1 - 입구 구역 (lv7)
+      { monsterId:"skeleton_warrior", x:320,y:420 }, { monsterId:"skeleton_warrior", x:540,y:380 },
+      { monsterId:"skeleton_warrior", x:760,y:450 }, { monsterId:"skeleton_warrior", x:420,y:650 },
+      { monsterId:"skeleton_warrior", x:640,y:700 },
+      // Hall 2 - 깊은 복도 (lv7)
+      { monsterId:"skeleton_warrior", x:1220,y:370 }, { monsterId:"skeleton_warrior", x:1460,y:470 },
+      { monsterId:"skeleton_warrior", x:1700,y:400 }, { monsterId:"skeleton_warrior", x:1340,y:620 },
+      { monsterId:"skeleton_warrior", x:1580,y:700 },
+      // Boss 방
+      { monsterId:"goblin_boss",   x:2400, y:520 },
+      { monsterId:"skeleton_boss", x:2700, y:670 },
     ];
 
     const mapSpawns: Record<string, SpawnEntry[]> = {
@@ -3186,14 +3058,26 @@ export class WorldScene extends Phaser.Scene {
         this.localPlayer!.x,
         this.localPlayer!.y,
       );
-      const AGGRO_RANGE = 150;
+      const mBase = monsterId.split("-offline-")[0];
+      const isAggressive = MONSTERS[mBase]?.aggressive ?? true;
+      // Aggressive monsters spot player from further away
+      const AGGRO_RANGE = isAggressive ? 300 : 140;
       const ATTACK_RANGE = 45;
+      // Leash: monster gives up if too far from spawn
+      const LEASH_DIST = 700;
+      const distToSpawn = Phaser.Math.Distance.Between(sprite.x, sprite.y, ai.spawnX, ai.spawnY);
 
       if (distToPlayer < AGGRO_RANGE) {
         ai.state = "chase";
         ai.lastChaseAt = now;
-      } else if (ai.state === "chase" && now - ai.lastChaseAt > 3000) {
+      } else if (ai.state === "chase" && now - ai.lastChaseAt > 8000) {
+        // Give up chase after 8 seconds without sighting
         ai.state = "idle";
+      } else if (distToSpawn > LEASH_DIST) {
+        // Too far from home — return to spawn
+        ai.state = "idle";
+        ai.wanderTargetX = ai.spawnX;
+        ai.wanderTargetY = ai.spawnY;
       }
 
       if (ai.state === "chase") {
@@ -3204,7 +3088,6 @@ export class WorldScene extends Phaser.Scene {
           ai.state = "idle";
           ai.lastChaseAt = 0;
         } else if (distToPlayer > ATTACK_RANGE) {
-          const mBase = monsterId.split("-offline-")[0];
           const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 38;
           const angle = Phaser.Math.Angle.Between(
             sprite.x,
@@ -3223,7 +3106,7 @@ export class WorldScene extends Phaser.Scene {
           }
         } else {
           // Within attack range — deal damage to player
-          const ATTACK_INTERVAL = 1500;
+          const ATTACK_INTERVAL = 1200;
           if (now - ai.lastAttackAt >= ATTACK_INTERVAL) {
             const store = useGameStore.getState();
             if (store.ui.deathOpen || store.player.hp <= 0) return;
@@ -3235,6 +3118,13 @@ export class WorldScene extends Phaser.Scene {
             const newHp = Math.max(0, store.player.hp - dmg);
             store.setPlayer({ hp: newHp });
             ai.lastAttackAt = now;
+
+            // Mark player in combat and reset the 6-second exit timer
+            store.setInCombat(true);
+            if (this.combatEndTimer) this.combatEndTimer.remove();
+            this.combatEndTimer = this.time.delayedCall(6000, () => {
+              useGameStore.getState().setInCombat(false);
+            });
 
             if (this.localPlayer) {
               this.showDamageNumber(this.localPlayer.x, this.localPlayer.y, dmg, false);

@@ -31,6 +31,8 @@ export function BottomHUD() {
   const inventory = useGameStore((state) => state.inventory) ?? [];
   const consumeItem = useGameStore((state) => state.consumeItem);
 
+  const inCombat = useGameStore((state) => state.inCombat);
+
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(player.name);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -79,6 +81,16 @@ export function BottomHUD() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    if (!inCombat) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "전투 중에는 게임을 닫을 수 없습니다.";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [inCombat]);
 
   const classColors: Record<string, string> = {
     guardian: "#79a7ff",
@@ -153,8 +165,15 @@ export function BottomHUD() {
                   {classLabel}
                 </div>
               </div>
-              <div className="rounded-full border border-white/8 bg-white/4 px-2 py-0.5 text-[9px] tracking-[0.2em] text-[#cbb38b]">
-                {connected ? "온라인" : "오프라인"}
+              <div className="flex items-center gap-1.5">
+                {inCombat && (
+                  <div className="rounded-full border border-red-500/60 bg-red-900/50 px-2 py-0.5 text-[9px] tracking-[0.2em] text-red-300 animate-pulse">
+                    전투 중
+                  </div>
+                )}
+                <div className="rounded-full border border-white/8 bg-white/4 px-2 py-0.5 text-[9px] tracking-[0.2em] text-[#cbb38b]">
+                  {connected ? "온라인" : "오프라인"}
+                </div>
               </div>
             </div>
 
