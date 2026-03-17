@@ -666,9 +666,9 @@ export class CharacterCreateScene extends Phaser.Scene {
       refreshName();
     };
 
-    this.input.keyboard?.on("keydown", keyHandler);
+    window.addEventListener("keydown", keyHandler);
     overlay.once(Phaser.GameObjects.Events.DESTROY, () => {
-      this.input.keyboard?.off("keydown", keyHandler);
+      window.removeEventListener("keydown", keyHandler);
     });
 
     this.gateOverlay = overlay;
