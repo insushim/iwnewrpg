@@ -60,6 +60,7 @@ export class CharacterCreateScene extends Phaser.Scene {
   private nameBuffer = "견습 모험가";
   private pendingJob: JobConfig | null = null;
   private gateOverlay?: Phaser.GameObjects.Container;
+  private nameInputEl: HTMLInputElement | null = null;
   private readonly servers = ["아스카론 01"];
 
   constructor() {
@@ -636,39 +637,56 @@ export class CharacterCreateScene extends Phaser.Scene {
       nameText.setText(this.nameBuffer || " ");
     };
 
-    const keyHandler = (event: KeyboardEvent) => {
-      if (!this.gateOverlay) {
-        return;
-      }
-      if (event.key === "Enter") {
-        this.confirmEntry();
-        return;
-      }
-      if (event.key === "Escape") {
-        this.closeGateOverlay();
-        return;
-      }
-      if (event.key === "Backspace") {
-        this.nameBuffer = this.nameBuffer.slice(0, -1);
-        refreshName();
-        return;
-      }
-      if (event.key.length !== 1) {
-        return;
-      }
-      if (!/^[0-9A-Za-z가-힣 ]$/.test(event.key)) {
-        return;
-      }
-      if (this.nameBuffer.length >= 12) {
-        return;
-      }
-      this.nameBuffer += event.key;
-      refreshName();
-    };
+    // DOM input — handles IME/Korean composition correctly
+    const inputEl = document.createElement("input");
+    inputEl.type = "text";
+    inputEl.value = this.nameBuffer;
+    inputEl.maxLength = 12;
+    Object.assign(inputEl.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "1px",
+      height: "1px",
+      opacity: "0.01",
+      border: "none",
+      outline: "none",
+      padding: "0",
+      margin: "0",
+      fontSize: "1px",
+      zIndex: "9999",
+    });
+    document.body.appendChild(inputEl);
+    this.nameInputEl = inputEl;
+    setTimeout(() => inputEl.focus(), 50);
 
-    window.addEventListener("keydown", keyHandler);
+    inputEl.addEventListener("input", () => {
+      const filtered = inputEl.value.replace(/[^0-9A-Za-z가-힣 ]/g, "").slice(0, 12);
+      inputEl.value = filtered;
+      this.nameBuffer = filtered;
+      refreshName();
+    });
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.confirmEntry();
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        this.closeGateOverlay();
+      }
+    });
+
+    // Re-focus the hidden input when user clicks the nickname area
+    const inputClickZone = this.add
+      .rectangle(px - 26 + 92, py + 126 + 23, 184, 46, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+    inputClickZone.on("pointerdown", () => inputEl.focus());
+    overlay.add(inputClickZone);
+
     overlay.once(Phaser.GameObjects.Events.DESTROY, () => {
-      window.removeEventListener("keydown", keyHandler);
+      inputEl.remove();
+      this.nameInputEl = null;
     });
 
     this.gateOverlay = overlay;
@@ -676,6 +694,8 @@ export class CharacterCreateScene extends Phaser.Scene {
 
   private closeGateOverlay() {
     this.pendingJob = null;
+    this.nameInputEl?.remove();
+    this.nameInputEl = null;
     this.gateOverlay?.destroy();
     this.gateOverlay = undefined;
   }
@@ -692,6 +712,11 @@ export class CharacterCreateScene extends Phaser.Scene {
 
     const store = useGameStore.getState();
     const serverName = this.servers[this.selectedServerIndex];
+
+    localStorage.setItem(
+      "iwnewrpg_save",
+      JSON.stringify({ name: trimmedName, className: String(this.pendingJob.id), serverName }),
+    );
 
     store.setServerName(serverName);
     store.setPlayer({
