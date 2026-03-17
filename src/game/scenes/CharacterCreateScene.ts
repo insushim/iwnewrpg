@@ -592,12 +592,11 @@ export class CharacterCreateScene extends Phaser.Scene {
     inputBg.strokeRoundedRect(px - 26, py + 126, 184, 46, 14);
     overlay.add(inputBg);
 
+    // nameText는 DOM input 뒤에 숨어 있으므로 placeholder 역할만 함
     const nameText = this.add
-      .text(px - 12, py + 149, this.nameBuffer, {
-        color: "#f2e4c2",
-        fontSize: "18px",
-      })
-      .setOrigin(0, 0.5);
+      .text(px - 12, py + 149, "", { color: "#f2e4c2", fontSize: "18px" })
+      .setOrigin(0, 0.5)
+      .setAlpha(0);
     overlay.add(nameText);
 
     const guideText = this.add
@@ -633,56 +632,58 @@ export class CharacterCreateScene extends Phaser.Scene {
     enterButton.on("pointerdown", () => this.confirmEntry());
     overlay.add(enterButton);
 
-    const refreshName = () => {
-      nameText.setText(this.nameBuffer || " ");
-    };
+    // ── DOM input: Phaser inputBg 위에 투명하게 띄워 커서·IME 모두 정상 동작 ──
+    const canvas = this.game.canvas;
+    const cr = canvas.getBoundingClientRect();
+    const sx = cr.width / this.scale.width;
+    const sy = cr.height / this.scale.height;
 
-    // DOM input — handles IME/Korean composition correctly
     const inputEl = document.createElement("input");
     inputEl.type = "text";
     inputEl.value = this.nameBuffer;
     inputEl.maxLength = 12;
+    inputEl.placeholder = "닉네임 입력";
     Object.assign(inputEl.style, {
       position: "fixed",
-      top: "0",
-      left: "0",
-      width: "1px",
-      height: "1px",
-      opacity: "0.01",
+      left:   `${cr.left + (px - 26 + 10) * sx}px`,
+      top:    `${cr.top  + (py + 126 + 11) * sy}px`,
+      width:  `${164 * sx}px`,
+      height: `${26 * sy}px`,
+      fontSize: `${Math.max(12, Math.round(15 * sy))}px`,
+      color: "#f2e4c2",
+      caretColor: "#dfbe73",
+      background: "transparent",
       border: "none",
       outline: "none",
       padding: "0",
       margin: "0",
-      fontSize: "1px",
-      zIndex: "9999",
+      fontFamily: "sans-serif",
+      zIndex: "10000",
+      boxSizing: "border-box",
     });
     document.body.appendChild(inputEl);
     this.nameInputEl = inputEl;
     setTimeout(() => inputEl.focus(), 50);
 
-    inputEl.addEventListener("input", () => {
+    // 한글 IME 조합 중에는 value를 건드리지 않아야 조합이 끊기지 않음
+    let isComposing = false;
+    inputEl.addEventListener("compositionstart", () => { isComposing = true; });
+    inputEl.addEventListener("compositionend", () => {
+      isComposing = false;
       const filtered = inputEl.value.replace(/[^0-9A-Za-z가-힣 ]/g, "").slice(0, 12);
       inputEl.value = filtered;
       this.nameBuffer = filtered;
-      refreshName();
+    });
+    inputEl.addEventListener("input", () => {
+      if (isComposing) return;
+      const filtered = inputEl.value.replace(/[^0-9A-Za-z가-힣 ]/g, "").slice(0, 12);
+      inputEl.value = filtered;
+      this.nameBuffer = filtered;
     });
     inputEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        this.confirmEntry();
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        this.closeGateOverlay();
-      }
+      if (e.key === "Enter")  { e.preventDefault(); this.confirmEntry(); }
+      if (e.key === "Escape") { e.preventDefault(); this.closeGateOverlay(); }
     });
-
-    // Re-focus the hidden input when user clicks the nickname area
-    const inputClickZone = this.add
-      .rectangle(px - 26 + 92, py + 126 + 23, 184, 46, 0x000000, 0)
-      .setInteractive({ useHandCursor: true });
-    inputClickZone.on("pointerdown", () => inputEl.focus());
-    overlay.add(inputClickZone);
 
     overlay.once(Phaser.GameObjects.Events.DESTROY, () => {
       inputEl.remove();
