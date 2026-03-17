@@ -694,21 +694,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (weapon?.subtype === "staff" || player.className === "Arcanist") {
       return {
-        str: 2,
+        str: 1,
         dex: 1,
-        int: 8 + derived.maxAttack + (weapon?.stats.spellPower ?? 0),
+        int: 4 + derived.maxAttack + (weapon?.stats.spellPower ?? 0),
       };
     }
 
     if (weapon?.subtype === "bow" || player.className === "Ranger") {
       return {
-        str: 3,
-        dex: 6 + derived.maxAttack + (weapon?.stats.rangedDamage ?? 0),
+        str: 2,
+        dex: 3 + derived.maxAttack + (weapon?.stats.rangedDamage ?? 0),
         int: 1,
       };
     }
 
-    return { str: 6 + derived.maxAttack, dex: 2, int: 1 };
+    return { str: 3 + derived.maxAttack, dex: 2, int: 1 };
   },
   getDerivedStats: () => {
     const { player, equipment } = get();

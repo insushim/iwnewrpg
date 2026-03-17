@@ -956,6 +956,8 @@ export class WorldScene extends Phaser.Scene {
         this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: fullHp });
         if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
         sprite.setPosition(rx, ry);
+        sprite.hpFill.width = 50;
+        sprite.prevHp = fullHp;
         useGameStore.getState().upsertMonster({
           id: monsterId,
           mapId: this.mapId,
@@ -2109,6 +2111,10 @@ export class WorldScene extends Phaser.Scene {
     if (!monster || !this.localPlayer) {
       return;
     }
+    // 마을 안전구역 안에서는 공격 불가
+    if (this.mapId === "speakingIsland" && STARTER_TOWN_RECT.contains(this.localPlayer.x, this.localPlayer.y)) {
+      return;
+    }
 
     this.selectMonster(monsterId);
     this.startAutoAttack(monsterId);
@@ -2270,11 +2276,11 @@ export class WorldScene extends Phaser.Scene {
       const state = useGameStore.getState();
       const attackProfile = state.getAttackProfile();
       const baseDamage =
-        3 + attackProfile.str + Math.floor(attackProfile.dex * 0.5);
-      const variance = Math.floor(Math.random() * 4) - 1; // -1 ~ +2
+        1 + Math.floor(attackProfile.str * 0.5) + Math.floor(attackProfile.dex * 0.4) + Math.floor(attackProfile.int * 0.3);
+      const variance = Math.floor(Math.random() * 3); // 0 ~ +2
       const damage = Math.max(1, baseDamage + variance);
-      const isCrit = Math.random() < 0.12;
-      const finalDamage = isCrit ? Math.floor(damage * 1.8) : damage;
+      const isCrit = Math.random() < 0.10;
+      const finalDamage = isCrit ? Math.floor(damage * 1.6) : damage;
 
       const newHp = Math.max(0, monsterData.hp - finalDamage);
       this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: newHp });
@@ -2351,6 +2357,8 @@ export class WorldScene extends Phaser.Scene {
           this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: fullHp });
           if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
           sprite.setPosition(rx, ry);
+          sprite.hpFill.width = 50;
+          sprite.prevHp = fullHp;
           useGameStore.getState().upsertMonster({
             id: monsterId,
             mapId: this.mapId,
@@ -3196,7 +3204,8 @@ export class WorldScene extends Phaser.Scene {
           ai.state = "idle";
           ai.lastChaseAt = 0;
         } else if (distToPlayer > ATTACK_RANGE) {
-          const speed = 50;
+          const mBase = monsterId.split("-offline-")[0];
+          const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 38;
           const angle = Phaser.Math.Angle.Between(
             sprite.x,
             sprite.y,
