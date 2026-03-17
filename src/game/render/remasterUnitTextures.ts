@@ -69,19 +69,30 @@ function createFrame(scene: Phaser.Scene, key: string, spec: FrameSpec) {
   ctx.clearRect(0, 0, REMASTER_FRAME_SIZE, REMASTER_FRAME_SIZE);
 
   const dir = directionVector(spec.direction);
+  const isBowAttack = spec.weapon === "bow" && spec.state === "attack";
+  const isStaffAttack = spec.weapon === "staff" && spec.state === "attack";
+
   const bob =
     spec.state === "walk"
       ? [0, 4, 1, 3][spec.frame % 4]
-      : spec.state === "attack"
-        ? [-3, -7, 1, -1][spec.frame % 4]
-        : [0, -1][spec.frame % 2];
+      : isBowAttack
+        ? [-1, -4, 0, -1][spec.frame % 4]   // 활: 살짝 뒤로 당기는 자세
+        : spec.state === "attack"
+          ? [-3, -7, 1, -1][spec.frame % 4]
+          : [0, -1][spec.frame % 2];
   const stride =
     spec.state === "walk"
       ? [-6, 6, -3, 3][spec.frame % 4]
-      : spec.state === "attack"
-        ? [0, 3, 7, 2][spec.frame % 4]
-        : 0;
-  const swing = spec.state === "attack" ? [0, 10, 18, 8][spec.frame % 4] : 0;
+      : isBowAttack
+        ? [0, -3, 2, 0][spec.frame % 4]     // 활: 뒤로 체중이동 후 release
+        : spec.state === "attack"
+          ? [0, 3, 7, 2][spec.frame % 4]
+          : 0;
+  const swing = isBowAttack
+    ? [0, -14, 8, 0][spec.frame % 4]        // 음수=시위 당김, 양수=발사
+    : isStaffAttack
+      ? [0, 6, 14, 4][spec.frame % 4]       // 지팡이: 앞으로 찌르는 동작
+      : spec.state === "attack" ? [0, 10, 18, 8][spec.frame % 4] : 0;
   const centerX = REMASTER_FRAME_SIZE / 2;
   const centerY = 58 + bob;
 
@@ -379,12 +390,36 @@ function drawWeapon(
     );
     roundRect(ctx, x + 11 + dir.x * 5, y - 3 - swing, 10, 5, 2, color(accent));
   } else if (weapon === "bow") {
-    strokeEllipse(ctx, x + 24 + dir.x * 4, y + 3, 16, 34, color(0x7a4c1d), 3);
-    strokeLine(ctx, x + 24 + dir.x * 4, y - 14, x + 24 + dir.x * 4, y + 20, color(0xdac9ab, 0.9), 1.6);
+    const bx = x + 24 + dir.x * 4;
+    // 활 몸체
+    strokeEllipse(ctx, bx, y + 3, 16, 34, color(0x7a4c1d), 3);
+    if (swing < -2) {
+      // 시위 당김: V자 형태로 구부러짐
+      const pull = Math.min(8, Math.abs(swing) * 0.45);
+      strokeLine(ctx, bx, y - 14, bx - pull, y + 3, color(0xdac9ab, 0.9), 1.6);
+      strokeLine(ctx, bx - pull, y + 3, bx, y + 20, color(0xdac9ab, 0.9), 1.6);
+      // 화살 (조준 중)
+      strokeLine(ctx, x + 6 + dir.x * 2, y + 3, bx - pull, y + 3, color(0x8b7340), 1.5);
+      circle(ctx, x + 6 + dir.x * 2, y + 3, 2, color(0x5a3a1c));
+    } else if (swing > 2) {
+      // 발사 직후: 시위 직선, 화살이 날아감
+      strokeLine(ctx, bx, y - 14, bx, y + 20, color(0xdac9ab, 0.9), 1.6);
+      strokeLine(ctx, bx + 4, y + 2, bx + 14 + swing, y - 1, color(0x8b7340, 0.65), 1.5);
+    } else {
+      // 대기/복귀: 시위 직선
+      strokeLine(ctx, bx, y - 14, bx, y + 20, color(0xdac9ab, 0.9), 1.6);
+    }
   } else if (weapon === "staff") {
-    roundRect(ctx, x + 18 + dir.x * 4, y - 16, 4, 34, 2, color(0x7a4c1d));
-    circle(ctx, x + 20 + dir.x * 4, y - 20, 9, color(0x8cc7ff, 0.22));
-    circle(ctx, x + 20 + dir.x * 4, y - 20, 4.5, color(0x8cc7ff));
+    const sx = x + 18 + dir.x * 4;
+    roundRect(ctx, sx, y - 16 - swing * 0.4, 4, 34, 2, color(0x7a4c1d));
+    // 마법구: swing에 따라 밝아짐
+    const glowR = 9 + swing * 0.3;
+    circle(ctx, sx + 2, y - 20 - swing * 0.4, glowR, color(0x8cc7ff, 0.12 + swing * 0.015));
+    circle(ctx, sx + 2, y - 20 - swing * 0.4, 4.5, color(0x8cc7ff));
+    if (swing > 8) {
+      // 시전 순간 작은 마법 이펙트
+      circle(ctx, sx + 12, y - 20, 3, color(0xffffff, 0.5));
+    }
   }
 }
 
