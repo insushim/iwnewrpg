@@ -427,6 +427,7 @@ export class CharacterCreateScene extends Phaser.Scene {
       delay: 180,
       loop: true,
       callback: () => {
+        if (!sprite.active) return;
         frameIndex = (frameIndex + 1) % frames.length;
         sprite.setTexture(frames[frameIndex]);
       },
