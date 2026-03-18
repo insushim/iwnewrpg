@@ -442,176 +442,136 @@ export class WorldScene extends Phaser.Scene {
     type SpawnEntry = { monsterId: string; x: number; y: number };
 
     // ══════════════════════════════════════════════════════════════════════
-    // 리니지 클래식 스타일 사냥터: 맵당 2-4개 존, 존당 5-7마리
-    // 몬스터 간격 180-250px, 깊이 따라 강해지는 구조
+    // 리니지 클래식 사냥터: 맵당 2-3개 존, 존당 4마리, 존별 단일 몬스터 종류
+    // 몬스터 간격 300-400px, 맵 공간 활용으로 자연스러운 사냥터 분리
     // ══════════════════════════════════════════════════════════════════════
 
-    // 이야기의 섬 (speakingIsland) Lv 1-10
+    // 이야기의 섬 (speakingIsland) 8960w×5460h — Lv 1-10
     const speakingIsland: SpawnEntry[] = [
-      // Zone 1 - 슬라임 습지 (서쪽 출구, lv1) ── 초보 사냥터
-      { monsterId:"slime", x:140,y:680 }, { monsterId:"slime", x:160,y:900 },
-      { monsterId:"slime", x:145,y:1120 }, { monsterId:"slime", x:165,y:1340 },
-      { monsterId:"slime", x:130,y:1560 }, { monsterId:"slime", x:155,y:1780 },
-      // Zone 2 - 고블린 야영지 (남서 계곡, lv2-3)
-      { monsterId:"goblin_child", x:350,y:1000 }, { monsterId:"goblin_child", x:580,y:1080 },
-      { monsterId:"goblin_child", x:820,y:1020 }, { monsterId:"goblin_child", x:450,y:1260 },
-      { monsterId:"goblin_child", x:700,y:1300 }, { monsterId:"goblin_child", x:960,y:1220 },
-      // Zone 3 - 멧돼지 평원 (동쪽 마을 너머, lv5)
-      { monsterId:"wild_boar", x:1200,y:280 }, { monsterId:"wild_boar", x:1480,y:360 },
-      { monsterId:"wild_boar", x:1760,y:290 }, { monsterId:"wild_boar", x:1350,y:520 },
-      { monsterId:"wild_boar", x:1640,y:580 }, { monsterId:"wild_boar", x:1920,y:510 },
-      // Zone 4 - 해골 고원 (북쪽 능선, lv7) ── 고위험 사냥터
-      { monsterId:"skeleton_warrior", x:400,y:150 }, { monsterId:"skeleton_warrior", x:750,y:145 },
-      { monsterId:"skeleton_warrior", x:1100,y:150 }, { monsterId:"skeleton_warrior", x:1500,y:145 },
-      { monsterId:"skeleton_warrior", x:1900,y:150 },
-      // Boss
-      { monsterId:"slime_boss",  x:155, y:2100 },
-      { monsterId:"goblin_boss", x:1050, y:1700 },
+      // ── 슬라임 서쪽 늪 (lv1-2) ─ 마을 서남쪽, 완전 초보 사냥터
+      { monsterId:"slime", x:220,y:1800 }, { monsterId:"slime", x:520,y:2150 },
+      { monsterId:"slime", x:240,y:2550 }, { monsterId:"slime", x:540,y:2950 },
+      // ── 고블린 야영지 (lv3-5) ─ 중앙 평원
+      { monsterId:"goblin_child", x:2200,y:1100 }, { monsterId:"goblin_child", x:2600,y:1450 },
+      { monsterId:"goblin_child", x:2200,y:1900 }, { monsterId:"goblin_child", x:2600,y:2350 },
+      // ── 멧돼지 동쪽 들판 (lv5-7) ─ 마을 반대편 넓은 평원
+      { monsterId:"wild_boar", x:5800,y:1800 }, { monsterId:"wild_boar", x:6250,y:2200 },
+      { monsterId:"wild_boar", x:5800,y:2700 }, { monsterId:"wild_boar", x:6250,y:3200 },
+      // ── [보스] 고블린 두목 ─ 동쪽 깊은 곳
+      { monsterId:"goblin_boss", x:7500, y:2800 },
     ];
 
-    // 은기사의 마을 (silverKnightTown) Lv 10-20
+    // 은기사의 마을 (silverKnightTown) 8240w×4940h — Lv 10-20
     const silverKnightTown: SpawnEntry[] = [
-      // Zone 1 - 워울프 남서 숲 (lv20)
-      { monsterId:"werewolf", x:380,y:950 }, { monsterId:"werewolf", x:620,y:1040 },
-      { monsterId:"werewolf", x:870,y:980 }, { monsterId:"werewolf", x:470,y:1220 },
-      { monsterId:"werewolf", x:730,y:1300 }, { monsterId:"werewolf", x:1000,y:1230 },
-      // Zone 2 - 독거미 동쪽 숲 (lv17)
-      { monsterId:"poison_spider", x:1950,y:380 }, { monsterId:"poison_spider", x:2260,y:480 },
-      { monsterId:"poison_spider", x:2560,y:410 }, { monsterId:"poison_spider", x:2120,y:680 },
-      { monsterId:"poison_spider", x:2420,y:750 }, { monsterId:"poison_spider", x:2720,y:660 },
-      // Zone 3 - 도마뱀 남쪽 평원 (lv16)
-      { monsterId:"lizard_scout", x:520,y:1780 }, { monsterId:"lizard_scout", x:820,y:1860 },
-      { monsterId:"lizard_scout", x:1120,y:1800 }, { monsterId:"lizard_scout", x:680,y:2050 },
-      { monsterId:"lizard_scout", x:980,y:2120 },
-      // Zone 4 - 해골 북쪽 폐허 (lv7)
-      { monsterId:"skeleton_warrior", x:380,y:155 }, { monsterId:"skeleton_warrior", x:750,y:148 },
-      { monsterId:"skeleton_warrior", x:1120,y:155 }, { monsterId:"skeleton_warrior", x:1500,y:148 },
-      { monsterId:"skeleton_warrior", x:1870,y:155 },
-      // Boss
-      { monsterId:"orc_chief", x:3200, y:1800 },
+      // ── 해골 북쪽 폐허 (lv7-10) ─ 마을 북단 고위험 지역
+      { monsterId:"skeleton_warrior", x:2400,y:380 }, { monsterId:"skeleton_warrior", x:2900,y:600 },
+      { monsterId:"skeleton_warrior", x:3500,y:380 }, { monsterId:"skeleton_warrior", x:4100,y:600 },
+      // ── 독거미 동쪽 심연 숲 (lv15-17) ─ 마을 동쪽
+      { monsterId:"poison_spider", x:6000,y:1800 }, { monsterId:"poison_spider", x:6500,y:2200 },
+      { monsterId:"poison_spider", x:6000,y:2700 }, { monsterId:"poison_spider", x:6500,y:3200 },
+      // ── 워울프 남서 깊은 숲 (lv18-20) ─ 고위험 남서 지역
+      { monsterId:"werewolf", x:900,y:3500 }, { monsterId:"werewolf", x:1350,y:3900 },
+      { monsterId:"werewolf", x:900,y:4350 }, { monsterId:"werewolf", x:1350,y:4700 },
+      // ── [보스] 오크 족장 ─ 남동 끝
+      { monsterId:"orc_chief", x:7200, y:4200 },
     ];
 
-    // 바람숲 (windwoodForest) Lv 15-25
+    // 바람숲 (windwoodForest) 10400w×5980h — Lv 15-25
     const windwoodForest: SpawnEntry[] = [
-      // Zone 1 - 독거미 서쪽 입구 (lv17)
-      { monsterId:"poison_spider", x:280,y:320 }, { monsterId:"poison_spider", x:520,y:420 },
-      { monsterId:"poison_spider", x:780,y:360 }, { monsterId:"poison_spider", x:380,y:580 },
-      { monsterId:"poison_spider", x:650,y:650 }, { monsterId:"poison_spider", x:920,y:580 },
-      // Zone 2 - 워울프 중앙 숲 (lv20)
-      { monsterId:"werewolf", x:1820,y:640 }, { monsterId:"werewolf", x:2120,y:740 },
-      { monsterId:"werewolf", x:2420,y:670 }, { monsterId:"werewolf", x:1980,y:940 },
-      { monsterId:"werewolf", x:2280,y:1020 }, { monsterId:"werewolf", x:2580,y:950 },
-      // Zone 3 - 포레스트 스프라이트 동쪽 (lv19) ── 고위험
-      { monsterId:"forest_sprite", x:3520,y:480 }, { monsterId:"forest_sprite", x:3820,y:580 },
-      { monsterId:"forest_sprite", x:4120,y:510 }, { monsterId:"forest_sprite", x:3680,y:780 },
-      { monsterId:"forest_sprite", x:3980,y:860 },
-      // Boss
-      { monsterId:"stone_golem", x:4600, y:1300 },
+      // ── 독거미 서쪽 입구 (lv17-19) ─ 숲 진입로
+      { monsterId:"poison_spider", x:600,y:2000 }, { monsterId:"poison_spider", x:1050,y:2450 },
+      { monsterId:"poison_spider", x:600,y:2950 }, { monsterId:"poison_spider", x:1050,y:3450 },
+      // ── 워울프 중앙 울창 숲 (lv20-22) ─ 핵심 사냥터
+      { monsterId:"werewolf", x:4500,y:2000 }, { monsterId:"werewolf", x:5000,y:2500 },
+      { monsterId:"werewolf", x:4500,y:3100 }, { monsterId:"werewolf", x:5000,y:3700 },
+      // ── 포레스트 스프라이트 동쪽 심부 (lv22-25) ─ 고위험
+      { monsterId:"forest_sprite", x:8500,y:1800 }, { monsterId:"forest_sprite", x:9000,y:2300 },
+      { monsterId:"forest_sprite", x:8500,y:2900 }, { monsterId:"forest_sprite", x:9000,y:3500 },
+      // ── [보스] 석재 골렘 ─ 동쪽 끝 폐허
+      { monsterId:"stone_golem", x:9800, y:3000 },
     ];
 
-    // 오크 부락지 (orcForest) Lv 18-28
+    // 오크 부락지 (orcForest) 9680w×5460h — Lv 18-28
     const orcForest: SpawnEntry[] = [
-      // Zone 1 - 오크 궁수 서쪽 야영지 (lv18)
-      { monsterId:"orc_archer", x:280,y:320 }, { monsterId:"orc_archer", x:540,y:420 },
-      { monsterId:"orc_archer", x:800,y:350 }, { monsterId:"orc_archer", x:380,y:570 },
-      { monsterId:"orc_archer", x:660,y:650 }, { monsterId:"orc_archer", x:940,y:580 },
-      // Zone 2 - 코볼드 광산 중앙 (lv19)
-      { monsterId:"kobold_raider", x:1740,y:430 }, { monsterId:"kobold_raider", x:2040,y:530 },
-      { monsterId:"kobold_raider", x:2340,y:460 }, { monsterId:"kobold_raider", x:1890,y:720 },
-      { monsterId:"kobold_raider", x:2190,y:800 }, { monsterId:"kobold_raider", x:2490,y:730 },
-      // Zone 3 - 오크 동쪽 요새 (lv18, 보스 근처)
-      { monsterId:"orc_archer", x:3020,y:370 }, { monsterId:"orc_archer", x:3320,y:470 },
-      { monsterId:"orc_archer", x:3620,y:400 }, { monsterId:"orc_archer", x:3180,y:620 },
-      { monsterId:"orc_archer", x:3480,y:700 },
-      // Boss
-      { monsterId:"orc_chief", x:4200, y:900 },
+      // ── 오크 궁수 서쪽 야영지 (lv18-20) ─ 부락 입구
+      { monsterId:"orc_archer", x:500,y:1300 }, { monsterId:"orc_archer", x:900,y:1700 },
+      { monsterId:"orc_archer", x:500,y:2200 }, { monsterId:"orc_archer", x:900,y:2700 },
+      // ── 코볼드 중앙 광산 (lv20-22) ─ 부락 중심부
+      { monsterId:"kobold_raider", x:4200,y:2000 }, { monsterId:"kobold_raider", x:4700,y:2500 },
+      { monsterId:"kobold_raider", x:4200,y:3100 }, { monsterId:"kobold_raider", x:4700,y:3700 },
+      // ── 오크 동쪽 요새 (lv22-25) ─ 부락 심부
+      { monsterId:"orc_archer", x:7500,y:1500 }, { monsterId:"orc_archer", x:7900,y:2000 },
+      { monsterId:"orc_archer", x:7500,y:2600 }, { monsterId:"orc_archer", x:7900,y:3200 },
+      // ── [보스] 오크 족장 ─ 동쪽 끝 요새
+      { monsterId:"orc_chief", x:9000, y:4000 },
     ];
 
-    // 글루디오 평원 (gludioPlain) Lv 10-18
+    // 글루디오 평원 (gludioPlain) 11120w×6500h — Lv 10-18
     const gludioPlain: SpawnEntry[] = [
-      // Zone 1 - 멧돼지 북쪽 개활지 (lv5)
-      { monsterId:"wild_boar", x:320,y:310 }, { monsterId:"wild_boar", x:600,y:400 },
-      { monsterId:"wild_boar", x:880,y:340 }, { monsterId:"wild_boar", x:480,y:560 },
-      { monsterId:"wild_boar", x:760,y:640 }, { monsterId:"wild_boar", x:1040,y:570 },
-      // Zone 2 - 고블린 서쪽 캠프 (lv2-3)
-      { monsterId:"goblin_child", x:270,y:960 }, { monsterId:"goblin_child", x:530,y:1040 },
-      { monsterId:"goblin_child", x:790,y:980 }, { monsterId:"goblin_child", x:380,y:1200 },
-      { monsterId:"goblin_child", x:650,y:1280 }, { monsterId:"goblin_child", x:920,y:1200 },
-      // Zone 3 - 도마뱀 동쪽 척후대 (lv16)
-      { monsterId:"lizard_scout", x:2020,y:420 }, { monsterId:"lizard_scout", x:2320,y:520 },
-      { monsterId:"lizard_scout", x:2620,y:460 }, { monsterId:"lizard_scout", x:2180,y:720 },
-      { monsterId:"lizard_scout", x:2480,y:800 },
+      // ── 멧돼지 서북 초원 (lv5-8) ─ 평원 진입 초기 구역
+      { monsterId:"wild_boar", x:700,y:800 }, { monsterId:"wild_boar", x:1100,y:1200 },
+      { monsterId:"wild_boar", x:700,y:1700 }, { monsterId:"wild_boar", x:1100,y:2200 },
+      // ── 고블린 중앙 캠프 (lv5-8) ─ 평원 중심
+      { monsterId:"goblin_child", x:4800,y:2800 }, { monsterId:"goblin_child", x:5300,y:3300 },
+      { monsterId:"goblin_child", x:4800,y:3900 }, { monsterId:"goblin_child", x:5300,y:4500 },
+      // ── 도마뱀 동쪽 척후대 (lv14-16) ─ 동쪽 고위험
+      { monsterId:"lizard_scout", x:8800,y:1500 }, { monsterId:"lizard_scout", x:9300,y:2000 },
+      { monsterId:"lizard_scout", x:8800,y:2600 }, { monsterId:"lizard_scout", x:9300,y:3200 },
     ];
 
-    // 달안개 습지 (moonlitWetland) Lv 20-28
+    // 달안개 습지 (moonlitWetland) 11120w×6500h — Lv 20-28
     const moonlitWetland: SpawnEntry[] = [
-      // Zone 1 - 개구리 서쪽 늪 (lv21)
-      { monsterId:"bog_frog", x:270,y:420 }, { monsterId:"bog_frog", x:530,y:520 },
-      { monsterId:"bog_frog", x:790,y:460 }, { monsterId:"bog_frog", x:380,y:700 },
-      { monsterId:"bog_frog", x:660,y:780 }, { monsterId:"bog_frog", x:940,y:700 },
-      // Zone 2 - 독거미 중앙 습지 (lv17)
-      { monsterId:"poison_spider", x:1720,y:370 }, { monsterId:"poison_spider", x:2020,y:470 },
-      { monsterId:"poison_spider", x:2320,y:400 }, { monsterId:"poison_spider", x:1870,y:670 },
-      { monsterId:"poison_spider", x:2170,y:750 },
-      // Zone 3 - 워울프 동쪽 안개 지대 (lv20)
-      { monsterId:"werewolf", x:3120,y:420 }, { monsterId:"werewolf", x:3420,y:520 },
-      { monsterId:"werewolf", x:3720,y:460 }, { monsterId:"werewolf", x:3280,y:720 },
-      { monsterId:"werewolf", x:3580,y:800 },
-      // Zone 4 - 골렘 북쪽 고지대 (lv24) ── 고위험
-      { monsterId:"stone_golem", x:650,y:195 }, { monsterId:"stone_golem", x:1350,y:185 },
-      { monsterId:"stone_golem", x:2050,y:195 }, { monsterId:"stone_golem", x:2750,y:185 },
+      // ── 늪개구리 서쪽 늪 (lv21-23) ─ 습지 입구
+      { monsterId:"bog_frog", x:600,y:1800 }, { monsterId:"bog_frog", x:1050,y:2300 },
+      { monsterId:"bog_frog", x:600,y:2900 }, { monsterId:"bog_frog", x:1050,y:3500 },
+      // ── 독거미 중앙 오염 지대 (lv17-20) ─ 습지 중심
+      { monsterId:"poison_spider", x:5200,y:2200 }, { monsterId:"poison_spider", x:5700,y:2700 },
+      { monsterId:"poison_spider", x:5200,y:3300 }, { monsterId:"poison_spider", x:5700,y:3900 },
+      // ── 워울프 동쪽 안개 숲 (lv20-25) ─ 고위험
+      { monsterId:"werewolf", x:8800,y:1800 }, { monsterId:"werewolf", x:9300,y:2300 },
+      { monsterId:"werewolf", x:8800,y:2900 }, { monsterId:"werewolf", x:9300,y:3500 },
     ];
 
-    // 기란 도시 (giranTown) Lv 30-40
+    // 기란 도시 (giranTown) 9680w×5460h — Lv 30-40
     const giranTown: SpawnEntry[] = [
-      // Zone 1 - 드레이크 북쪽 황무지 (lv38)
-      { monsterId:"drake", x:420,y:205 }, { monsterId:"drake", x:820,y:190 },
-      { monsterId:"drake", x:1220,y:210 }, { monsterId:"drake", x:620,y:370 },
-      { monsterId:"drake", x:1020,y:390 }, { monsterId:"drake", x:1420,y:355 },
-      // Zone 2 - 골렘 동쪽 평원 (lv24)
-      { monsterId:"stone_golem", x:2220,y:420 }, { monsterId:"stone_golem", x:2620,y:500 },
-      { monsterId:"stone_golem", x:3020,y:440 }, { monsterId:"stone_golem", x:2420,y:720 },
-      { monsterId:"stone_golem", x:2820,y:800 },
-      // Zone 3 - 스프라이트 서쪽 숲 (lv19)
-      { monsterId:"forest_sprite", x:270,y:950 }, { monsterId:"forest_sprite", x:540,y:1030 },
-      { monsterId:"forest_sprite", x:810,y:970 }, { monsterId:"forest_sprite", x:380,y:1200 },
-      { monsterId:"forest_sprite", x:660,y:1280 },
+      // ── 드레이크 북쪽 황무지 (lv35-38) ─ 도시 북단 고위험
+      { monsterId:"drake", x:2000,y:400 }, { monsterId:"drake", x:2500,y:750 },
+      { monsterId:"drake", x:2000,y:1200 }, { monsterId:"drake", x:2500,y:1700 },
+      // ── 석재 골렘 동쪽 폐허 (lv24-26) ─ 도시 동쪽 외곽
+      { monsterId:"stone_golem", x:7000,y:2200 }, { monsterId:"stone_golem", x:7500,y:2700 },
+      { monsterId:"stone_golem", x:7000,y:3300 }, { monsterId:"stone_golem", x:7500,y:3900 },
     ];
 
-    // 용의 계곡 (dragonValley) Lv 35-50
+    // 용의 계곡 (dragonValley) 12560w×7020h — Lv 35-50
     const dragonValley: SpawnEntry[] = [
-      // Zone 1 - 드레이크 서쪽 협곡 (lv38)
-      { monsterId:"drake", x:270,y:370 }, { monsterId:"drake", x:540,y:470 },
-      { monsterId:"drake", x:810,y:400 }, { monsterId:"drake", x:380,y:660 },
-      { monsterId:"drake", x:660,y:740 }, { monsterId:"drake", x:940,y:670 },
-      // Zone 2 - 와이번 중앙 화염지대 (lv42) ── 고위험
-      { monsterId:"ash_wyvern", x:2020,y:470 }, { monsterId:"ash_wyvern", x:2340,y:570 },
-      { monsterId:"ash_wyvern", x:2660,y:500 }, { monsterId:"ash_wyvern", x:2180,y:770 },
-      { monsterId:"ash_wyvern", x:2500,y:850 },
-      // Zone 3 - 드레이크 동쪽 잔해 (lv38)
-      { monsterId:"drake", x:3520,y:420 }, { monsterId:"drake", x:3820,y:520 },
-      { monsterId:"drake", x:4120,y:455 }, { monsterId:"drake", x:3680,y:720 },
-      { monsterId:"drake", x:3980,y:800 },
-      // Boss (레이드)
-      { monsterId:"red_dragon", x:5800, y:1300 },
+      // ── 드레이크 서쪽 협곡 (lv38-40) ─ 계곡 진입
+      { monsterId:"drake", x:600,y:2000 }, { monsterId:"drake", x:1100,y:2600 },
+      { monsterId:"drake", x:600,y:3300 }, { monsterId:"drake", x:1100,y:4000 },
+      // ── 와이번 중앙 화염지대 (lv42-45) ─ 핵심 고위험 사냥터
+      { monsterId:"ash_wyvern", x:5800,y:2500 }, { monsterId:"ash_wyvern", x:6400,y:3100 },
+      { monsterId:"ash_wyvern", x:5800,y:3800 }, { monsterId:"ash_wyvern", x:6400,y:4500 },
+      // ── 드레이크 동쪽 잔해지 (lv38-40) ─ 보스 전 구역
+      { monsterId:"drake", x:9800,y:2200 }, { monsterId:"drake", x:10300,y:2800 },
+      { monsterId:"drake", x:9800,y:3500 }, { monsterId:"drake", x:10300,y:4200 },
+      // ── [보스] 붉은 용 ─ 계곡 최심부 레이드
+      { monsterId:"red_dragon", x:11800, y:3500 },
     ];
 
     // ──────────────────────────────────────────────────────────────────────
-    // 고대 동굴 (ancientCave) Lv 8-15 던전
+    // 고대 동굴 (ancientCave) 4280w×2600h — Lv 8-15 던전
     // ──────────────────────────────────────────────────────────────────────
-    // 고대 동굴 (ancientCave) Lv 8-15 던전
     const ancientCave: SpawnEntry[] = [
-      // Hall 1 - 입구 구역 (lv7)
-      { monsterId:"skeleton_warrior", x:320,y:420 }, { monsterId:"skeleton_warrior", x:540,y:380 },
-      { monsterId:"skeleton_warrior", x:760,y:450 }, { monsterId:"skeleton_warrior", x:420,y:650 },
-      { monsterId:"skeleton_warrior", x:640,y:700 },
-      // Hall 2 - 깊은 복도 (lv7)
-      { monsterId:"skeleton_warrior", x:1220,y:370 }, { monsterId:"skeleton_warrior", x:1460,y:470 },
-      { monsterId:"skeleton_warrior", x:1700,y:400 }, { monsterId:"skeleton_warrior", x:1340,y:620 },
-      { monsterId:"skeleton_warrior", x:1580,y:700 },
-      // Boss 방
-      { monsterId:"goblin_boss",   x:2400, y:520 },
-      { monsterId:"skeleton_boss", x:2700, y:670 },
+      // ── Hall 1 해골 수호자 (lv7-10) ─ 동굴 입구 구역
+      { monsterId:"skeleton_warrior", x:500,y:700 },
+      { monsterId:"skeleton_warrior", x:900,y:1100 },
+      { monsterId:"skeleton_warrior", x:500,y:1600 },
+      // ── Hall 2 해골 심층부 (lv10-13) ─ 동굴 중심부
+      { monsterId:"skeleton_warrior", x:2000,y:700 },
+      { monsterId:"skeleton_warrior", x:2400,y:1100 },
+      { monsterId:"skeleton_warrior", x:2000,y:1600 },
+      // ── [보스] 해골/고블린 보스 ─ 최심부 보스방
+      { monsterId:"skeleton_boss", x:3500, y:1000 },
+      { monsterId:"goblin_boss",   x:3800, y:1400 },
     ];
 
     const mapSpawns: Record<string, SpawnEntry[]> = {
@@ -3066,7 +3026,9 @@ export class WorldScene extends Phaser.Scene {
       monster.y - this.localPlayer.y,
       this.localPlayer.facing,
     );
-    this.localPlayer.attackUntil = now + 260;
+    const meleeStyle = this.getMeleeWeaponStyle();
+    this.localPlayer.attackUntil =
+      now + (meleeStyle === "dagger" ? 220 : meleeStyle === "greatsword" ? 340 : 280);
     const classTone = this.getPlayerClassTone();
 
     if (this.isRangedClass()) {
@@ -3122,44 +3084,129 @@ export class WorldScene extends Phaser.Scene {
       });
     } else {
       this.spawnMeleeAfterimage(classTone.afterimageTint);
-      // Main slash arc
-      const slash = this.add
-        .arc(monster.x, monster.y - 8, 32, 200, 340, false, classTone.slashTint, 0.32)
-        .setStrokeStyle(4, classTone.slashTint, 0.95);
-      this.effectLayer?.add(slash);
-      this.tweens.add({
-        targets: slash,
-        alpha: 0,
-        scaleX: 1.4,
-        scaleY: 1.4,
-        duration: 200,
-        ease: "Power2.Out",
-        onComplete: () => slash.destroy(),
-      });
-      // Secondary impact flash
-      const impact = this.add.ellipse(
-        monster.x,
-        monster.y - 12,
-        38,
-        28,
-        classTone.impactTint,
-        0.45,
-      );
-      this.effectLayer?.add(impact);
-      this.tweens.add({
-        targets: impact,
-        alpha: 0,
-        scaleX: 1.8,
-        scaleY: 1.8,
-        duration: 150,
-        ease: "Power2.Out",
-        onComplete: () => impact.destroy(),
-      });
+      if (meleeStyle === "dagger") {
+        const stab = this.add
+          .ellipse(monster.x, monster.y - 12, 54, 10, classTone.slashTint, 0.26)
+          .setRotation(
+            Phaser.Math.Angle.Between(
+              this.localPlayer.x,
+              this.localPlayer.y,
+              monster.x,
+              monster.y,
+            ),
+          )
+          .setBlendMode(Phaser.BlendModes.SCREEN);
+        const pierce = this.add
+          .ellipse(monster.x, monster.y - 12, 18, 30, classTone.impactTint, 0.36)
+          .setBlendMode(Phaser.BlendModes.SCREEN);
+        this.effectLayer?.add(stab);
+        this.effectLayer?.add(pierce);
+        this.tweens.add({
+          targets: stab,
+          alpha: 0,
+          scaleX: 1.35,
+          duration: 120,
+          ease: "Power2.Out",
+          onComplete: () => stab.destroy(),
+        });
+        this.tweens.add({
+          targets: pierce,
+          alpha: 0,
+          scaleY: 1.6,
+          duration: 110,
+          ease: "Power2.Out",
+          onComplete: () => pierce.destroy(),
+        });
+      } else if (meleeStyle === "greatsword") {
+        const slash = this.add
+          .arc(
+            monster.x,
+            monster.y - 10,
+            42,
+            188,
+            348,
+            false,
+            classTone.slashTint,
+            0.38,
+          )
+          .setStrokeStyle(6, classTone.slashTint, 0.95);
+        this.effectLayer?.add(slash);
+        this.tweens.add({
+          targets: slash,
+          alpha: 0,
+          scaleX: 1.55,
+          scaleY: 1.55,
+          duration: 240,
+          ease: "Power2.Out",
+          onComplete: () => slash.destroy(),
+        });
+        const impact = this.add.ellipse(
+          monster.x,
+          monster.y - 10,
+          52,
+          34,
+          classTone.impactTint,
+          0.5,
+        );
+        this.effectLayer?.add(impact);
+        this.tweens.add({
+          targets: impact,
+          alpha: 0,
+          scaleX: 2.1,
+          scaleY: 2.1,
+          duration: 180,
+          ease: "Power2.Out",
+          onComplete: () => impact.destroy(),
+        });
+      } else {
+        const slash = this.add
+          .arc(
+            monster.x,
+            monster.y - 8,
+            32,
+            200,
+            340,
+            false,
+            classTone.slashTint,
+            0.32,
+          )
+          .setStrokeStyle(4, classTone.slashTint, 0.95);
+        this.effectLayer?.add(slash);
+        this.tweens.add({
+          targets: slash,
+          alpha: 0,
+          scaleX: 1.4,
+          scaleY: 1.4,
+          duration: 200,
+          ease: "Power2.Out",
+          onComplete: () => slash.destroy(),
+        });
+        const impact = this.add.ellipse(
+          monster.x,
+          monster.y - 12,
+          38,
+          28,
+          classTone.impactTint,
+          0.45,
+        );
+        this.effectLayer?.add(impact);
+        this.tweens.add({
+          targets: impact,
+          alpha: 0,
+          scaleX: 1.8,
+          scaleY: 1.8,
+          duration: 150,
+          ease: "Power2.Out",
+          onComplete: () => impact.destroy(),
+        });
+      }
       this.tweens.add({
         targets: this.localPlayer,
-        scaleX: 1.06,
-        scaleY: 1.06,
-        duration: 70,
+        scaleX:
+          meleeStyle === "dagger" ? 1.03 : meleeStyle === "greatsword" ? 1.08 : 1.06,
+        scaleY:
+          meleeStyle === "dagger" ? 1.03 : meleeStyle === "greatsword" ? 1.08 : 1.06,
+        duration: meleeStyle === "dagger" ? 55 : meleeStyle === "greatsword" ? 90 : 70,
         yoyo: true,
       });
       this.spawnWeaponTrail(
@@ -3168,6 +3215,7 @@ export class WorldScene extends Phaser.Scene {
         monster.x,
         monster.y - 14,
         classTone.trailTint,
+        meleeStyle as "dagger" | "sword" | "greatsword",
       );
       if (classTone.classId === "guardian") {
         this.spawnShieldPulse(monster.x, monster.y - 14, classTone.burstTint);
@@ -3764,14 +3812,16 @@ export class WorldScene extends Phaser.Scene {
     const weaponVariant =
       weaponSubtype === WeaponSubType.DAGGER
         ? "dagger"
-        : weaponSubtype === WeaponSubType.ONE_HAND_SWORD ||
-            weaponSubtype === WeaponSubType.TWO_HAND_SWORD
+        : weaponSubtype === WeaponSubType.TWO_HAND_SWORD
+          ? "greatsword"
+          : weaponSubtype === WeaponSubType.ONE_HAND_SWORD
           ? "sword"
           : null;
 
     if (className.includes("guardian")) {
       if (weaponVariant === "dagger") return "anim_player_guardian_dagger";
       if (weaponVariant === "sword") return "anim_player_guardian_sword";
+      if (weaponVariant === "greatsword") return "anim_player_guardian_greatsword";
       return "anim_player_guardian";
     }
     if (className.includes("ranger")) return "anim_player_ranger";
@@ -3779,10 +3829,13 @@ export class WorldScene extends Phaser.Scene {
     if (className.includes("sovereign")) {
       if (weaponVariant === "dagger") return "anim_player_sovereign_dagger";
       if (weaponVariant === "sword") return "anim_player_sovereign_sword";
+      if (weaponVariant === "greatsword") return "anim_player_sovereign_greatsword";
       return "anim_player_sovereign";
     }
     return weaponVariant === "dagger"
       ? "anim_player_guardian_dagger"
+      : weaponVariant === "greatsword"
+        ? "anim_player_guardian_greatsword"
       : weaponVariant === "sword"
         ? "anim_player_guardian_sword"
         : "anim_player_guardian";
@@ -3868,7 +3921,28 @@ export class WorldScene extends Phaser.Scene {
     const weaponId = useGameStore.getState().equipment.weapon?.id ?? "";
     if (weaponId === "hunter_bow") return 900;
     if (weaponId === "arcana_staff") return 1050;
+    if (this.getEquippedWeaponSubtype() === WeaponSubType.DAGGER) return 620;
+    if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD) return 920;
     return 760;
+  }
+
+  private getEquippedWeaponSubtype() {
+    const weaponId = useGameStore.getState().equipment.weapon?.id;
+    return weaponId ? ITEMS[weaponId]?.subtype : undefined;
+  }
+
+  private getMeleeWeaponStyle() {
+    const subtype = this.getEquippedWeaponSubtype();
+    if (subtype === WeaponSubType.DAGGER) {
+      return "dagger" as const;
+    }
+    if (subtype === WeaponSubType.TWO_HAND_SWORD) {
+      return "greatsword" as const;
+    }
+    if (subtype === WeaponSubType.ONE_HAND_SWORD) {
+      return "sword" as const;
+    }
+    return "sword" as const;
   }
 
   private createGroundPatch(x: number, y: number, mapId: string) {
@@ -4615,18 +4689,26 @@ export class WorldScene extends Phaser.Scene {
     endX: number,
     endY: number,
     tint: number,
+    style: "dagger" | "sword" | "greatsword" = "sword",
   ) {
     const angle = Phaser.Math.Angle.Between(startX, startY, endX, endY);
     const midX = (startX + endX) / 2;
     const midY = (startY + endY) / 2;
+    const distance = Phaser.Math.Distance.Between(startX, startY, endX, endY);
+    const trailWidth =
+      style === "dagger" ? distance * 0.72 : style === "greatsword" ? distance * 1.08 : distance;
+    const trailHeight = style === "dagger" ? 6 : style === "greatsword" ? 14 : 10;
+    const coreWidth =
+      trailWidth * (style === "dagger" ? 0.72 : style === "greatsword" ? 0.92 : 0.88);
+    const coreHeight = style === "dagger" ? 3 : style === "greatsword" ? 5 : 4;
     const trail = this.add
       .rectangle(
         midX,
         midY,
-        Phaser.Math.Distance.Between(startX, startY, endX, endY),
-        10,
+        trailWidth,
+        trailHeight,
         tint,
-        0.16,
+        style === "dagger" ? 0.22 : style === "greatsword" ? 0.2 : 0.16,
       )
       .setRotation(angle)
       .setBlendMode(Phaser.BlendModes.SCREEN);
@@ -4634,10 +4716,10 @@ export class WorldScene extends Phaser.Scene {
       .rectangle(
         midX,
         midY,
-        Phaser.Math.Distance.Between(startX, startY, endX, endY) * 0.88,
-        4,
+        coreWidth,
+        coreHeight,
         0xffffff,
-        0.18,
+        style === "dagger" ? 0.24 : style === "greatsword" ? 0.2 : 0.18,
       )
       .setRotation(angle)
       .setBlendMode(Phaser.BlendModes.SCREEN);
@@ -4646,16 +4728,16 @@ export class WorldScene extends Phaser.Scene {
     this.tweens.add({
       targets: trail,
       alpha: 0,
-      scaleY: 0.2,
-      duration: 140,
+      scaleY: style === "dagger" ? 0.12 : style === "greatsword" ? 0.24 : 0.2,
+      duration: style === "dagger" ? 100 : style === "greatsword" ? 170 : 140,
       ease: "Quad.Out",
       onComplete: () => trail.destroy(),
     });
     this.tweens.add({
       targets: trailCore,
       alpha: 0,
-      scaleY: 0.15,
-      duration: 120,
+      scaleY: style === "dagger" ? 0.1 : style === "greatsword" ? 0.18 : 0.15,
+      duration: style === "dagger" ? 90 : style === "greatsword" ? 150 : 120,
       ease: "Quad.Out",
       onComplete: () => trailCore.destroy(),
     });
