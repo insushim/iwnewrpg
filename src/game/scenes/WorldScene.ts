@@ -7,6 +7,7 @@ import { getSocket } from "@/lib/socket";
 import { ELEMENTARY_VOCABULARY } from "@/data/vocabulary/elementary";
 import { MONSTERS } from "@/game/data/monsters";
 import { ITEMS } from "@/game/data/items";
+import { WeaponSubType } from "@/types/item";
 
 type WorldInitPayload = {
   selfId: string;
@@ -1110,12 +1111,12 @@ export class WorldScene extends Phaser.Scene {
         };
       case "ancientCave":
         return {
-          skyTop: 0x10151b,
-          skyBottom: 0x05080d,
-          hazePrimary: 0x587189,
-          hazeSecondary: 0x111a24,
+          skyTop: 0x2e4060,
+          skyBottom: 0x18273a,
+          hazePrimary: 0x6a90b8,
+          hazeSecondary: 0x2a3f58,
           sunTint: 0xb9d8ff,
-          ambient: 0x05080d,
+          ambient: 0x1c2e42,
         };
       default:
         return {
@@ -1404,11 +1405,11 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "ancientCave") {
-      g.fillStyle(0x080c11, 0.32);
+      g.fillStyle(0x1a2d42, 0.1);
       g.fillRoundedRect(120, 120, mapWidth - 240, mapHeight - 240, 48);
-      g.lineStyle(2, 0xa8c5df, 0.06);
+      g.lineStyle(2, 0xa8c5df, 0.12);
       g.strokeRoundedRect(140, 140, mapWidth - 280, mapHeight - 280, 40);
-      g.fillStyle(0x92dfff, 0.05);
+      g.fillStyle(0x92dfff, 0.08);
       g.fillEllipse(mapWidth * 0.32, 340, 150, 74);
       g.fillEllipse(mapWidth * 0.68, 340, 150, 74);
       g.fillEllipse(mapWidth * 0.5, 220, 180, 86);
@@ -3469,6 +3470,14 @@ export class WorldScene extends Phaser.Scene {
     now: number,
   ) {
     if (!sprite.spriteBody?.scene || !sprite.glowBody?.scene) return;
+
+    if ("playerId" in sprite && sprite.playerId === this.selfId) {
+      const nextTextureBase = this.getPlayerTexture();
+      if (sprite.textureBase !== nextTextureBase) {
+        sprite.textureBase = nextTextureBase;
+      }
+    }
+
     const dx = sprite.x - sprite.lastX;
     const dy = sprite.y - sprite.lastY;
     const moving = Math.abs(dx) + Math.abs(dy) > 0.45;
@@ -3630,7 +3639,7 @@ export class WorldScene extends Phaser.Scene {
           : this.mapId === "moonlitWetland"
             ? { r: 6, g: 18, b: 18, alpha: 0.1 }
             : this.mapId === "ancientCave"
-              ? { r: 8, g: 14, b: 22, alpha: 0.11 }
+              ? { r: 16, g: 28, b: 44, alpha: 0.08 }
               : { r: 7, g: 16, b: 26, alpha: 0.08 };
       this.ambientVeil.alpha = ambientBase.alpha + phase * 0.08;
       this.ambientVeil.fillColor = Phaser.Display.Color.GetColor(
@@ -3748,11 +3757,35 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private getPlayerTexture() {
-    const className = useGameStore.getState().player.className.toLowerCase();
+    const state = useGameStore.getState();
+    const className = state.player.className.toLowerCase();
+    const weaponId = state.equipment.weapon?.id;
+    const weaponSubtype = weaponId ? ITEMS[weaponId]?.subtype : undefined;
+    const weaponVariant =
+      weaponSubtype === WeaponSubType.DAGGER
+        ? "dagger"
+        : weaponSubtype === WeaponSubType.ONE_HAND_SWORD ||
+            weaponSubtype === WeaponSubType.TWO_HAND_SWORD
+          ? "sword"
+          : null;
+
+    if (className.includes("guardian")) {
+      if (weaponVariant === "dagger") return "anim_player_guardian_dagger";
+      if (weaponVariant === "sword") return "anim_player_guardian_sword";
+      return "anim_player_guardian";
+    }
     if (className.includes("ranger")) return "anim_player_ranger";
     if (className.includes("arcan")) return "anim_player_arcanist";
-    if (className.includes("sovereign")) return "anim_player_sovereign";
-    return "anim_player_guardian";
+    if (className.includes("sovereign")) {
+      if (weaponVariant === "dagger") return "anim_player_sovereign_dagger";
+      if (weaponVariant === "sword") return "anim_player_sovereign_sword";
+      return "anim_player_sovereign";
+    }
+    return weaponVariant === "dagger"
+      ? "anim_player_guardian_dagger"
+      : weaponVariant === "sword"
+        ? "anim_player_guardian_sword"
+        : "anim_player_guardian";
   }
 
   private getNpcTexture(role: string) {
@@ -3946,8 +3979,8 @@ export class WorldScene extends Phaser.Scene {
     if (mapId === "ancientCave") {
       return {
         texture: ridge > 0.58 ? "tile_volcanic" : "tile_wet_stone",
-        alpha: 0.62 + ridge * 0.08,
-        tint: ridge > 0.58 ? 0x6d6462 : 0x88a0a9,
+        alpha: 0.78 + ridge * 0.12,
+        tint: ridge > 0.58 ? 0x8a8280 : 0xa8c0cc,
         rotation: (seed - 0.5) * 0.05,
         scaleX: 0.02,
         scaleY: 0.02,
@@ -4244,7 +4277,7 @@ export class WorldScene extends Phaser.Scene {
           ai.state = "idle";
           ai.lastChaseAt = 0;
         } else if (distToPlayer > ATTACK_RANGE) {
-          const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 38;
+          const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 62;
           const angle = Phaser.Math.Angle.Between(
             sprite.x,
             sprite.y,
