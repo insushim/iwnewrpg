@@ -64,10 +64,10 @@ export class CharacterCreateScene extends Phaser.Scene {
   private nameInputEl: HTMLInputElement | null = null;
   private readonly servers = ["아스카론 01"];
   private readonly grades = [
-    { value: 3, label: "3학년", desc: "기초 단어 300개" },
-    { value: 4, label: "4학년", desc: "기초+중급 500개" },
-    { value: 5, label: "5학년", desc: "중급+고급 700개" },
-    { value: 6, label: "6학년", desc: "전체 1000개" },
+    { value: 3, label: "3학년", desc: "기초 단어 500개" },
+    { value: 4, label: "4학년", desc: "기초+중급 700개" },
+    { value: 5, label: "5학년", desc: "중급+고급 900개" },
+    { value: 6, label: "6학년", desc: "전체 1300개" },
   ];
 
   constructor() {
