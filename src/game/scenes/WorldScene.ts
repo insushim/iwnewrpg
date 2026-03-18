@@ -6,6 +6,7 @@ import { useGameStore } from "@/lib/gameStore";
 import { getSocket } from "@/lib/socket";
 import { ELEMENTARY_VOCABULARY } from "@/data/vocabulary/elementary";
 import { MONSTERS } from "@/game/data/monsters";
+import { ITEMS } from "@/game/data/items";
 
 type WorldInitPayload = {
   selfId: string;
@@ -274,6 +275,7 @@ export class WorldScene extends Phaser.Scene {
 
   private showEntranceBanner() {
     const player = useGameStore.getState().player;
+    const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
     const width = this.scale.width;
     const banner = this.add.container(width / 2, 94).setDepth(1600).setScrollFactor(0);
 
@@ -284,7 +286,17 @@ export class WorldScene extends Phaser.Scene {
     plate.strokeRoundedRect(-220, -34, 440, 68, 22);
     plate.lineStyle(1, 0xffffff, 0.06);
     plate.strokeRoundedRect(-212, -26, 424, 52, 18);
+    plate.lineStyle(1, 0xf8d58d, 0.2);
+    plate.strokeRoundedRect(-188, -14, 376, 2, 1);
+    plate.strokeRoundedRect(-188, 18, 376, 2, 1);
     banner.add(plate);
+
+    const crest = this.add.graphics();
+    crest.fillStyle(0xd0ad6e, 0.85);
+    crest.fillTriangle(0, -42, -10, -26, 10, -26);
+    crest.fillStyle(0x2f2012, 0.95);
+    crest.fillCircle(0, -31, 5);
+    banner.add(crest);
 
     banner.add(
       this.add
@@ -301,6 +313,14 @@ export class WorldScene extends Phaser.Scene {
           fontFamily: "serif",
           fontSize: "22px",
           fontStyle: "bold",
+        })
+        .setOrigin(0.5),
+    );
+    banner.add(
+      this.add
+        .text(0, 26, `${map.name}  LV ${map.level}`, {
+          color: "#d8c49f",
+          fontSize: "10px",
         })
         .setOrigin(0.5),
     );
@@ -798,10 +818,20 @@ export class WorldScene extends Phaser.Scene {
         Math.floor(
           Math.random() * (monsterData.goldMax - monsterData.goldMin + 1),
         );
+      const mBaseQ = monsterId.split("-offline-")[0];
+      const mDefQ = MONSTERS[mBaseQ];
+      const droppedItemsQ: string[] = [];
+      if (mDefQ?.drops) {
+        for (const drop of mDefQ.drops) {
+          if (Math.random() < drop.rate) droppedItemsQ.push(drop.itemId);
+        }
+      }
       useGameStore.getState().applyOfflineReward({
         gold: goldReward + 10,
         exp: monsterData.exp + 20,
+        items: droppedItemsQ,
       });
+      useGameStore.getState().registerKill(mBaseQ, mDefQ?.isBoss ?? false);
 
       const killQuest = state.quests.find(
         (q) => q.questId === "mq_001" && q.status === "in_progress",
@@ -934,6 +964,7 @@ export class WorldScene extends Phaser.Scene {
     const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
     const mapWidth = map.width * TILE_WIDTH + 320;
     const mapHeight = map.height * TILE_HEIGHT + 260;
+    const theme = this.getMapVisualTheme(map.id);
 
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
     this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
@@ -945,10 +976,26 @@ export class WorldScene extends Phaser.Scene {
     this.weatherLayer?.removeAll(true);
 
     const backdrop = this.add.graphics();
-    backdrop.fillGradientStyle(0x0e2033, 0x10263b, 0x07121a, 0x050d14, 1);
+    backdrop.fillGradientStyle(
+      theme.skyTop,
+      Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.IntegerToColor(theme.skyTop),
+        Phaser.Display.Color.IntegerToColor(theme.skyBottom),
+        100,
+        32,
+      ).color,
+      theme.skyBottom,
+      Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.IntegerToColor(theme.skyBottom),
+        Phaser.Display.Color.IntegerToColor(theme.ambient),
+        100,
+        48,
+      ).color,
+      1,
+    );
     backdrop.fillRect(0, 0, mapWidth, mapHeight);
     backdrop
-      .fillStyle(0x12283a, 0.65)
+      .fillStyle(theme.hazePrimary, 0.65)
       .fillEllipse(
         mapWidth * 0.52,
         mapHeight * 0.18,
@@ -956,7 +1003,7 @@ export class WorldScene extends Phaser.Scene {
         mapHeight * 0.42,
       );
     backdrop
-      .fillStyle(0x0c1d29, 0.55)
+      .fillStyle(theme.hazeSecondary, 0.55)
       .fillEllipse(
         mapWidth * 0.12,
         mapHeight * 0.78,
@@ -964,7 +1011,7 @@ export class WorldScene extends Phaser.Scene {
         mapHeight * 0.32,
       );
     backdrop
-      .fillStyle(0xf4d693, 0.03)
+      .fillStyle(theme.sunTint, 0.05)
       .fillEllipse(mapWidth * 0.34, mapHeight * 0.12, mapWidth * 0.42, 180);
     this.groundLayer?.add(backdrop);
 
@@ -984,29 +1031,182 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
+    this.drawTerrainContours(map.id, mapWidth, mapHeight);
     this.drawRoads(map.id, mapWidth, mapHeight);
     this.drawWaterBodies(map.id);
+    this.drawMapStructures(map.id, mapWidth, mapHeight);
     this.scatterProps(map.id, map.width, map.height);
     this.drawTownFence(map.id);
+    this.drawMapLandmarks(map.id, mapWidth, mapHeight);
     this.drawGroundShade(mapWidth, mapHeight);
     this.drawAtmosphere(mapWidth, mapHeight);
     this.drawWeatherEffects(map.id, mapWidth, mapHeight);
   }
 
+  private getMapVisualTheme(mapId: string) {
+    switch (mapId) {
+      case "silverKnightTown":
+        return {
+          skyTop: 0x243547,
+          skyBottom: 0x0b141d,
+          hazePrimary: 0xaebed0,
+          hazeSecondary: 0x46525b,
+          sunTint: 0xf4dfae,
+          ambient: 0x11181f,
+        };
+      case "windwoodForest":
+        return {
+          skyTop: 0x143126,
+          skyBottom: 0x07110d,
+          hazePrimary: 0x35684d,
+          hazeSecondary: 0x0e2419,
+          sunTint: 0xcaefa6,
+          ambient: 0x08130d,
+        };
+      case "orcForest":
+        return {
+          skyTop: 0x2e281d,
+          skyBottom: 0x120f0a,
+          hazePrimary: 0x66503a,
+          hazeSecondary: 0x231912,
+          sunTint: 0xe7b06b,
+          ambient: 0x110d0a,
+        };
+      case "gludioPlain":
+        return {
+          skyTop: 0x30402b,
+          skyBottom: 0x0d130c,
+          hazePrimary: 0x7aa06a,
+          hazeSecondary: 0x31422c,
+          sunTint: 0xf4de9a,
+          ambient: 0x12170d,
+        };
+      case "moonlitWetland":
+        return {
+          skyTop: 0x112330,
+          skyBottom: 0x060d12,
+          hazePrimary: 0x4c8c86,
+          hazeSecondary: 0x18362f,
+          sunTint: 0xcff5ff,
+          ambient: 0x091011,
+        };
+      case "giranTown":
+        return {
+          skyTop: 0x3b2f44,
+          skyBottom: 0x100b14,
+          hazePrimary: 0x997b65,
+          hazeSecondary: 0x2c1c20,
+          sunTint: 0xf7ddbd,
+          ambient: 0x150f12,
+        };
+      case "dragonValley":
+        return {
+          skyTop: 0x2a1513,
+          skyBottom: 0x0f0808,
+          hazePrimary: 0x964d3f,
+          hazeSecondary: 0x2a1411,
+          sunTint: 0xffb167,
+          ambient: 0x160d0b,
+        };
+      case "ancientCave":
+        return {
+          skyTop: 0x10151b,
+          skyBottom: 0x05080d,
+          hazePrimary: 0x587189,
+          hazeSecondary: 0x111a24,
+          sunTint: 0xb9d8ff,
+          ambient: 0x05080d,
+        };
+      default:
+        return {
+          skyTop: 0x13263a,
+          skyBottom: 0x061019,
+          hazePrimary: 0x2c5572,
+          hazeSecondary: 0x122433,
+          sunTint: 0xf4d693,
+          ambient: 0x08121a,
+        };
+    }
+  }
+
+  private drawTerrainContours(mapId: string, mapWidth: number, mapHeight: number) {
+    const contour = this.add.graphics();
+    contour.lineStyle(2, 0xffffff, 0.03);
+
+    for (let index = 0; index < 8; index += 1) {
+      const y = mapHeight * (0.14 + index * 0.1);
+      contour.beginPath();
+      contour.moveTo(0, y);
+      for (let x = 0; x <= mapWidth; x += 80) {
+        const offset =
+          Math.sin((x + index * 90) / 180) * 16 +
+          Math.cos((x + index * 40) / 120) * 8;
+        contour.lineTo(x, y + offset);
+      }
+      contour.strokePath();
+    }
+
+    if (mapId === "dragonValley" || mapId === "ancientCave") {
+      contour.fillStyle(0x0b0807, 0.16);
+      contour.fillEllipse(mapWidth * 0.52, mapHeight * 0.48, mapWidth * 0.72, mapHeight * 0.26);
+    }
+
+    this.groundLayer?.add(contour);
+  }
+
   private drawRoads(mapId: string, mapWidth: number, mapHeight: number) {
     const road = this.add.graphics();
-    road.fillStyle(mapId === "silverKnightTown" ? 0x848d92 : 0x8d7850, 0.9);
+    const roadColor =
+      mapId === "silverKnightTown" || mapId === "giranTown"
+        ? 0x848d92
+        : mapId === "dragonValley"
+          ? 0x6e5545
+          : 0x8d7850;
+    road.fillStyle(roadColor, 0.9);
 
     if (mapId === "speakingIsland") {
       road.fillRoundedRect(240, 360, 680, 88, 24);
       road.fillRoundedRect(470, 220, 120, 260, 18);
       road.fillRoundedRect(320, 270, 360, 120, 28);
+      road.fillStyle(0xd7bc86, 0.2);
+      road.fillEllipse(520, 330, 220, 110);
+      road.fillStyle(0xc7a46d, 0.14);
+      road.fillRoundedRect(804, 360, 180, 64, 20);
     } else if (mapId === "silverKnightTown") {
       road.fillRoundedRect(160, 290, 1200, 122, 30);
       road.fillRoundedRect(660, 120, 152, 780, 24);
+      road.fillStyle(0xd3d9df, 0.18);
+      road.fillEllipse(mapWidth * 0.5, mapHeight * 0.5, 320, 180);
+      road.fillStyle(0xc6ccd3, 0.12);
+      road.fillRoundedRect(mapWidth * 0.5 - 250, 314, 500, 74, 20);
     } else if (mapId === "giranTown") {
       road.fillRoundedRect(220, 340, mapWidth - 440, 126, 30);
       road.fillRoundedRect(mapWidth * 0.5 - 66, 140, 132, mapHeight - 300, 26);
+      road.fillStyle(0xd4c091, 0.16);
+      road.fillEllipse(mapWidth * 0.5, 330, 260, 124);
+      road.fillRoundedRect(274, 330, 190, 70, 18);
+      road.fillRoundedRect(mapWidth - 464, 330, 190, 70, 18);
+    } else if (mapId === "windwoodForest") {
+      road.fillRoundedRect(210, 344, mapWidth - 420, 82, 22);
+      road.fillRoundedRect(mapWidth * 0.5 - 58, 210, 116, 300, 20);
+      road.fillStyle(0xb49c71, 0.14);
+      road.fillEllipse(mapWidth * 0.5, 314, 180, 96);
+    } else if (mapId === "orcForest") {
+      road.fillRoundedRect(160, 344, mapWidth - 320, 86, 22);
+      road.fillRoundedRect(mapWidth * 0.54 - 48, 264, 96, 220, 18);
+      road.fillStyle(0x8d684a, 0.16);
+      road.fillEllipse(mapWidth * 0.54, 360, 210, 114);
+    } else if (mapId === "gludioPlain") {
+      road.fillRoundedRect(170, 346, mapWidth - 340, 84, 22);
+      road.fillRoundedRect(mapWidth * 0.5 - 56, 188, 112, 278, 18);
+      road.fillStyle(0xd2bc86, 0.15);
+      road.fillEllipse(mapWidth * 0.34, 332, 190, 96);
+      road.fillEllipse(mapWidth * 0.68, 420, 170, 84);
+    } else if (mapId === "moonlitWetland") {
+      road.fillRoundedRect(170, 350, mapWidth - 340, 76, 20);
+      road.fillRoundedRect(552, 182, 96, 260, 18);
+      road.fillStyle(0x8f8a6c, 0.12);
+      road.fillEllipse(mapWidth * 0.54, 360, 210, 108);
     } else {
       road.fillRoundedRect(160, 340, mapWidth - 320, 84, 20);
     }
@@ -1015,6 +1215,8 @@ export class WorldScene extends Phaser.Scene {
     road.fillRoundedRect(180, 372, Math.max(500, mapWidth * 0.35), 18, 10);
     road.fillStyle(0x2c180d, 0.08);
     road.fillRoundedRect(180, 430, Math.max(500, mapWidth * 0.35), 12, 8);
+    road.lineStyle(2, 0xffffff, 0.06);
+    road.strokeRoundedRect(190, 366, Math.max(480, mapWidth * 0.34), 34, 14);
     this.groundLayer?.add(road);
   }
 
@@ -1031,15 +1233,25 @@ export class WorldScene extends Phaser.Scene {
     if (mapId === "speakingIsland") {
       water.fillEllipse(1480, 480, 520, 720);
       water.fillEllipse(1420, 920, 380, 300);
+      water.fillEllipse(1180, 356, 170, 96);
     } else if (mapId === "moonlitWetland") {
       water.fillEllipse(1440, 560, 760, 820);
       water.fillEllipse(880, 1120, 520, 360);
+      water.fillEllipse(780, 360, 180, 110);
+      water.fillEllipse(1090, 420, 220, 130);
     } else {
       water.fillEllipse(1560, 540, 420, 520);
     }
 
     water.fillStyle(0xa7efff, 0.12);
     water.fillEllipse(1500, 420, 280, 140);
+    water.lineStyle(3, 0xd3f7ff, 0.08);
+    water.strokeEllipse(
+      mapId === "moonlitWetland" ? 1440 : 1480,
+      mapId === "moonlitWetland" ? 560 : 480,
+      mapId === "moonlitWetland" ? 760 : 520,
+      mapId === "moonlitWetland" ? 820 : 720,
+    );
     this.waterLayer?.add(water);
 
     const shimmer = this.add.graphics();
@@ -1050,11 +1262,14 @@ export class WorldScene extends Phaser.Scene {
         ? [
             { x: 1500, y: 420, w: 260, h: 120 },
             { x: 1420, y: 980, w: 180, h: 90 },
+            { x: 1180, y: 356, w: 96, h: 34 },
           ]
         : mapId === "moonlitWetland"
           ? [
               { x: 1440, y: 520, w: 320, h: 140 },
               { x: 920, y: 1140, w: 210, h: 90 },
+              { x: 780, y: 360, w: 110, h: 48 },
+              { x: 1090, y: 420, w: 130, h: 56 },
             ]
           : [{ x: 1560, y: 520, w: 180, h: 90 }];
 
@@ -1082,6 +1297,635 @@ export class WorldScene extends Phaser.Scene {
     this.waterLayer?.add(ripples);
   }
 
+  private drawMapLandmarks(mapId: string, mapWidth: number, mapHeight: number) {
+    const layer = this.overlayLayer;
+    if (!layer) {
+      return;
+    }
+
+    const g = this.add.graphics();
+
+    if (mapId === "silverKnightTown" || mapId === "giranTown") {
+      g.fillStyle(0xe7d6b5, 0.08);
+      g.fillRoundedRect(mapWidth * 0.5 - 150, mapHeight * 0.5 - 90, 300, 180, 36);
+      g.lineStyle(2, 0xf7ebcd, 0.1);
+      g.strokeRoundedRect(mapWidth * 0.5 - 150, mapHeight * 0.5 - 90, 300, 180, 36);
+    }
+
+    if (mapId === "speakingIsland") {
+      g.fillStyle(0xf2d9a2, 0.08);
+      g.fillEllipse(520, 330, 260, 132);
+      g.lineStyle(2, 0xf5dfae, 0.1);
+      g.strokeEllipse(520, 330, 220, 96);
+      g.fillStyle(0xb9ecff, 0.06);
+      g.fillRoundedRect(1030, 330, 190, 86, 22);
+      g.lineStyle(2, 0xd5f7ff, 0.08);
+      g.strokeRoundedRect(1042, 342, 164, 58, 18);
+    }
+
+    if (mapId === "silverKnightTown") {
+      g.fillStyle(0xdfe5ec, 0.08);
+      g.fillEllipse(mapWidth * 0.5, 352, 360, 150);
+      g.lineStyle(2, 0xf6fbff, 0.1);
+      g.strokeEllipse(mapWidth * 0.5, 352, 280, 102);
+      g.fillStyle(0xc7d3de, 0.06);
+      g.fillRoundedRect(mapWidth * 0.5 - 90, 168, 180, 72, 22);
+      g.fillRoundedRect(238, 332, 126, 54, 18);
+      g.fillRoundedRect(mapWidth - 364, 332, 126, 54, 18);
+    }
+
+    if (mapId === "windwoodForest" || mapId === "moonlitWetland") {
+      g.fillStyle(0x0d1613, 0.22);
+      g.fillEllipse(mapWidth * 0.68, mapHeight * 0.42, 460, 220);
+      g.fillStyle(0xb8ffd3, 0.04);
+      g.fillEllipse(mapWidth * 0.68, mapHeight * 0.38, 240, 90);
+    }
+
+    if (mapId === "windwoodForest") {
+      g.fillStyle(0xbfe6a6, 0.06);
+      g.fillEllipse(mapWidth * 0.5, 314, 220, 112);
+      g.lineStyle(2, 0xd8f6bc, 0.08);
+      g.strokeEllipse(mapWidth * 0.5, 314, 170, 72);
+      g.fillStyle(0x153423, 0.18);
+      g.fillEllipse(338, 278, 220, 96);
+      g.fillEllipse(mapWidth - 338, 278, 220, 96);
+    }
+
+    if (mapId === "orcForest") {
+      g.fillStyle(0x2d1b11, 0.22);
+      g.fillEllipse(mapWidth * 0.54, 360, 260, 132);
+      g.lineStyle(2, 0xc18f57, 0.08);
+      g.strokeEllipse(mapWidth * 0.54, 360, 206, 88);
+      g.fillStyle(0x5e3f27, 0.1);
+      g.fillRoundedRect(296, 304, 120, 70, 18);
+      g.fillRoundedRect(mapWidth - 416, 404, 140, 74, 18);
+    }
+
+    if (mapId === "gludioPlain") {
+      g.fillStyle(0xd8c89d, 0.06);
+      g.fillEllipse(mapWidth * 0.34, 332, 220, 108);
+      g.fillEllipse(mapWidth * 0.68, 420, 210, 98);
+      g.lineStyle(2, 0xf0e2b3, 0.08);
+      g.strokeEllipse(mapWidth * 0.34, 332, 168, 72);
+      g.fillStyle(0xa6b66d, 0.08);
+      g.fillRoundedRect(mapWidth * 0.5 - 84, 338, 168, 74, 20);
+    }
+
+    if (mapId === "moonlitWetland") {
+      g.fillStyle(0x10201d, 0.2);
+      g.fillEllipse(mapWidth * 0.54, 360, 260, 120);
+      g.fillStyle(0xc4fff2, 0.06);
+      g.fillEllipse(780, 360, 160, 84);
+      g.fillEllipse(1090, 420, 190, 94);
+      g.lineStyle(2, 0xcafef4, 0.08);
+      g.strokeEllipse(mapWidth * 0.54, 360, 198, 80);
+    }
+
+    if (mapId === "giranTown") {
+      g.fillStyle(0xe8d8b1, 0.08);
+      g.fillEllipse(mapWidth * 0.5, 330, 300, 140);
+      g.lineStyle(2, 0xffefc6, 0.08);
+      g.strokeEllipse(mapWidth * 0.5, 330, 226, 90);
+      g.fillStyle(0xc09b62, 0.08);
+      g.fillRoundedRect(274, 330, 190, 70, 18);
+      g.fillRoundedRect(mapWidth - 464, 330, 190, 70, 18);
+    }
+
+    if (mapId === "dragonValley") {
+      g.fillStyle(0x1b0b08, 0.24);
+      g.fillTriangle(mapWidth * 0.24, 180, mapWidth * 0.42, mapHeight * 0.62, mapWidth * 0.07, mapHeight * 0.62);
+      g.fillTriangle(mapWidth * 0.82, 160, mapWidth * 0.96, mapHeight * 0.58, mapWidth * 0.64, mapHeight * 0.58);
+      g.fillStyle(0xffa460, 0.08);
+      g.fillEllipse(mapWidth * 0.52, mapHeight * 0.34, 200, 70);
+      g.fillStyle(0x3b1710, 0.18);
+      g.fillEllipse(mapWidth * 0.72, 418, 220, 108);
+      g.lineStyle(2, 0xffbf7d, 0.08);
+      g.strokeEllipse(mapWidth * 0.72, 418, 168, 70);
+    }
+
+    if (mapId === "ancientCave") {
+      g.fillStyle(0x080c11, 0.32);
+      g.fillRoundedRect(120, 120, mapWidth - 240, mapHeight - 240, 48);
+      g.lineStyle(2, 0xa8c5df, 0.06);
+      g.strokeRoundedRect(140, 140, mapWidth - 280, mapHeight - 280, 40);
+      g.fillStyle(0x92dfff, 0.05);
+      g.fillEllipse(mapWidth * 0.32, 340, 150, 74);
+      g.fillEllipse(mapWidth * 0.68, 340, 150, 74);
+      g.fillEllipse(mapWidth * 0.5, 220, 180, 86);
+    }
+
+    layer.add(g);
+  }
+
+  private drawMapStructures(mapId: string, mapWidth: number, mapHeight: number) {
+    const layer = this.propLayer;
+    if (!layer) {
+      return;
+    }
+
+    const structure = this.add.graphics();
+
+    if (mapId === "speakingIsland") {
+      this.drawHouseCluster(structure, 360, 260, 0xa36d44, 0x6f4322, 1);
+      this.drawHouseCluster(structure, 650, 290, 0xb78754, 0x7a4f2e, 0.92);
+      this.drawHouseCluster(structure, 790, 395, 0x8f6746, 0x684329, 0.84);
+      this.drawDock(structure, 1080, 388, 1);
+      this.drawLighthouse(structure, 1228, 236, 0.92);
+      this.drawMarketStalls(structure, 516, 334, 0.94);
+    }
+
+    if (mapId === "silverKnightTown") {
+      this.drawKeep(structure, mapWidth * 0.5, 260, 1.08, 0xbec7cf, 0x74818f);
+      this.drawWatchTower(structure, 330, 260, 0.96, 0xaab1b6);
+      this.drawWatchTower(structure, mapWidth - 330, 260, 0.96, 0xaab1b6);
+      this.drawGatehouse(structure, mapWidth * 0.5, 164, 1);
+      this.drawFountain(structure, mapWidth * 0.5, 352, 1.04);
+      this.drawBarracks(structure, 280, 368, 0.94);
+      this.drawBarracks(structure, mapWidth - 280, 368, 0.94);
+    }
+
+    if (mapId === "giranTown") {
+      this.drawMarketHall(structure, mapWidth * 0.5, 280, 1.08);
+      this.drawHouseCluster(structure, 320, 320, 0xb98757, 0x7a4f2d, 0.88);
+      this.drawHouseCluster(structure, mapWidth - 320, 340, 0xa86c48, 0x704125, 0.88);
+      this.drawCaravanCanopy(structure, 350, 362, 0.94);
+      this.drawCaravanCanopy(structure, mapWidth - 350, 362, 0.94);
+      this.drawFountain(structure, mapWidth * 0.5, 334, 0.92);
+    }
+
+    if (mapId === "windwoodForest") {
+      this.drawShrine(structure, mapWidth * 0.5, 310, 0x6b8a59, 0xced8b4);
+      this.drawForestArch(structure, 332, 286, 0.96);
+      this.drawForestArch(structure, mapWidth - 332, 286, 0.96);
+      this.drawMoonwell(structure, mapWidth * 0.5, 314, 0.98);
+    }
+
+    if (mapId === "orcForest") {
+      this.drawTotem(structure, mapWidth * 0.38, 320, 1.06);
+      this.drawTotem(structure, mapWidth * 0.7, 420, 0.92);
+      this.drawCampfire(structure, mapWidth * 0.54, 360, 1);
+      this.drawWarTent(structure, 326, 332, 0.98);
+      this.drawWarTent(structure, mapWidth - 326, 430, 0.9);
+      this.drawPalisade(structure, mapWidth * 0.54, 360, 1.02);
+    }
+
+    if (mapId === "gludioPlain") {
+      this.drawFarmstead(structure, mapWidth * 0.34, 330, 1);
+      this.drawStoneCircle(structure, mapWidth * 0.68, 420, 1.04);
+      this.drawBridge(structure, mapWidth * 0.5, 390, 1);
+      this.drawWindmill(structure, 334, 250, 0.94);
+      this.drawWagon(structure, mapWidth * 0.5 + 96, 366, 0.92);
+    }
+
+    if (mapId === "moonlitWetland") {
+      this.drawShrine(structure, mapWidth * 0.54, 360, 0x56706a, 0xc8fff1);
+      this.drawRuinedArch(structure, mapWidth * 0.74, mapHeight * 0.55, 1);
+      this.drawBogPlatform(structure, 778, 360, 0.96);
+      this.drawSunkenBarge(structure, 1090, 424, 0.94);
+      this.drawReedCluster(structure, mapWidth * 0.54 - 118, 386, 1);
+      this.drawReedCluster(structure, mapWidth * 0.54 + 132, 334, 0.86);
+    }
+
+    if (mapId === "dragonValley") {
+      this.drawRuinedArch(structure, mapWidth * 0.5, 260, 1.18);
+      this.drawLavaForge(structure, mapWidth * 0.72, 420, 1);
+      this.drawObsidianSpire(structure, mapWidth * 0.26, 314, 1.02);
+      this.drawObsidianSpire(structure, mapWidth * 0.78, 278, 0.9);
+      this.drawLavaVent(structure, mapWidth * 0.58, 418, 1);
+    }
+
+    if (mapId === "ancientCave") {
+      this.drawRuinedArch(structure, mapWidth * 0.5, 220, 1.08);
+      this.drawCrystalObelisk(structure, mapWidth * 0.32, 340, 0.86);
+      this.drawCrystalObelisk(structure, mapWidth * 0.68, 340, 0.86);
+      this.drawCrystalRing(structure, mapWidth * 0.5, 226, 1);
+      this.drawCrystalAltar(structure, mapWidth * 0.5, 360, 0.98);
+    }
+
+    layer.add(structure);
+  }
+
+  private drawHouseCluster(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    wall: number,
+    roof: number,
+    scale: number,
+  ) {
+    const w = 110 * scale;
+    const h = 64 * scale;
+    g.fillStyle(0x070b0f, 0.16);
+    g.fillEllipse(x, y + 44 * scale, 120 * scale, 24 * scale);
+    g.fillStyle(wall, 0.95);
+    g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 16 * scale);
+    g.fillStyle(roof, 0.98);
+    g.fillTriangle(x - w / 2 - 10 * scale, y - h / 2 + 10 * scale, x, y - h / 2 - 34 * scale, x + w / 2 + 10 * scale, y - h / 2 + 10 * scale);
+    g.fillStyle(0xe7d2a2, 0.2);
+    g.fillRect(x - 10 * scale, y - 4 * scale, 20 * scale, 28 * scale);
+    g.fillStyle(0x59311c, 0.9);
+    g.fillRect(x - 9 * scale, y + 2 * scale, 18 * scale, 22 * scale);
+    g.fillStyle(0xeed9a9, 0.26);
+    g.fillRect(x - 34 * scale, y - 6 * scale, 18 * scale, 14 * scale);
+    g.fillRect(x + 16 * scale, y - 6 * scale, 18 * scale, 14 * scale);
+  }
+
+  private drawKeep(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+    wall: number,
+    roof: number,
+  ) {
+    const w = 220 * scale;
+    const h = 120 * scale;
+    g.fillStyle(0x070b0f, 0.2);
+    g.fillEllipse(x, y + 74 * scale, 240 * scale, 28 * scale);
+    g.fillStyle(wall, 0.94);
+    g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 18 * scale);
+    g.fillStyle(roof, 0.98);
+    g.fillRect(x - w / 2, y - h / 2 - 14 * scale, w, 20 * scale);
+    g.fillStyle(roof, 0.95);
+    g.fillRect(x - w / 2 - 24 * scale, y - h / 2 - 2 * scale, 42 * scale, 110 * scale);
+    g.fillRect(x + w / 2 - 18 * scale, y - h / 2 - 2 * scale, 42 * scale, 110 * scale);
+    g.fillStyle(0x5a6470, 0.98);
+    g.fillRect(x - 16 * scale, y - 10 * scale, 32 * scale, 50 * scale);
+    g.fillStyle(0xeaf3ff, 0.16);
+    g.fillRect(x - 64 * scale, y - 16 * scale, 18 * scale, 22 * scale);
+    g.fillRect(x + 46 * scale, y - 16 * scale, 18 * scale, 22 * scale);
+  }
+
+  private drawWatchTower(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+    wall: number,
+  ) {
+    g.fillStyle(0x090d12, 0.18);
+    g.fillEllipse(x, y + 68 * scale, 90 * scale, 18 * scale);
+    g.fillStyle(wall, 0.95);
+    g.fillRect(x - 24 * scale, y - 40 * scale, 48 * scale, 108 * scale);
+    g.fillStyle(0x687280, 0.98);
+    g.fillRect(x - 34 * scale, y - 56 * scale, 68 * scale, 22 * scale);
+    g.fillStyle(0xe8f3ff, 0.16);
+    g.fillRect(x - 8 * scale, y - 8 * scale, 16 * scale, 24 * scale);
+  }
+
+  private drawMarketHall(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090b0d, 0.2);
+    g.fillEllipse(x, y + 62 * scale, 210 * scale, 26 * scale);
+    g.fillStyle(0xc49a69, 0.95);
+    g.fillRoundedRect(x - 100 * scale, y - 30 * scale, 200 * scale, 82 * scale, 18 * scale);
+    g.fillStyle(0x7a382a, 0.98);
+    g.fillTriangle(x - 118 * scale, y - 14 * scale, x, y - 74 * scale, x + 118 * scale, y - 14 * scale);
+    g.fillStyle(0xefdbb2, 0.22);
+    g.fillRect(x - 68 * scale, y - 4 * scale, 20 * scale, 24 * scale);
+    g.fillRect(x - 10 * scale, y - 4 * scale, 20 * scale, 24 * scale);
+    g.fillRect(x + 48 * scale, y - 4 * scale, 20 * scale, 24 * scale);
+  }
+
+  private drawShrine(g: Phaser.GameObjects.Graphics, x: number, y: number, stone: number, glow: number) {
+    g.fillStyle(0x06080a, 0.2);
+    g.fillEllipse(x, y + 36, 120, 24);
+    g.fillStyle(stone, 0.94);
+    g.fillRoundedRect(x - 50, y - 18, 100, 52, 16);
+    g.fillStyle(stone, 0.98);
+    g.fillTriangle(x - 66, y - 4, x, y - 58, x + 66, y - 4);
+    g.fillStyle(glow, 0.18);
+    g.fillEllipse(x, y - 8, 24, 42);
+    g.fillStyle(0xffffff, 0.1);
+    g.fillRect(x - 6, y - 12, 12, 32);
+  }
+
+  private drawRuinedArch(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x07090b, 0.22);
+    g.fillEllipse(x, y + 52 * scale, 140 * scale, 28 * scale);
+    g.fillStyle(0x666a67, 0.94);
+    g.fillRect(x - 52 * scale, y - 40 * scale, 22 * scale, 92 * scale);
+    g.fillRect(x + 30 * scale, y - 40 * scale, 22 * scale, 92 * scale);
+    g.lineStyle(10 * scale, 0x7d817d, 0.96);
+    g.beginPath();
+    g.arc(x, y - 8 * scale, 48 * scale, Math.PI, Math.PI * 2, false);
+    g.strokePath();
+  }
+
+  private drawLavaForge(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x080506, 0.22);
+    g.fillEllipse(x, y + 40 * scale, 120 * scale, 24 * scale);
+    g.fillStyle(0x524847, 0.96);
+    g.fillRoundedRect(x - 56 * scale, y - 12 * scale, 112 * scale, 42 * scale, 12 * scale);
+    g.fillStyle(0xff8a41, 0.4);
+    g.fillRoundedRect(x - 34 * scale, y - 2 * scale, 68 * scale, 18 * scale, 8 * scale);
+    g.fillStyle(0xffd89a, 0.14);
+    g.fillEllipse(x, y + 6 * scale, 54 * scale, 12 * scale);
+  }
+
+  private drawCrystalObelisk(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x081016, 0.18);
+    g.fillEllipse(x, y + 30 * scale, 72 * scale, 16 * scale);
+    g.fillStyle(0x6fe2ff, 0.82);
+    g.fillTriangle(x, y - 42 * scale, x + 18 * scale, y + 6 * scale, x - 18 * scale, y + 6 * scale);
+    g.fillStyle(0xdfffff, 0.45);
+    g.fillTriangle(x, y - 28 * scale, x + 8 * scale, y - 2 * scale, x - 8 * scale, y - 2 * scale);
+    g.fillStyle(0x52585e, 0.96);
+    g.fillRoundedRect(x - 16 * scale, y + 6 * scale, 32 * scale, 18 * scale, 6 * scale);
+  }
+
+  private drawTotem(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090708, 0.2);
+    g.fillEllipse(x, y + 38 * scale, 90 * scale, 20 * scale);
+    g.fillStyle(0x6a4931, 0.96);
+    g.fillRect(x - 12 * scale, y - 54 * scale, 24 * scale, 92 * scale);
+    g.fillStyle(0x9aa05c, 0.8);
+    g.fillEllipse(x, y - 22 * scale, 34 * scale, 24 * scale);
+    g.fillStyle(0xffc96d, 0.18);
+    g.fillEllipse(x, y - 18 * scale, 12 * scale, 12 * scale);
+  }
+
+  private drawCampfire(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090607, 0.22);
+    g.fillEllipse(x, y + 22 * scale, 76 * scale, 18 * scale);
+    g.fillStyle(0x6f5140, 0.95);
+    g.fillRect(x - 20 * scale, y + 2 * scale, 40 * scale, 6 * scale);
+    g.fillRect(x - 6 * scale, y - 10 * scale, 12 * scale, 26 * scale);
+    g.fillStyle(0xff8a4a, 0.52);
+    g.fillTriangle(x, y - 28 * scale, x + 12 * scale, y - 4 * scale, x - 12 * scale, y - 4 * scale);
+    g.fillStyle(0xffde8a, 0.24);
+    g.fillEllipse(x, y - 10 * scale, 26 * scale, 18 * scale);
+  }
+
+  private drawFarmstead(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    this.drawHouseCluster(g, x, y, 0xbe9a62, 0x835534, scale);
+    g.fillStyle(0xb3a164, 0.24);
+    g.fillRect(x + 68 * scale, y - 4 * scale, 72 * scale, 36 * scale);
+    g.fillStyle(0xd8c788, 0.12);
+    g.fillRect(x + 74 * scale, y + 2 * scale, 60 * scale, 24 * scale);
+  }
+
+  private drawStoneCircle(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x07090b, 0.18);
+    g.fillEllipse(x, y + 26 * scale, 120 * scale, 24 * scale);
+    for (let index = 0; index < 6; index += 1) {
+      const angle = (index / 6) * Math.PI * 2;
+      const sx = x + Math.cos(angle) * 36 * scale;
+      const sy = y + Math.sin(angle) * 14 * scale;
+      g.fillStyle(0x78796f, 0.95);
+      g.fillRoundedRect(sx - 6 * scale, sy - 18 * scale, 12 * scale, 28 * scale, 4 * scale);
+    }
+    g.fillStyle(0xe2efc4, 0.08);
+    g.fillEllipse(x, y, 28 * scale, 16 * scale);
+  }
+
+  private drawBridge(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x0a0e11, 0.16);
+    g.fillEllipse(x, y + 24 * scale, 140 * scale, 20 * scale);
+    g.fillStyle(0x7d5c3a, 0.95);
+    g.fillRoundedRect(x - 58 * scale, y - 6 * scale, 116 * scale, 16 * scale, 8 * scale);
+    g.fillStyle(0xa47d54, 0.95);
+    for (let index = 0; index < 6; index += 1) {
+      g.fillRect(x - 48 * scale + index * 18 * scale, y - 4 * scale, 10 * scale, 12 * scale);
+    }
+  }
+
+  private drawDock(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090d11, 0.18);
+    g.fillEllipse(x, y + 26 * scale, 180 * scale, 24 * scale);
+    g.fillStyle(0x805b39, 0.96);
+    g.fillRoundedRect(x - 72 * scale, y - 10 * scale, 144 * scale, 18 * scale, 8 * scale);
+    for (let index = 0; index < 4; index += 1) {
+      const px = x - 54 * scale + index * 36 * scale;
+      g.fillRect(px, y + 8 * scale, 8 * scale, 28 * scale);
+    }
+    g.fillStyle(0xe9dcc0, 0.22);
+    g.fillRect(x - 48 * scale, y - 2 * scale, 22 * scale, 6 * scale);
+    g.fillRect(x + 20 * scale, y - 2 * scale, 22 * scale, 6 * scale);
+  }
+
+  private drawLighthouse(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x070b0f, 0.18);
+    g.fillEllipse(x, y + 64 * scale, 96 * scale, 18 * scale);
+    g.fillStyle(0xd8ddd8, 0.96);
+    g.fillRoundedRect(x - 24 * scale, y - 46 * scale, 48 * scale, 112 * scale, 16 * scale);
+    g.fillStyle(0xc06743, 0.96);
+    g.fillRect(x - 28 * scale, y - 56 * scale, 56 * scale, 18 * scale);
+    g.fillStyle(0xffefba, 0.28);
+    g.fillEllipse(x, y - 40 * scale, 32 * scale, 20 * scale);
+    g.fillStyle(0xfef9da, 0.16);
+    g.fillTriangle(x + 4 * scale, y - 48 * scale, x + 68 * scale, y - 26 * scale, x + 12 * scale, y - 12 * scale);
+  }
+
+  private drawMarketStalls(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    for (let index = -1; index <= 1; index += 1) {
+      const ox = x + index * 52 * scale;
+      g.fillStyle(0x0a0c0e, 0.16);
+      g.fillEllipse(ox, y + 18 * scale, 48 * scale, 10 * scale);
+      g.fillStyle(0x8c623d, 0.95);
+      g.fillRoundedRect(ox - 18 * scale, y - 2 * scale, 36 * scale, 18 * scale, 6 * scale);
+      g.fillStyle(index === 0 ? 0xb33d2f : 0xd0b25f, 0.96);
+      g.fillTriangle(ox - 24 * scale, y + 2 * scale, ox, y - 22 * scale, ox + 24 * scale, y + 2 * scale);
+    }
+  }
+
+  private drawGatehouse(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x070b0f, 0.18);
+    g.fillEllipse(x, y + 50 * scale, 180 * scale, 22 * scale);
+    g.fillStyle(0xaab4bf, 0.96);
+    g.fillRoundedRect(x - 84 * scale, y - 20 * scale, 168 * scale, 54 * scale, 14 * scale);
+    g.fillRect(x - 108 * scale, y - 8 * scale, 28 * scale, 72 * scale);
+    g.fillRect(x + 80 * scale, y - 8 * scale, 28 * scale, 72 * scale);
+    g.fillStyle(0x5d6875, 0.96);
+    g.fillRect(x - 24 * scale, y + 2 * scale, 48 * scale, 32 * scale);
+    g.fillStyle(0xeaf3ff, 0.18);
+    g.fillRect(x - 54 * scale, y - 8 * scale, 16 * scale, 14 * scale);
+    g.fillRect(x + 38 * scale, y - 8 * scale, 16 * scale, 14 * scale);
+  }
+
+  private drawFountain(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x0b1014, 0.18);
+    g.fillEllipse(x, y + 26 * scale, 140 * scale, 22 * scale);
+    g.fillStyle(0x98a7b6, 0.96);
+    g.fillEllipse(x, y, 112 * scale, 44 * scale);
+    g.fillStyle(0x5fcfff, 0.24);
+    g.fillEllipse(x, y - 2 * scale, 82 * scale, 26 * scale);
+    g.fillStyle(0xcad7e3, 0.98);
+    g.fillRect(x - 10 * scale, y - 34 * scale, 20 * scale, 28 * scale);
+    g.fillStyle(0xe8fbff, 0.3);
+    g.fillEllipse(x, y - 22 * scale, 26 * scale, 18 * scale);
+  }
+
+  private drawBarracks(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x080b0f, 0.18);
+    g.fillEllipse(x, y + 38 * scale, 132 * scale, 20 * scale);
+    g.fillStyle(0xadb6bd, 0.95);
+    g.fillRoundedRect(x - 58 * scale, y - 22 * scale, 116 * scale, 54 * scale, 12 * scale);
+    g.fillStyle(0x6d7885, 0.98);
+    g.fillTriangle(x - 72 * scale, y - 6 * scale, x, y - 46 * scale, x + 72 * scale, y - 6 * scale);
+    g.fillStyle(0xe7f2ff, 0.16);
+    g.fillRect(x - 34 * scale, y - 4 * scale, 18 * scale, 14 * scale);
+    g.fillRect(x + 16 * scale, y - 4 * scale, 18 * scale, 14 * scale);
+    g.fillStyle(0xb48a46, 0.22);
+    g.fillRect(x - 4 * scale, y - 18 * scale, 8 * scale, 16 * scale);
+  }
+
+  private drawForestArch(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x060909, 0.18);
+    g.fillEllipse(x, y + 30 * scale, 110 * scale, 18 * scale);
+    g.fillStyle(0x456445, 0.92);
+    g.fillRect(x - 36 * scale, y - 8 * scale, 12 * scale, 46 * scale);
+    g.fillRect(x + 24 * scale, y - 8 * scale, 12 * scale, 46 * scale);
+    g.lineStyle(10 * scale, 0x5d8a61, 0.94);
+    g.beginPath();
+    g.arc(x, y - 4 * scale, 36 * scale, Math.PI, Math.PI * 2, false);
+    g.strokePath();
+    g.fillStyle(0xc9f8a4, 0.14);
+    g.fillEllipse(x, y - 6 * scale, 30 * scale, 16 * scale);
+  }
+
+  private drawMoonwell(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x081113, 0.16);
+    g.fillEllipse(x, y + 22 * scale, 128 * scale, 18 * scale);
+    g.fillStyle(0x6b7c77, 0.96);
+    g.fillEllipse(x, y, 108 * scale, 36 * scale);
+    g.fillStyle(0x92ffe0, 0.22);
+    g.fillEllipse(x, y - 2 * scale, 74 * scale, 18 * scale);
+    g.fillStyle(0xe7fff8, 0.16);
+    g.fillEllipse(x, y - 4 * scale, 28 * scale, 8 * scale);
+  }
+
+  private drawWarTent(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090607, 0.18);
+    g.fillEllipse(x, y + 28 * scale, 116 * scale, 18 * scale);
+    g.fillStyle(0x6f4c36, 0.95);
+    g.fillTriangle(x - 62 * scale, y + 16 * scale, x, y - 34 * scale, x + 62 * scale, y + 16 * scale);
+    g.fillStyle(0x3b2417, 0.96);
+    g.fillRect(x - 12 * scale, y - 2 * scale, 24 * scale, 20 * scale);
+    g.fillStyle(0xc6774a, 0.2);
+    g.fillTriangle(x - 30 * scale, y + 8 * scale, x, y - 16 * scale, x + 30 * scale, y + 8 * scale);
+  }
+
+  private drawPalisade(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090707, 0.16);
+    g.fillEllipse(x, y + 36 * scale, 220 * scale, 20 * scale);
+    g.fillStyle(0x64432c, 0.95);
+    for (let index = 0; index < 8; index += 1) {
+      const px = x - 84 * scale + index * 24 * scale;
+      g.fillTriangle(px - 7 * scale, y + 12 * scale, px, y - 26 * scale, px + 7 * scale, y + 12 * scale);
+    }
+    g.fillStyle(0x7d5638, 0.95);
+    g.fillRect(x - 90 * scale, y + 8 * scale, 180 * scale, 8 * scale);
+  }
+
+  private drawWindmill(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090c0f, 0.16);
+    g.fillEllipse(x, y + 48 * scale, 110 * scale, 18 * scale);
+    g.fillStyle(0xc8bfac, 0.96);
+    g.fillRoundedRect(x - 28 * scale, y - 34 * scale, 56 * scale, 82 * scale, 16 * scale);
+    g.fillStyle(0x916848, 0.96);
+    g.fillTriangle(x - 40 * scale, y - 18 * scale, x, y - 60 * scale, x + 40 * scale, y - 18 * scale);
+    g.lineStyle(4 * scale, 0xead9b4, 0.9);
+    g.lineBetween(x, y - 8 * scale, x + 36 * scale, y - 32 * scale);
+    g.lineBetween(x, y - 8 * scale, x - 36 * scale, y - 32 * scale);
+    g.lineBetween(x, y - 8 * scale, x + 24 * scale, y + 24 * scale);
+    g.lineBetween(x, y - 8 * scale, x - 24 * scale, y + 24 * scale);
+  }
+
+  private drawWagon(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x080a0c, 0.16);
+    g.fillEllipse(x, y + 24 * scale, 100 * scale, 16 * scale);
+    g.fillStyle(0x8a623c, 0.95);
+    g.fillRoundedRect(x - 36 * scale, y - 10 * scale, 72 * scale, 22 * scale, 8 * scale);
+    g.fillStyle(0x604527, 0.95);
+    g.fillCircle(x - 22 * scale, y + 18 * scale, 11 * scale);
+    g.fillCircle(x + 22 * scale, y + 18 * scale, 11 * scale);
+    g.fillStyle(0xd3be8b, 0.2);
+    g.fillRect(x - 18 * scale, y - 2 * scale, 36 * scale, 8 * scale);
+  }
+
+  private drawBogPlatform(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x071012, 0.18);
+    g.fillEllipse(x, y + 24 * scale, 126 * scale, 18 * scale);
+    g.fillStyle(0x6d5d47, 0.94);
+    g.fillRoundedRect(x - 54 * scale, y - 8 * scale, 108 * scale, 14 * scale, 6 * scale);
+    for (let index = 0; index < 4; index += 1) {
+      const px = x - 40 * scale + index * 26 * scale;
+      g.fillRect(px, y + 6 * scale, 8 * scale, 18 * scale);
+    }
+    g.fillStyle(0xbef7ea, 0.18);
+    g.fillEllipse(x, y - 2 * scale, 36 * scale, 10 * scale);
+  }
+
+  private drawSunkenBarge(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x070b0d, 0.18);
+    g.fillEllipse(x, y + 24 * scale, 132 * scale, 18 * scale);
+    g.fillStyle(0x4c3a2e, 0.9);
+    g.fillEllipse(x, y, 110 * scale, 28 * scale);
+    g.fillStyle(0x2b1e18, 0.95);
+    g.fillRect(x - 6 * scale, y - 34 * scale, 12 * scale, 34 * scale);
+    g.fillStyle(0xb4fff2, 0.14);
+    g.fillTriangle(x + 4 * scale, y - 30 * scale, x + 38 * scale, y - 18 * scale, x + 8 * scale, y - 8 * scale);
+  }
+
+  private drawReedCluster(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x243826, 0.92);
+    for (let index = 0; index < 5; index += 1) {
+      const px = x + (index - 2) * 8 * scale;
+      g.fillTriangle(px - 3 * scale, y + 12 * scale, px, y - 22 * scale, px + 3 * scale, y + 12 * scale);
+    }
+    g.fillStyle(0xc7f6d8, 0.08);
+    g.fillEllipse(x, y - 4 * scale, 26 * scale, 10 * scale);
+  }
+
+  private drawCaravanCanopy(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x0a0c0e, 0.16);
+    g.fillEllipse(x, y + 18 * scale, 92 * scale, 14 * scale);
+    g.fillStyle(0x9a6b42, 0.95);
+    g.fillRoundedRect(x - 34 * scale, y - 4 * scale, 68 * scale, 18 * scale, 6 * scale);
+    g.fillStyle(0xcfb462, 0.96);
+    g.fillTriangle(x - 44 * scale, y + 4 * scale, x, y - 28 * scale, x + 44 * scale, y + 4 * scale);
+    g.fillStyle(0xead9a1, 0.18);
+    g.fillRect(x - 16 * scale, y - 2 * scale, 32 * scale, 7 * scale);
+  }
+
+  private drawObsidianSpire(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x060506, 0.18);
+    g.fillEllipse(x, y + 28 * scale, 96 * scale, 16 * scale);
+    g.fillStyle(0x2a2024, 0.96);
+    g.fillTriangle(x, y - 54 * scale, x + 22 * scale, y + 10 * scale, x - 22 * scale, y + 10 * scale);
+    g.fillStyle(0xff9a56, 0.16);
+    g.fillTriangle(x, y - 20 * scale, x + 8 * scale, y + 2 * scale, x - 8 * scale, y + 2 * scale);
+  }
+
+  private drawLavaVent(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x090505, 0.18);
+    g.fillEllipse(x, y + 18 * scale, 84 * scale, 14 * scale);
+    g.fillStyle(0x5a433a, 0.94);
+    g.fillEllipse(x, y, 64 * scale, 20 * scale);
+    g.fillStyle(0xff8a3c, 0.4);
+    g.fillEllipse(x, y - 2 * scale, 36 * scale, 10 * scale);
+    g.fillStyle(0xffd6a0, 0.14);
+    g.fillEllipse(x, y - 10 * scale, 18 * scale, 20 * scale);
+  }
+
+  private drawCrystalRing(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.lineStyle(6 * scale, 0x7fdfff, 0.6);
+    g.strokeEllipse(x, y, 126 * scale, 54 * scale);
+    g.fillStyle(0xe8ffff, 0.14);
+    g.fillEllipse(x, y, 52 * scale, 16 * scale);
+  }
+
+  private drawCrystalAltar(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+    g.fillStyle(0x081118, 0.18);
+    g.fillEllipse(x, y + 22 * scale, 126 * scale, 18 * scale);
+    g.fillStyle(0x57636e, 0.95);
+    g.fillRoundedRect(x - 48 * scale, y - 8 * scale, 96 * scale, 22 * scale, 8 * scale);
+    g.fillStyle(0x95eeff, 0.2);
+    g.fillTriangle(x, y - 34 * scale, x + 16 * scale, y - 2 * scale, x - 16 * scale, y - 2 * scale);
+    g.fillStyle(0xe8ffff, 0.16);
+    g.fillEllipse(x, y - 6 * scale, 26 * scale, 8 * scale);
+  }
+
   private scatterProps(
     mapId: string,
     mapWidthTiles: number,
@@ -1105,12 +1949,24 @@ export class WorldScene extends Phaser.Scene {
 
       const roll = this.noise(index * 0.47 + seedOffset, 1.7);
       let texture = "prop_tree";
-      if (roll < 0.16) texture = "prop_rock";
-      else if (roll < 0.24) texture = "prop_ruin";
-      else if (roll < 0.28 && mapId !== "speakingIsland")
-        texture = "prop_crystal";
-      else if (roll < 0.32) texture = "prop_banner";
-      else if (roll < 0.34) texture = "prop_fence";
+      if (mapId === "dragonValley" || mapId === "ancientCave") {
+        if (roll < 0.34) texture = "prop_rock";
+        else if (roll < 0.48) texture = "prop_ruin";
+        else if (roll < 0.56) texture = "prop_crystal";
+        else if (roll < 0.62) texture = "prop_banner";
+      } else if (mapId === "silverKnightTown" || mapId === "giranTown") {
+        if (roll < 0.18) texture = "prop_rock";
+        else if (roll < 0.36) texture = "prop_banner";
+        else if (roll < 0.48) texture = "prop_fence";
+        else if (roll < 0.56) texture = "prop_ruin";
+      } else {
+        if (roll < 0.16) texture = "prop_rock";
+        else if (roll < 0.24) texture = "prop_ruin";
+        else if (roll < 0.28 && mapId !== "speakingIsland")
+          texture = "prop_crystal";
+        else if (roll < 0.32) texture = "prop_banner";
+        else if (roll < 0.34) texture = "prop_fence";
+      }
       const image = this.add.image(x, y, texture).setOrigin(0.5, 0.85);
       const propShadow = this.add
         .ellipse(
@@ -1328,7 +2184,61 @@ export class WorldScene extends Phaser.Scene {
       });
     };
 
+    const addDriftBand = (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      color: number,
+      alpha: number,
+      driftX: number,
+      duration: number,
+    ) => {
+      const band = this.add
+        .ellipse(x, y, width, height, color, alpha)
+        .setBlendMode(Phaser.BlendModes.SCREEN);
+      layer.add(band);
+      this.tweens.add({
+        targets: band,
+        x: x + driftX,
+        alpha: alpha * 0.45,
+        duration,
+        repeat: -1,
+        yoyo: true,
+        ease: "Sine.easeInOut",
+      });
+    };
+
+    const addVerticalGlow = (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      color: number,
+      alpha: number,
+      rise: number,
+      duration: number,
+    ) => {
+      const glow = this.add
+        .ellipse(x, y, width, height, color, alpha)
+        .setBlendMode(Phaser.BlendModes.SCREEN);
+      layer.add(glow);
+      this.tweens.add({
+        targets: glow,
+        y: y + rise,
+        alpha: alpha * 0.35,
+        duration,
+        repeat: -1,
+        yoyo: true,
+        ease: "Sine.easeInOut",
+      });
+    };
+
     if (mapId === "moonlitWetland") {
+      addDriftBand(mapWidth * 0.52, mapHeight * 0.46, mapWidth * 0.72, 84, 0xd8fff8, 0.06, 40, 5200);
+      addDriftBand(mapWidth * 0.66, mapHeight * 0.62, mapWidth * 0.46, 68, 0xbff9ee, 0.05, -34, 4600);
+      addVerticalGlow(780, 352, 110, 42, 0x9ffff1, 0.06, -10, 2200);
+      addVerticalGlow(1090, 414, 140, 48, 0x8aeede, 0.05, -12, 2400);
       for (let index = 0; index < 26; index += 1) {
         addFloatingParticle(
           Phaser.Math.Between(120, mapWidth - 120),
@@ -1345,7 +2255,27 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
+    if (mapId === "gludioPlain") {
+      addDriftBand(mapWidth * 0.34, mapHeight * 0.26, 220, 44, 0xf6e6b4, 0.035, 16, 4200);
+      for (let index = 0; index < 14; index += 1) {
+        addFloatingParticle(
+          Phaser.Math.Between(140, mapWidth - 140),
+          Phaser.Math.Between(120, mapHeight - 120),
+          Phaser.Math.Between(12, 24),
+          Phaser.Math.Between(6, 12),
+          0xf5dea0,
+          Phaser.Math.FloatBetween(0.03, 0.08),
+          Phaser.Math.Between(-16, 16),
+          Phaser.Math.Between(-6, 6),
+          Phaser.Math.Between(2800, 4200),
+        );
+      }
+      return;
+    }
+
     if (mapId === "windwoodForest") {
+      addDriftBand(mapWidth * 0.42, mapHeight * 0.28, mapWidth * 0.34, 56, 0xcdf7be, 0.04, 26, 4200);
+      addDriftBand(mapWidth * 0.58, mapHeight * 0.46, mapWidth * 0.28, 44, 0xe1ffd6, 0.035, -18, 3600);
       for (let index = 0; index < 22; index += 1) {
         addFloatingParticle(
           Phaser.Math.Between(120, mapWidth - 120),
@@ -1362,7 +2292,29 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
+    if (mapId === "orcForest") {
+      addDriftBand(mapWidth * 0.54, mapHeight * 0.42, mapWidth * 0.38, 62, 0xffc17a, 0.035, 18, 3800);
+      addVerticalGlow(mapWidth * 0.54, mapHeight * 0.36, 180, 68, 0xff9b52, 0.05, -14, 2000);
+      for (let index = 0; index < 18; index += 1) {
+        addFloatingParticle(
+          Phaser.Math.Between(140, mapWidth - 140),
+          Phaser.Math.Between(120, mapHeight - 120),
+          Phaser.Math.Between(6, 12),
+          Phaser.Math.Between(8, 14),
+          0xffb06b,
+          Phaser.Math.FloatBetween(0.08, 0.18),
+          Phaser.Math.Between(-10, 12),
+          Phaser.Math.Between(-28, -8),
+          Phaser.Math.Between(1500, 2800),
+        );
+      }
+      return;
+    }
+
     if (mapId === "dragonValley") {
+      addVerticalGlow(mapWidth * 0.52, mapHeight * 0.36, 240, 90, 0xffb56e, 0.08, -24, 2200);
+      addVerticalGlow(mapWidth * 0.72, mapHeight * 0.44, 180, 72, 0xff8a57, 0.06, -18, 1800);
+      addVerticalGlow(mapWidth * 0.58, 418, 120, 46, 0xff7b3f, 0.08, -16, 1600);
       for (let index = 0; index < 24; index += 1) {
         addFloatingParticle(
           Phaser.Math.Between(120, mapWidth - 120),
@@ -1380,6 +2332,8 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "ancientCave") {
+      addDriftBand(mapWidth * 0.5, mapHeight * 0.34, mapWidth * 0.52, 60, 0xa7cfff, 0.045, 22, 5400);
+      addVerticalGlow(mapWidth * 0.5, 226, 160, 48, 0x86deff, 0.05, -10, 2600);
       for (let index = 0; index < 18; index += 1) {
         addFloatingParticle(
           Phaser.Math.Between(120, mapWidth - 120),
@@ -1394,6 +2348,11 @@ export class WorldScene extends Phaser.Scene {
         );
       }
       return;
+    }
+
+    if (mapId === "speakingIsland") {
+      addDriftBand(mapWidth * 0.76, mapHeight * 0.22, 320, 52, 0xdff8ff, 0.05, 24, 4600);
+      addDriftBand(mapWidth * 0.84, mapHeight * 0.5, 240, 38, 0x9fe8ff, 0.05, -18, 3800);
     }
 
     for (let index = 0; index < 16; index += 1) {
@@ -1463,20 +2422,31 @@ export class WorldScene extends Phaser.Scene {
     const gfx = this.add.graphics();
 
     // 포탈 바닥 빛
-    gfx.fillStyle(0x44aaff, 0.15);
-    gfx.fillEllipse(x, y + 30, 120, 40);
+    gfx.fillStyle(0x44aaff, 0.12);
+    gfx.fillEllipse(x, y + 32, 138, 44);
+    gfx.fillStyle(0xf2d28e, 0.18);
+    gfx.fillEllipse(x, y + 28, 96, 24);
+    gfx.fillStyle(0x423325, 0.95);
+    gfx.fillRect(x - 46, y - 40, 10, 90);
+    gfx.fillRect(x + 36, y - 40, 10, 90);
+    gfx.lineStyle(8, 0x725338, 0.95);
+    gfx.beginPath();
+    gfx.arc(x, y - 8, 46, Math.PI, Math.PI * 2, false);
+    gfx.strokePath();
 
     // 포탈 링 (외부)
-    gfx.lineStyle(4, 0x88ccff, 0.8);
+    gfx.lineStyle(4, 0x88ccff, 0.84);
     gfx.strokeEllipse(x, y, 64, 90);
 
     // 포탈 링 (내부)
-    gfx.lineStyle(2, 0xaaddff, 0.6);
+    gfx.lineStyle(2, 0xaaddff, 0.65);
     gfx.strokeEllipse(x, y, 48, 72);
 
     // 포탈 내부 채우기
-    gfx.fillStyle(0x2266cc, 0.25);
+    gfx.fillStyle(0x2266cc, 0.26);
     gfx.fillEllipse(x, y, 48, 72);
+    gfx.fillStyle(0xffffff, 0.08);
+    gfx.fillEllipse(x - 10, y - 18, 18, 42);
 
     // 포탈 상단 크리스탈
     gfx.lineStyle(3, 0x66ddff, 0.9);
@@ -1487,10 +2457,51 @@ export class WorldScene extends Phaser.Scene {
     this.overlayLayer?.add(gfx);
     this.portalGlows.push(gfx);
 
+    const sigil = this.add
+      .ellipse(x, y + 30, 88, 20, 0xf5dda0, 0.08)
+      .setStrokeStyle(2, 0xf5dda0, 0.18)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    this.overlayLayer?.add(sigil);
+    this.tweens.add({
+      targets: sigil,
+      scaleX: 1.08,
+      scaleY: 1.08,
+      alpha: 0.03,
+      duration: 1500,
+      repeat: -1,
+      yoyo: true,
+      ease: "Sine.easeInOut",
+    });
+
+    for (let index = 0; index < 4; index += 1) {
+      const spark = this.add
+        .ellipse(
+          x + Phaser.Math.Between(-18, 18),
+          y - 8 + Phaser.Math.Between(-32, 32),
+          6,
+          6,
+          0xdff6ff,
+          0.22,
+        )
+        .setBlendMode(Phaser.BlendModes.SCREEN);
+      this.overlayLayer?.add(spark);
+      this.tweens.add({
+        targets: spark,
+        y: spark.y - Phaser.Math.Between(10, 24),
+        x: spark.x + Phaser.Math.Between(-8, 8),
+        alpha: 0.04,
+        duration: Phaser.Math.Between(1000, 1600),
+        repeat: -1,
+        yoyo: true,
+        ease: "Sine.easeInOut",
+        delay: index * 140,
+      });
+    }
+
     // 포탈 레이블
     const text = this.add.text(x, y + 52, label, {
       fontSize: "11px",
-      color: "#88ccff",
+      color: "#d4ebff",
       stroke: "#001833",
       strokeThickness: 3,
     }).setOrigin(0.5);
@@ -1552,6 +2563,12 @@ export class WorldScene extends Phaser.Scene {
         .zone(0, -24, 92, 118)
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
+      const roleBadge = this.createBadgeMarker(
+        0,
+        -84,
+        this.getNpcRoleBadgeText(npc.role),
+        this.getNpcRoleBadgeColor(npc.role),
+      );
 
       const container = this.add.container(worldPosition.x, worldPosition.y, [
         shadow,
@@ -1559,6 +2576,7 @@ export class WorldScene extends Phaser.Scene {
         ring,
         glow,
         sprite,
+        roleBadge,
         label,
         hitArea,
       ]) as NpcSprite;
@@ -1733,6 +2751,12 @@ export class WorldScene extends Phaser.Scene {
         strokeThickness: 4,
       })
       .setOrigin(0.5);
+    const classBadge = this.createBadgeMarker(
+      0,
+      -90,
+      this.getPlayerClassBadgeText(),
+      classTone.burstTint,
+    );
 
     const container = this.add.container(payload.x, payload.y, [
       shadow,
@@ -1740,6 +2764,7 @@ export class WorldScene extends Phaser.Scene {
       ring,
       glow,
       body,
+      classBadge,
       label,
     ]) as PlayerSprite;
     container.playerId = payload.id;
@@ -1905,11 +2930,18 @@ export class WorldScene extends Phaser.Scene {
           })
           .setOrigin(0.5)
       : null;
+    const bossHalo = isBoss
+      ? this.add
+          .ellipse(0, -16, 116, 116, 0xffd07a, 0.08)
+          .setStrokeStyle(2, 0xffefb5, 0.3)
+          .setBlendMode(Phaser.BlendModes.SCREEN)
+      : null;
 
     const container = this.add.container(payload.x, payload.y, [
       shadow,
       aura,
       ring,
+      ...(bossHalo ? [bossHalo] : []),
       glow,
       body,
       hpBack,
@@ -1960,6 +2992,9 @@ export class WorldScene extends Phaser.Scene {
 
     this.actorLayer?.add(container);
     this.monsterSprites.set(payload.id, container);
+    if (isBoss) {
+      this.playBossEntrance(container.x, container.y);
+    }
   }
 
   private handleRightClick(worldX: number, worldY: number) {
@@ -2196,9 +3231,38 @@ export class WorldScene extends Phaser.Scene {
             Math.random() * (monsterData.goldMax - monsterData.goldMin + 1),
           );
         const expReward = monsterData.exp;
+
+        // 랜덤 드랍 처리
+        const mBase2 = monsterId.split("-offline-")[0];
+        const mDef2 = MONSTERS[mBase2];
+        const droppedItems: string[] = [];
+        if (mDef2?.drops) {
+          for (const drop of mDef2.drops) {
+            if (Math.random() < drop.rate) {
+              droppedItems.push(drop.itemId);
+              // 레어 이상 드랍 시 채팅 공지
+              const itemData = ITEMS[drop.itemId];
+              if (itemData && ["rare","epic","legendary","mythic"].includes(itemData.rarity)) {
+                const rarityLabel: Record<string, string> = { rare: "레어", epic: "에픽", legendary: "전설", mythic: "신화" };
+                useGameStore.getState().addChat({
+                  id: crypto.randomUUID(),
+                  channel: "system",
+                  author: "드랍",
+                  message: `✨ [${rarityLabel[itemData.rarity] ?? itemData.rarity}] ${itemData.name} 획득!`,
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          }
+        }
+
         useGameStore
           .getState()
-          .applyOfflineReward({ gold: goldReward, exp: expReward });
+          .applyOfflineReward({ gold: goldReward, exp: expReward, items: droppedItems });
+
+        // 킬 트래킹 (업적)
+        const isBoss2 = mDef2?.isBoss ?? false;
+        useGameStore.getState().registerKill(mBase2, isBoss2);
 
         const killQuest = state.quests.find(
           (q) => q.questId === "mq_001" && q.status === "in_progress",
@@ -2480,6 +3544,12 @@ export class WorldScene extends Phaser.Scene {
     sprite.auraRing.alpha =
       ("monsterId" in sprite && sprite.isBoss ? 0.18 : 0.1) +
       Math.sin(now / 200) * 0.025;
+    if ("monsterId" in sprite && sprite.isBoss && sprite.list[3] instanceof Phaser.GameObjects.Ellipse) {
+      const halo = sprite.list[3] as Phaser.GameObjects.Ellipse;
+      halo.alpha = 0.06 + Math.sin(now / 220) * 0.02;
+      halo.scaleX = 1.02 + Math.sin(now / 260) * 0.04;
+      halo.scaleY = 1.02 + Math.cos(now / 280) * 0.04;
+    }
     sprite.lastX = sprite.x;
     sprite.lastY = sprite.y;
   }
@@ -2554,22 +3624,40 @@ export class WorldScene extends Phaser.Scene {
   private updateAmbientLighting() {
     const phase = (Math.sin(this.time.now / 22000) + 1) / 2;
     if (this.ambientVeil) {
-      this.ambientVeil.alpha = 0.05 + phase * 0.12;
+      const ambientBase =
+        this.mapId === "dragonValley"
+          ? { r: 28, g: 12, b: 8, alpha: 0.12 }
+          : this.mapId === "moonlitWetland"
+            ? { r: 6, g: 18, b: 18, alpha: 0.1 }
+            : this.mapId === "ancientCave"
+              ? { r: 8, g: 14, b: 22, alpha: 0.11 }
+              : { r: 7, g: 16, b: 26, alpha: 0.08 };
+      this.ambientVeil.alpha = ambientBase.alpha + phase * 0.08;
       this.ambientVeil.fillColor = Phaser.Display.Color.GetColor(
-        Phaser.Math.Linear(7, 14, 1 - phase),
-        Phaser.Math.Linear(16, 34, 1 - phase),
-        Phaser.Math.Linear(26, 56, phase),
+        Phaser.Math.Linear(ambientBase.r, ambientBase.r + 10, 1 - phase),
+        Phaser.Math.Linear(ambientBase.g, ambientBase.g + 18, 1 - phase),
+        Phaser.Math.Linear(ambientBase.b, ambientBase.b + 30, phase),
       );
     }
 
     if (this.ambientBloom) {
-      this.ambientBloom.alpha = 0.18 - phase * 0.11;
+      const bloomAlpha =
+        this.mapId === "dragonValley"
+          ? 0.16
+          : this.mapId === "moonlitWetland"
+            ? 0.1
+            : 0.18;
+      this.ambientBloom.alpha = bloomAlpha - phase * 0.08;
       this.ambientBloom.setScale(0.94 + Math.sin(this.time.now / 6000) * 0.04);
       this.ambientBloom.x = this.scale.width * (0.2 + phase * 0.1);
     }
 
     if (this.ambientMoon) {
-      this.ambientMoon.alpha = 0.03 + phase * 0.14;
+      const moonAlpha =
+        this.mapId === "moonlitWetland" || this.mapId === "ancientCave"
+          ? 0.08
+          : 0.03;
+      this.ambientMoon.alpha = moonAlpha + phase * 0.12;
       this.ambientMoon.setScale(0.92 + Math.cos(this.time.now / 7000) * 0.05);
       this.ambientMoon.x = this.scale.width * (0.72 + phase * 0.07);
     }
@@ -2756,6 +3844,7 @@ export class WorldScene extends Phaser.Scene {
       y * 0.29 + mapId.length * 2,
     );
     const moisture = this.noise(x * 0.11 + 9, y * 0.17 + 17);
+    const ridge = this.noise(x * 0.07 + 41, y * 0.09 + 23);
     const nearRoad =
       (mapId === "speakingIsland" &&
         ((y >= 5 && y <= 9 && x >= 2 && x <= 13) ||
@@ -2778,7 +3867,7 @@ export class WorldScene extends Phaser.Scene {
 
     if (mapId === "moonlitWetland" && moisture > 0.7) {
       return {
-        texture: "tile_water",
+        texture: moisture > 0.82 ? "tile_water" : "tile_wet_stone",
         alpha: 0.48,
         tint: 0xc9fbff,
         rotation: seed * 0.06,
@@ -2789,17 +3878,84 @@ export class WorldScene extends Phaser.Scene {
 
     if (mapId === "dragonValley") {
       return {
-        texture: seed > 0.78 ? "tile_path" : "tile_grass_b",
-        alpha: 0.58,
-        tint: seed > 0.78 ? 0xa36c4d : 0x45504d,
+        texture:
+          ridge > 0.8 ? "tile_lava" : seed > 0.56 ? "tile_volcanic" : "tile_dirt",
+        alpha: ridge > 0.8 ? 0.8 : 0.68,
+        tint: ridge > 0.8 ? 0xffd078 : seed > 0.56 ? 0x7c5f56 : 0x8e6548,
         rotation: (seed - 0.5) * 0.1,
         scaleX: 0.03,
         scaleY: 0.03,
       };
     }
 
+    if (mapId === "silverKnightTown") {
+      return {
+        texture: seed > 0.72 ? "tile_cobble" : seed > 0.34 ? "tile_marble" : "tile_meadow",
+        alpha: 0.58 + ridge * 0.12,
+        tint: seed > 0.34 ? 0xd6d1c3 : 0x89a37d,
+        rotation: (seed - 0.5) * 0.04,
+        scaleX: moisture * 0.02,
+        scaleY: ridge * 0.02,
+      };
+    }
+
+    if (mapId === "giranTown") {
+      return {
+        texture: seed > 0.66 ? "tile_cobble" : seed > 0.32 ? "tile_marble" : "tile_path",
+        alpha: 0.6 + moisture * 0.1,
+        tint: seed > 0.32 ? 0xd8c6b2 : 0xbd9870,
+        rotation: (seed - 0.5) * 0.04,
+        scaleX: ridge * 0.02,
+        scaleY: moisture * 0.02,
+      };
+    }
+
+    if (mapId === "windwoodForest") {
+      return {
+        texture: moisture > 0.62 ? "tile_moss" : seed > 0.48 ? "tile_forest" : "tile_dirt",
+        alpha: 0.58 + moisture * 0.12,
+        tint: moisture > 0.62 ? 0xa9c78a : 0x7a8f65,
+        rotation: (seed - 0.5) * 0.08,
+        scaleX: moisture * 0.03,
+        scaleY: ridge * 0.03,
+      };
+    }
+
+    if (mapId === "orcForest") {
+      return {
+        texture: seed > 0.62 ? "tile_dirt" : ridge > 0.64 ? "tile_volcanic" : "tile_moss",
+        alpha: 0.56 + ridge * 0.12,
+        tint: seed > 0.62 ? 0x8d6f56 : 0x62715d,
+        rotation: (seed - 0.5) * 0.08,
+        scaleX: 0.02,
+        scaleY: ridge * 0.03,
+      };
+    }
+
+    if (mapId === "gludioPlain") {
+      return {
+        texture: moisture > 0.58 ? "tile_meadow" : seed > 0.48 ? "tile_grass_a" : "tile_dirt",
+        alpha: 0.6 + moisture * 0.1,
+        tint: moisture > 0.58 ? 0xaaca74 : 0x90ab68,
+        rotation: (seed - 0.5) * 0.06,
+        scaleX: moisture * 0.03,
+        scaleY: ridge * 0.02,
+      };
+    }
+
+    if (mapId === "ancientCave") {
+      return {
+        texture: ridge > 0.58 ? "tile_volcanic" : "tile_wet_stone",
+        alpha: 0.62 + ridge * 0.08,
+        tint: ridge > 0.58 ? 0x6d6462 : 0x88a0a9,
+        rotation: (seed - 0.5) * 0.05,
+        scaleX: 0.02,
+        scaleY: 0.02,
+      };
+    }
+
     return {
-      texture: seed > 0.54 ? "tile_grass_a" : "tile_grass_b",
+      texture: moisture > 0.6 ? "tile_meadow" : seed > 0.54 ? "tile_grass_a" : "tile_grass_b",
       alpha: 0.54 + moisture * 0.16,
       tint:
         mapId === "silverKnightTown"
@@ -3183,11 +4339,15 @@ export class WorldScene extends Phaser.Scene {
     damage: number,
     isCrit: boolean,
   ) {
+    const glow = this.add
+      .ellipse(x, y - 30, isCrit ? 72 : 52, isCrit ? 34 : 24, isCrit ? 0xffdc73 : 0xffffff, isCrit ? 0.22 : 0.12)
+      .setBlendMode(Phaser.BlendModes.SCREEN)
+      .setDepth(9998);
     const text = this.add
       .text(x, y - 30, isCrit ? `${damage}!` : String(damage), {
-        fontSize: isCrit ? "22px" : "18px",
-        color: isCrit ? "#FFD700" : "#FFFFFF",
-        fontFamily: "sans-serif",
+        fontSize: isCrit ? "24px" : "18px",
+        color: isCrit ? "#ffe58a" : "#f7fbff",
+        fontFamily: "serif",
         stroke: "#07101a",
         strokeThickness: 4,
         fontStyle: isCrit ? "bold" : "normal",
@@ -3195,18 +4355,42 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(9999);
 
+    this.effectLayer?.add(glow);
     this.effectLayer?.add(text);
     this.tweens.add({
-      targets: text,
-      y: y - 80,
+      targets: glow,
+      scaleX: isCrit ? 1.8 : 1.45,
+      scaleY: isCrit ? 1.8 : 1.45,
       alpha: 0,
-      duration: 900,
+      duration: 320,
+      ease: "Quad.Out",
+      onComplete: () => glow.destroy(),
+    });
+    this.tweens.add({
+      targets: text,
+      y: y - (isCrit ? 92 : 80),
+      alpha: 0,
+      scale: isCrit ? 1.08 : 1,
+      duration: isCrit ? 980 : 900,
       ease: "Quad.Out",
       onComplete: () => text.destroy(),
     });
   }
 
   private showHitEffect(x: number, y: number) {
+    const ring = this.add
+      .ellipse(x, y - 18, 24, 24, 0xffffff, 0.08)
+      .setStrokeStyle(2, 0xffefb0, 0.65);
+    this.effectLayer?.add(ring);
+    this.tweens.add({
+      targets: ring,
+      scaleX: 1.8,
+      scaleY: 1.8,
+      alpha: 0,
+      duration: 220,
+      ease: "Quad.Out",
+      onComplete: () => ring.destroy(),
+    });
     for (let i = 0; i < 5; i += 1) {
       const angle = (i / 5) * Math.PI * 2;
       const dist = 14 + Math.random() * 16;
@@ -3239,7 +4423,11 @@ export class WorldScene extends Phaser.Scene {
       .arc(x, y - 12, isCrit ? 40 : 30, 210, 338, false, slashTint, 0.18)
       .setStrokeStyle(isCrit ? 5 : 4, slashTint, 0.95)
       .setRotation(Phaser.Math.FloatBetween(-0.14, 0.14));
+    const shock = this.add
+      .ellipse(x, y - 14, isCrit ? 40 : 30, isCrit ? 24 : 18, slashTint, 0.18)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
     this.effectLayer?.add(slash);
+    this.effectLayer?.add(shock);
     this.tweens.add({
       targets: slash,
       alpha: 0,
@@ -3248,6 +4436,15 @@ export class WorldScene extends Phaser.Scene {
       duration: isCrit ? 230 : 180,
       ease: "Power2.Out",
       onComplete: () => slash.destroy(),
+    });
+    this.tweens.add({
+      targets: shock,
+      scaleX: isCrit ? 2 : 1.65,
+      scaleY: isCrit ? 2 : 1.65,
+      alpha: 0,
+      duration: isCrit ? 240 : 180,
+      ease: "Power2.Out",
+      onComplete: () => shock.destroy(),
     });
 
     if (isCrit) {
@@ -3291,11 +4488,74 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
+  private createBadgeMarker(x: number, y: number, text: string, tint: number) {
+    const badge = this.add.container(x, y);
+    const plate = this.add
+      .ellipse(0, 0, 44, 18, tint, 0.18)
+      .setStrokeStyle(1, 0xffffff, 0.16);
+    const label = this.add
+      .text(0, 0, text, {
+        fontSize: "9px",
+        color: "#fdf7e6",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    badge.add([plate, label]);
+    return badge;
+  }
+
+  private getPlayerClassBadgeText() {
+    const className = useGameStore.getState().player.className.toLowerCase();
+    if (className.includes("guardian")) return "GDN";
+    if (className.includes("ranger")) return "RNG";
+    if (className.includes("arcan")) return "ARC";
+    if (className.includes("sovereign")) return "SVR";
+    return "ADV";
+  }
+
+  private getNpcRoleBadgeText(role: string) {
+    switch (role) {
+      case "weapon":
+        return "FORGE";
+      case "armor":
+        return "WARD";
+      case "magic":
+        return "ARC";
+      case "inn":
+        return "REST";
+      case "blacksmith":
+        return "SMITH";
+      default:
+        return "NPC";
+    }
+  }
+
+  private getNpcRoleBadgeColor(role: string) {
+    switch (role) {
+      case "weapon":
+        return 0x7fc2ff;
+      case "armor":
+        return 0x7ee0c1;
+      case "magic":
+        return 0xd889ff;
+      case "inn":
+        return 0xffb17f;
+      case "blacksmith":
+        return 0xff8a68;
+      default:
+        return 0xe6db97;
+    }
+  }
+
   private spawnArcaneBurst(x: number, y: number, tint: number) {
     const ring = this.add
       .ellipse(x, y, 28, 28, tint, 0.18)
       .setStrokeStyle(2, 0xffffff, 0.7);
+    const core = this.add
+      .star(x, y, 6, 6, 14, tint, 0.42)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
     this.effectLayer?.add(ring);
+    this.effectLayer?.add(core);
     this.tweens.add({
       targets: ring,
       scaleX: 2.2,
@@ -3304,6 +4564,15 @@ export class WorldScene extends Phaser.Scene {
       duration: 240,
       ease: "Sine.Out",
       onComplete: () => ring.destroy(),
+    });
+    this.tweens.add({
+      targets: core,
+      scaleX: 1.8,
+      scaleY: 1.8,
+      alpha: 0,
+      duration: 220,
+      ease: "Sine.Out",
+      onComplete: () => core.destroy(),
     });
   }
 
@@ -3328,7 +4597,19 @@ export class WorldScene extends Phaser.Scene {
       )
       .setRotation(angle)
       .setBlendMode(Phaser.BlendModes.SCREEN);
+    const trailCore = this.add
+      .rectangle(
+        midX,
+        midY,
+        Phaser.Math.Distance.Between(startX, startY, endX, endY) * 0.88,
+        4,
+        0xffffff,
+        0.18,
+      )
+      .setRotation(angle)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
     this.effectLayer?.add(trail);
+    this.effectLayer?.add(trailCore);
     this.tweens.add({
       targets: trail,
       alpha: 0,
@@ -3336,6 +4617,14 @@ export class WorldScene extends Phaser.Scene {
       duration: 140,
       ease: "Quad.Out",
       onComplete: () => trail.destroy(),
+    });
+    this.tweens.add({
+      targets: trailCore,
+      alpha: 0,
+      scaleY: 0.15,
+      duration: 120,
+      ease: "Quad.Out",
+      onComplete: () => trailCore.destroy(),
     });
   }
 
@@ -3388,7 +4677,11 @@ export class WorldScene extends Phaser.Scene {
           .ellipse(projectile.x, projectile.y, 10, 6, tint, 0.22)
           .setRotation(projectile.rotation)
           .setBlendMode(Phaser.BlendModes.SCREEN);
+        const spark = this.add
+          .ellipse(projectile.x, projectile.y, 4, 4, 0xffffff, 0.32)
+          .setBlendMode(Phaser.BlendModes.SCREEN);
         this.effectLayer?.add(ember);
+        this.effectLayer?.add(spark);
         this.tweens.add({
           targets: ember,
           alpha: 0,
@@ -3397,6 +4690,15 @@ export class WorldScene extends Phaser.Scene {
           duration: 180,
           ease: "Quad.Out",
           onComplete: () => ember.destroy(),
+        });
+        this.tweens.add({
+          targets: spark,
+          alpha: 0,
+          scaleX: 0.1,
+          scaleY: 0.1,
+          duration: 140,
+          ease: "Quad.Out",
+          onComplete: () => spark.destroy(),
         });
       },
     });
@@ -3426,7 +4728,11 @@ export class WorldScene extends Phaser.Scene {
     const pulse = this.add
       .ellipse(x, y, 34, 26, tint, 0.18)
       .setStrokeStyle(2, tint, 0.8);
+    const guard = this.add
+      .star(x, y, 4, 8, 16, tint, 0.16)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
     this.effectLayer?.add(pulse);
+    this.effectLayer?.add(guard);
     this.tweens.add({
       targets: pulse,
       scaleX: 1.9,
@@ -3435,6 +4741,15 @@ export class WorldScene extends Phaser.Scene {
       duration: 220,
       ease: "Quad.Out",
       onComplete: () => pulse.destroy(),
+    });
+    this.tweens.add({
+      targets: guard,
+      alpha: 0,
+      scaleX: 1.7,
+      scaleY: 1.7,
+      duration: 200,
+      ease: "Quad.Out",
+      onComplete: () => guard.destroy(),
     });
   }
 
@@ -3486,7 +4801,11 @@ export class WorldScene extends Phaser.Scene {
 
   private showDeathEffect(x: number, y: number) {
     const flash = this.add.ellipse(x, y - 16, 56, 36, 0xffffff, 0.72);
+    const sigil = this.add
+      .star(x, y - 16, 7, 12, 26, 0xffdd8b, 0.32)
+      .setStrokeStyle(2, 0xfff2c8, 0.65);
     this.effectLayer?.add(flash);
+    this.effectLayer?.add(sigil);
     this.tweens.add({
       targets: flash,
       alpha: 0,
@@ -3495,6 +4814,15 @@ export class WorldScene extends Phaser.Scene {
       duration: 420,
       ease: "Power2.Out",
       onComplete: () => flash.destroy(),
+    });
+    this.tweens.add({
+      targets: sigil,
+      alpha: 0,
+      scaleX: 2.2,
+      scaleY: 2.2,
+      duration: 380,
+      ease: "Power2.Out",
+      onComplete: () => sigil.destroy(),
     });
     for (let i = 0; i < 8; i += 1) {
       const angle = (i / 8) * Math.PI * 2;
@@ -3518,6 +4846,38 @@ export class WorldScene extends Phaser.Scene {
         onComplete: () => particle.destroy(),
       });
     }
+  }
+
+  private playBossEntrance(x: number, y: number) {
+    this.cameras.main.shake(220, 0.0026);
+    const wave = this.add
+      .ellipse(x, y - 8, 64, 36, 0xffd07a, 0.2)
+      .setStrokeStyle(3, 0xfff0bf, 0.65)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    const crown = this.add
+      .star(x, y - 48, 6, 10, 22, 0xffd07a, 0.38)
+      .setStrokeStyle(2, 0xfff4cf, 0.7);
+    this.effectLayer?.add(wave);
+    this.effectLayer?.add(crown);
+    this.tweens.add({
+      targets: wave,
+      scaleX: 2.4,
+      scaleY: 2.1,
+      alpha: 0,
+      duration: 520,
+      ease: "Cubic.Out",
+      onComplete: () => wave.destroy(),
+    });
+    this.tweens.add({
+      targets: crown,
+      y: y - 68,
+      alpha: 0,
+      scaleX: 1.8,
+      scaleY: 1.8,
+      duration: 460,
+      ease: "Cubic.Out",
+      onComplete: () => crown.destroy(),
+    });
   }
 }
 

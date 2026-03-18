@@ -2,6 +2,8 @@
 
 import { create } from "zustand";
 import { ITEMS } from "@/game/data/items";
+import { ACHIEVEMENTS } from "@/game/data/achievements";
+import { rollEnchant } from "@/game/systems/enchant";
 import { QUESTS, type QuestData } from "@/game/data/quests";
 import { getSocket } from "@/lib/socket";
 import { ArmorSubType, ItemType } from "@/types/item";
@@ -36,12 +38,17 @@ type PlayerSnapshot = {
   buffs: BuffState[];
 };
 
+type RandomOption = { stat: string; value: number; label: string };
+
 type InventoryItem = {
+  uid?: string;
   id: string;
   name: string;
   quantity: number;
   rarity: "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
   type: string;
+  enchantLevel?: number;
+  randomOptions?: RandomOption[];
 };
 
 type DroppedLoot = {
@@ -82,7 +89,9 @@ type QuestProgress = {
 
 type UiState = {
   inventoryOpen: boolean;
+  achievementsOpen: boolean;
   chatOpen: boolean;
+  enchantOpen: boolean;
   shopOpen: boolean;
   activeShopId: string | null;
   selectedInventoryItemId: string | null;
@@ -155,10 +164,33 @@ type NpcQuestView = QuestData & {
   goal: number;
 };
 
+type AchievementState = {
+  id: string;
+  progress: number;
+  completed: boolean;
+  claimed: boolean;
+};
+
+type EnchantOutcome = {
+  result: "success" | "fail" | "destroy";
+  newLevel: number;
+  message: string;
+};
+
 type GameStore = {
   player: PlayerSnapshot;
   serverName: string;
   currentMapId: string;
+  pendingLevelUp: boolean;
+  pendingDailyBonus: boolean;
+  loginStreak: number;
+  lastLoginDate: string | null;
+  achievements: AchievementState[];
+  totalKills: number;
+  bossKills: number;
+  maxQuizStreak: number;
+  visitedMaps: string[];
+  activeTitle: string | null;
   inventory: InventoryItem[];
   equipment: EquipmentState;
   droppedLoot: DroppedLoot[];
@@ -176,11 +208,20 @@ type GameStore = {
   setEquipment: (equipment: EquipmentState) => void;
   setQuests: (quests: QuestProgress[]) => void;
   setCurrentMapId: (mapId: string) => void;
+  clearLevelUp: () => void;
+  claimDailyBonus: () => void;
+  checkDailyLogin: () => void;
+  claimAchievement: (achievementId: string) => void;
+  registerKill: (monsterId: string, isBoss: boolean) => void;
+  updateAchievementProgress: (trackType: string, value: number, mode?: "add" | "max" | "set") => void;
+  setTitle: (title: string) => void;
   addDroppedLoot: (items: DroppedLoot[]) => void;
   removeDroppedLoot: (lootId: string) => void;
   addChat: (message: ChatMessage) => void;
   toggleInventory: () => void;
+  toggleAchievements: () => void;
   toggleShop: () => void;
+  toggleEnchant: () => void;
   toggleQuestWindow: () => void;
   toggleMinimap: () => void;
   setActiveShop: (shopId: string | null) => void;
@@ -202,6 +243,7 @@ type GameStore = {
   unequipItem: (slot: EquipmentSlot) => void;
   getAttackProfile: () => AttackProfile;
   getDerivedStats: () => DerivedStats;
+  enchantItem: (uid: string, blessed: boolean) => EnchantOutcome;
   setConnected: (connected: boolean) => void;
   setWorld: (payload: {
     selfId: string;
@@ -225,7 +267,11 @@ type GameStore = {
   resolveQuiz: (payload: QuizFeedback) => void;
   closeQuiz: () => void;
   inCombat: boolean;
+  skillLevels: Record<string, number>;
+  sp: number;
   setInCombat: (v: boolean) => void;
+  upgradeSkill: (skillId: string) => void;
+  activateSkill: (skillId: string) => void;
   applyOfflineReward: (reward: {
     gold: number;
     exp: number;
@@ -247,6 +293,8 @@ const INITIAL_INVENTORY: InventoryItem[] = [
     quantity: 1,
     rarity: "common",
     type: "weapon",
+    uid: "uid_trainee_dagger_init",
+    enchantLevel: 0,
   },
   {
     id: "teleport_scroll",
@@ -261,6 +309,13 @@ const INITIAL_QUESTS: QuestProgress[] = QUESTS.map((quest) => ({
   questId: quest.id,
   status: "available",
   progress: 0,
+}));
+
+const INITIAL_ACHIEVEMENTS: AchievementState[] = ACHIEVEMENTS.map((achievement) => ({
+  id: achievement.id,
+  progress: 0,
+  completed: false,
+  claimed: false,
 }));
 
 const INITIAL_SYSTEM_TIMESTAMP = 0;
@@ -282,6 +337,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   serverName: "아스카론 01",
   currentMapId: "speakingIsland",
+  pendingLevelUp: false,
+  pendingDailyBonus: false,
+  loginStreak: 0,
+  lastLoginDate: null,
+  achievements: INITIAL_ACHIEVEMENTS,
+  totalKills: 0,
+  bossKills: 0,
+  maxQuizStreak: 0,
+  visitedMaps: ["speakingIsland"],
+  activeTitle: null,
   inventory: INITIAL_INVENTORY,
   equipment: {},
   droppedLoot: [],
@@ -297,7 +362,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   quests: INITIAL_QUESTS,
   ui: {
     inventoryOpen: false,
+    achievementsOpen: false,
     chatOpen: true,
+    enchantOpen: false,
     shopOpen: false,
     activeShopId: "radar",
     selectedInventoryItemId: null,
@@ -312,6 +379,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   connected: false,
   inCombat: false,
+  skillLevels: {},
+  sp: 0,
   selfId: null,
   worldPlayers: [],
   worldMonsters: [],
@@ -339,7 +408,198 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setInventory: (items) => set(() => ({ inventory: items })),
   setEquipment: (equipment) => set(() => ({ equipment })),
   setQuests: (quests) => set(() => ({ quests })),
-  setCurrentMapId: (mapId) => set(() => ({ currentMapId: mapId })),
+  setCurrentMapId: (mapId) =>
+    set((state) => ({
+      currentMapId: mapId,
+      visitedMaps: state.visitedMaps.includes(mapId)
+        ? state.visitedMaps
+        : [...state.visitedMaps, mapId],
+    })),
+  clearLevelUp: () => set({ pendingLevelUp: false }),
+  checkDailyLogin: () =>
+    set((state) => {
+      const today = new Date().toDateString();
+      if (state.lastLoginDate === today) return state;
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      const newStreak =
+        state.lastLoginDate === yesterday ? state.loginStreak + 1 : 1;
+      return {
+        lastLoginDate: today,
+        loginStreak: newStreak,
+        pendingDailyBonus: true,
+      };
+    }),
+  claimDailyBonus: () =>
+    set((state) => {
+      const DAY_REWARDS = [
+        { gold: 200, exp: 500, itemId: "red_potion", qty: 5 },
+        { gold: 400, exp: 1000, itemId: "blue_potion", qty: 3 },
+        { gold: 600, exp: 1500, itemId: "teleport_scroll", qty: 2 },
+        { gold: 800, exp: 2000, itemId: "haste_potion", qty: 2 },
+        { gold: 1200, exp: 3000, itemId: "mystery_box", qty: 1 },
+        { gold: 1500, exp: 4000, itemId: "weapon_enchant_scroll", qty: 1 },
+        { gold: 3000, exp: 8000, itemId: "legendary_box", qty: 1 },
+      ];
+      const streakDay = (state.loginStreak - 1) % 7;
+      const reward = DAY_REWARDS[streakDay];
+
+      const nextInventory = [...state.inventory];
+      const itemData = ITEMS[reward.itemId];
+      if (itemData) {
+        const existing = nextInventory.find((e) => e.id === reward.itemId);
+        if (existing) {
+          existing.quantity += reward.qty;
+        } else {
+          nextInventory.push({
+            id: itemData.id,
+            name: itemData.name,
+            quantity: reward.qty,
+            rarity: itemData.rarity,
+            type: itemData.type,
+          });
+        }
+      }
+
+      const playerWithGold = { ...state.player, gold: state.player.gold + reward.gold };
+      const nextPlayer = applyExpReward(playerWithGold, reward.exp);
+
+      const updatedAchievements = state.achievements.map((ach) => {
+        const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
+        if (!def || ach.completed || def.trackType !== "login_streak") return ach;
+        const newProg = Math.max(ach.progress, state.loginStreak);
+        return { ...ach, progress: newProg, completed: newProg >= def.goal };
+      });
+
+      return {
+        player: nextPlayer,
+        inventory: nextInventory,
+        pendingDailyBonus: false,
+        achievements: updatedAchievements,
+        chat: [
+          ...state.chat.slice(-47),
+          {
+            id: crypto.randomUUID(),
+            channel: "system" as const,
+            author: "시스템",
+            message: `📅 출석 보너스 수령! ${state.loginStreak}일 연속 출석 · +${reward.gold} Gold · +${reward.exp} EXP`,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    }),
+  claimAchievement: (achievementId) =>
+    set((state) => {
+      const def = ACHIEVEMENTS.find((d) => d.id === achievementId);
+      const ach = state.achievements.find((a) => a.id === achievementId);
+      if (!def || !ach || !ach.completed || ach.claimed) return state;
+
+      const nextInventory = [...state.inventory];
+      if (def.rewards.itemId) {
+        const itemData = ITEMS[def.rewards.itemId];
+        if (itemData) {
+          const existing = nextInventory.find((e) => e.id === def.rewards.itemId);
+          if (existing && itemData.stackable) {
+            existing.quantity += 1;
+          } else {
+            nextInventory.push({
+              id: itemData.id,
+              name: itemData.name,
+              quantity: 1,
+              rarity: itemData.rarity,
+              type: itemData.type,
+              uid: itemData.stackable ? undefined : `uid_${crypto.randomUUID()}`,
+              enchantLevel: itemData.stackable ? undefined : 0,
+            });
+          }
+        }
+      }
+
+      const playerWithGold = {
+        ...state.player,
+        gold: state.player.gold + (def.rewards.gold ?? 0),
+      };
+      const nextPlayer = def.rewards.exp
+        ? applyExpReward(playerWithGold, def.rewards.exp)
+        : playerWithGold;
+
+      const nextTitle = def.rewards.title ?? state.activeTitle;
+
+      return {
+        achievements: state.achievements.map((a) =>
+          a.id === achievementId ? { ...a, claimed: true } : a,
+        ),
+        inventory: nextInventory,
+        player: nextPlayer,
+        activeTitle: nextTitle,
+        chat: [
+          ...state.chat.slice(-48),
+          {
+            id: crypto.randomUUID(),
+            channel: "system" as const,
+            author: "업적",
+            message: `업적 [${def.name}] 보상 수령 완료!${def.rewards.title ? ` 칭호 [${def.rewards.title}] 획득!` : ""}`,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    }),
+  registerKill: (monsterId, isBoss) =>
+    set((state) => {
+      const newTotalKills = state.totalKills + 1;
+      const newBossKills = isBoss ? state.bossKills + 1 : state.bossKills;
+
+      const updatedAchievements = state.achievements.map((ach) => {
+        const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
+        if (!def || ach.completed) return ach;
+        if (def.trackType === "kill_any") {
+          const newProg = ach.progress + 1;
+          return { ...ach, progress: newProg, completed: newProg >= def.goal };
+        }
+        if (def.trackType === "kill_boss" && isBoss) {
+          const newProg = ach.progress + 1;
+          return { ...ach, progress: newProg, completed: newProg >= def.goal };
+        }
+        return ach;
+      });
+
+      const newlyCompleted = updatedAchievements.filter(
+        (a, i) => a.completed && !state.achievements[i]?.completed,
+      );
+
+      const newMessages: ChatMessage[] = newlyCompleted.map((a) => {
+        const def = ACHIEVEMENTS.find((d) => d.id === a.id)!;
+        return {
+          id: crypto.randomUUID(),
+          channel: "system" as const,
+          author: "업적",
+          message: `🏆 업적 달성: [${def.name}]! 보상을 수령하세요.`,
+          timestamp: Date.now(),
+        };
+      });
+
+      return {
+        totalKills: newTotalKills,
+        bossKills: newBossKills,
+        achievements: updatedAchievements,
+        ...(newMessages.length > 0 && {
+          chat: [...state.chat.slice(-(50 - newMessages.length)), ...newMessages],
+        }),
+      };
+    }),
+  updateAchievementProgress: (trackType, value, mode = "add") =>
+    set((state) => {
+      const updatedAchievements = state.achievements.map((ach) => {
+        const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
+        if (!def || ach.completed || def.trackType !== trackType) return ach;
+        const newProg =
+          mode === "set" ? value :
+          mode === "max" ? Math.max(ach.progress, value) :
+          ach.progress + value;
+        return { ...ach, progress: newProg, completed: newProg >= def.goal };
+      });
+      return { achievements: updatedAchievements };
+    }),
+  setTitle: (title) => set({ activeTitle: title }),
   addDroppedLoot: (items) =>
     set((state) => ({
       droppedLoot: [
@@ -364,11 +624,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
         inventoryOpen: !state.ui.inventoryOpen,
       },
     })),
+  toggleAchievements: () =>
+    set((state) => ({
+      ui: {
+        ...state.ui,
+        achievementsOpen: !state.ui.achievementsOpen,
+      },
+    })),
   toggleShop: () =>
     set((state) => ({
       ui: {
         ...state.ui,
         shopOpen: !state.ui.shopOpen,
+      },
+    })),
+  toggleEnchant: () =>
+    set((state) => ({
+      ui: {
+        ...state.ui,
+        enchantOpen: !state.ui.enchantOpen,
       },
     })),
   toggleQuestWindow: () =>
@@ -717,8 +991,118 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { player, equipment } = get();
     return getDerivedStatsFromState(player, equipment);
   },
+  enchantItem: (uid, blessed) => {
+    let outcome: EnchantOutcome = { result: "fail", newLevel: 0, message: "" };
+    set((state) => {
+      const itemIdx = state.inventory.findIndex((i) => (i.uid ?? i.id) === uid);
+      if (itemIdx === -1) return state;
+
+      const item = state.inventory[itemIdx];
+      const currentLevel = item.enchantLevel ?? 0;
+      const result = rollEnchant(currentLevel, blessed);
+      outcome = result;
+
+      const scrollId =
+        (ITEMS[item.id]?.type ?? "") === "weapon"
+          ? "weapon_enchant_scroll"
+          : "armor_enchant_scroll";
+      const blessingId = "blessing_scroll";
+
+      const nextInventoryBase = state.inventory
+        .map((inv, idx) => {
+          if (idx === itemIdx) {
+            if (result.result === "destroy") return null;
+            return { ...inv, enchantLevel: result.newLevel };
+          }
+          return inv;
+        })
+        .filter(Boolean) as InventoryItem[];
+
+      const nextInventory = (blessed
+        ? nextInventoryBase
+            .map((inv) => {
+              if (inv.id === blessingId && inv.quantity > 0) {
+                return { ...inv, quantity: inv.quantity - 1 };
+              }
+              return inv;
+            })
+        : nextInventoryBase)
+        .map((inv) => {
+          if (inv.id === scrollId && inv.quantity > 0) {
+            return { ...inv, quantity: inv.quantity - 1 };
+          }
+          return inv;
+        })
+        .filter((inv) => inv.quantity > 0 || !ITEMS[inv.id]?.stackable);
+
+      let updatedAchievements = state.achievements;
+      if (result.result === "success") {
+        updatedAchievements = state.achievements.map((ach) => {
+          const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
+          if (!def || ach.completed || def.trackType !== "enchant_level") return ach;
+          const newProg = Math.max(ach.progress, result.newLevel);
+          return { ...ach, progress: newProg, completed: newProg >= def.goal };
+        });
+      }
+
+      const resultIcon =
+        result.result === "success" ? "✨" : result.result === "destroy" ? "💥" : "❌";
+      return {
+        inventory: nextInventory,
+        achievements: updatedAchievements,
+        chat: [
+          ...state.chat.slice(-49),
+          {
+            id: crypto.randomUUID(),
+            channel: "system" as const,
+            author: "강화",
+            message: `${resultIcon} ${result.message}`,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    });
+    return outcome;
+  },
   setConnected: (connected) => set(() => ({ connected })),
   setInCombat: (v) => set({ inCombat: v }),
+  upgradeSkill: (skillId) =>
+    set((state) => {
+      if (state.sp <= 0) return state;
+      const currentLv = state.skillLevels[skillId] ?? 0;
+      if (currentLv >= 5) return state;
+      return {
+        sp: state.sp - 1,
+        skillLevels: { ...state.skillLevels, [skillId]: currentLv + 1 },
+        chat: [
+          ...state.chat.slice(-49),
+          {
+            id: crypto.randomUUID(),
+            channel: "system" as const,
+            author: "시스템",
+            message: `스킬이 Lv ${currentLv + 1}로 강화되었습니다!`,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    }),
+  activateSkill: (skillId) =>
+    set((state) => {
+      const lv = state.skillLevels[skillId] ?? 0;
+      if (lv <= 0) return state;
+      return {
+        chat: [
+          ...state.chat.slice(-49),
+          {
+            id: crypto.randomUUID(),
+            channel: "system" as const,
+            author: "스킬",
+            message: `스킬 발동!`,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    }),
   setWorld: (payload) =>
     set(() => ({
       selfId: payload.selfId,
@@ -803,6 +1187,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
       const nextPlayer = applyExpReward(playerWithGold, exp);
       const leveled = nextPlayer.level > prevLevel;
+      const levelsGained = nextPlayer.level - prevLevel;
 
       const nextInventory = [...state.inventory];
       items.forEach((itemId) => {
@@ -841,9 +1226,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
         });
       }
 
+      const updatedAchievements = state.achievements.map((ach) => {
+        const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
+        if (!def || ach.completed) return ach;
+        if (def.trackType === "level") {
+          const newProg = Math.max(ach.progress, nextPlayer.level);
+          return { ...ach, progress: newProg, completed: newProg >= def.goal };
+        }
+        if (def.trackType === "gold") {
+          const newProg = Math.max(ach.progress, nextPlayer.gold);
+          return { ...ach, progress: newProg, completed: newProg >= def.goal };
+        }
+        return ach;
+      });
+
+      const updatedMapAchievements = updatedAchievements.map((ach) => {
+        const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
+        if (!def || ach.completed || def.trackType !== "map_visit") return ach;
+        const newProg = state.visitedMaps.length;
+        return { ...ach, progress: newProg, completed: newProg >= def.goal };
+      });
+
       return {
         player: nextPlayer,
         inventory: nextInventory,
+        sp: state.sp + (leveled ? levelsGained * 2 : 0),
+        pendingLevelUp: leveled,
+        achievements: updatedMapAchievements,
         chat: [...state.chat.slice(-(50 - messages.length)), ...messages],
       };
     });
@@ -918,6 +1327,8 @@ function applyExpReward(player: PlayerSnapshot, expReward: number) {
 }
 
 export type {
+  AchievementState,
+  EnchantOutcome,
   EquipmentSlot,
   EquipmentState,
   InventoryItem,
@@ -925,4 +1336,5 @@ export type {
   DroppedLoot,
   QuestProgress,
   QuestStatus,
+  RandomOption,
 };

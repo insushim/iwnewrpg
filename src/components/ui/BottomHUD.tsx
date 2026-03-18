@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MAPS } from "@/game/data/maps";
 import { useGameStore } from "@/lib/gameStore";
+import { SkillBar } from "@/components/ui/SkillBar";
 
 type QuickSlot = {
   key: string;
@@ -28,10 +29,16 @@ export function BottomHUD() {
   const toggleInventory = useGameStore((state) => state.toggleInventory);
   const toggleQuestWindow = useGameStore((state) => state.toggleQuestWindow);
   const ui = useGameStore((state) => state.ui);
-  const inventory = useGameStore((state) => state.inventory) ?? [];
+  const inventory = useGameStore((state) => state.inventory);
   const consumeItem = useGameStore((state) => state.consumeItem);
 
   const inCombat = useGameStore((state) => state.inCombat);
+  const toggleAchievements = useGameStore((state) => state.toggleAchievements);
+  const toggleEnchant = useGameStore((state) => state.toggleEnchant);
+  const achievements = useGameStore((state) => state.achievements);
+  const claimableAchievements = achievements.filter((a) => a.completed && !a.claimed).length;
+  const activeTitle = useGameStore((state) => state.activeTitle);
+  const sp = useGameStore((state) => state.sp);
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(player.name);
@@ -61,20 +68,22 @@ export function BottomHUD() {
       }
       if (e.key === "i" || e.key === "I") toggleInventory();
       if (e.key === "q" || e.key === "Q") toggleQuestWindow();
+      if (e.key === "a" || e.key === "A") toggleAchievements();
+      if (e.key === "e" || e.key === "E") toggleEnchant();
       if (e.key === "1") {
-        const hp = inventory.find((it) => it.id === "red_potion");
+        const hp = inventory?.find((it) => it.id === "red_potion");
         if (hp && hp.quantity > 0) consumeItem("red_potion");
       }
       if (e.key === "2") {
-        const mp = inventory.find((it) => it.id === "blue_potion");
+        const mp = inventory?.find((it) => it.id === "blue_potion");
         if (mp && mp.quantity > 0) consumeItem("blue_potion");
       }
       if (e.key === "3") {
-        const sc = inventory.find((it) => it.id === "teleport_scroll");
+        const sc = inventory?.find((it) => it.id === "teleport_scroll");
         if (sc && sc.quantity > 0) consumeItem("teleport_scroll");
       }
     },
-    [consumeItem, inventory, toggleInventory, toggleQuestWindow],
+    [consumeItem, inventory, toggleInventory, toggleQuestWindow, toggleAchievements, toggleEnchant],
   );
 
   useEffect(() => {
@@ -114,13 +123,14 @@ export function BottomHUD() {
   return (
     <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-20 px-3 pb-2">
       <div
-        className="relative flex h-[92px] items-center gap-3 overflow-hidden rounded-[26px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(14,18,28,0.96),rgba(4,6,12,0.98))] px-3 shadow-[0_-10px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,228,168,0.05)]"
+        className="relative flex min-h-[104px] items-center gap-4 overflow-hidden rounded-[28px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(14,18,28,0.96),rgba(4,6,12,0.98))] px-4 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,228,168,0.05)]"
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,128,0.09),transparent_28%),linear-gradient(90deg,transparent,rgba(119,168,255,0.04),transparent)]" />
+        <div className="absolute inset-[10px] rounded-[22px] border border-white/5" />
 
         <div className="relative flex shrink-0 items-center gap-3">
           <div
-            className="relative flex h-[64px] w-[64px] items-center justify-center rounded-full border text-[22px] font-bold"
+            className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full border text-[22px] font-bold"
             style={{
               borderColor: `${classColor}99`,
               color: classColor,
@@ -135,7 +145,7 @@ export function BottomHUD() {
             </div>
           </div>
 
-          <div className="w-[240px]">
+          <div className="w-[252px]">
             <div className="mb-1 flex items-end justify-between">
               <div>
                 {editingName ? (
@@ -162,7 +172,11 @@ export function BottomHUD() {
                   </button>
                 )}
                 <div className="text-[10px] uppercase tracking-[0.22em] text-[#b79660]">
-                  {classLabel}
+                  {activeTitle ? (
+                    <span className="text-[#f0c040]">[{activeTitle}]</span>
+                  ) : (
+                    classLabel
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
@@ -187,7 +201,7 @@ export function BottomHUD() {
 
         <div className="relative flex shrink-0 gap-2">
           {QUICK_SLOTS.map((slot) => {
-            const invItem = slot.itemId ? inventory.find((it) => it.id === slot.itemId) : null;
+            const invItem = slot.itemId ? inventory?.find((it) => it.id === slot.itemId) : null;
             const count = invItem?.quantity ?? 0;
             const active = !!slot.itemId && count > 0;
             return (
@@ -197,7 +211,7 @@ export function BottomHUD() {
                 onClick={() => {
                   if (slot.itemId && count > 0) consumeItem(slot.itemId);
                 }}
-                className="group relative flex h-[62px] w-[52px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[14px] border px-1 py-1.5 text-[9px] transition"
+                className="group relative flex h-[66px] w-[56px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[16px] border px-1 py-1.5 text-[9px] transition"
                 style={{
                   cursor: active ? "pointer" : "default",
                   borderColor: active ? `${slot.color}77` : "rgba(120,120,140,0.24)",
@@ -226,7 +240,13 @@ export function BottomHUD() {
 
         <Divider />
 
-        <div className="relative min-w-[118px] shrink-0">
+        <div className="relative flex shrink-0 items-center">
+          <SkillBar />
+        </div>
+
+        <Divider />
+
+        <div className="relative min-w-[148px] shrink-0 rounded-[18px] border border-white/6 bg-white/[0.03] px-3 py-2.5">
           <div className="text-[10px] uppercase tracking-[0.26em] text-[#af9166]">지역</div>
           <div className="mt-1 text-[13px] font-semibold text-[#f5e8c3]">{MAPS[currentMapId]?.name ?? currentMapId}</div>
           <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#9f8560]">{serverName}</div>
@@ -236,6 +256,13 @@ export function BottomHUD() {
               {player.gold.toLocaleString()}
             </span>
           </div>
+          {sp > 0 && (
+            <div className="mt-1 flex items-center gap-1">
+              <span className="animate-pulse rounded-full border border-[#f0c040]/50 bg-[#f0c040]/10 px-2 py-0.5 text-[9px] font-bold text-[#f0c040]">
+                SP +{sp}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="relative ml-auto flex items-center gap-2">
@@ -243,7 +270,7 @@ export function BottomHUD() {
             <div
               key={buff.id}
               title={`${buff.name} (${buff.remaining}s)`}
-              className="flex h-[38px] w-[38px] items-center justify-center rounded-[12px] border border-emerald-300/20 bg-[linear-gradient(180deg,rgba(38,84,58,0.48),rgba(8,18,14,0.92))] text-[10px] text-emerald-100 shadow-[0_0_18px_rgba(84,214,145,0.12)]"
+              className="flex h-[40px] w-[40px] items-center justify-center rounded-[14px] border border-emerald-300/20 bg-[linear-gradient(180deg,rgba(38,84,58,0.48),rgba(8,18,14,0.92))] text-[10px] text-emerald-100 shadow-[0_0_18px_rgba(84,214,145,0.12)]"
             >
               축
             </div>
@@ -251,6 +278,15 @@ export function BottomHUD() {
 
           <HudButton active={ui.inventoryOpen} label="[I] 인벤" onClick={toggleInventory} />
           <HudButton active={ui.questWindowOpen} label="[Q] 퀘스트" onClick={toggleQuestWindow} />
+          <div className="relative">
+            <HudButton active={ui.achievementsOpen} label="[A] 업적" onClick={toggleAchievements} />
+            {claimableAchievements > 0 && (
+              <div className="pointer-events-none absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#f0c040] text-[8px] font-bold text-[#1a0f00]">
+                {claimableAchievements}
+              </div>
+            )}
+          </div>
+          <HudButton active={ui.enchantOpen} label="[E] 강화" onClick={toggleEnchant} />
         </div>
       </div>
     </div>
