@@ -12,7 +12,7 @@ export type FrameFamily =
   | "golem"
   | "skeleton";
 
-export type WeaponKind = "blade" | "bow" | "staff" | "none";
+export type WeaponKind = "blade" | "dagger" | "sword" | "greatsword" | "bow" | "staff" | "none";
 
 export type PalettePack = {
   base: string;
@@ -52,7 +52,34 @@ export const REMASTER_UNIT_PACKS: PalettePack[] = [
     secondary: 0x243f8a,
     tertiary: 0xd6e6ff,
     accent: 0x2d3960,
-    weapon: "blade",
+    weapon: "sword",
+  },
+  {
+    base: "anim_player_guardian_dagger",
+    family: "humanoid",
+    primary: 0x8aa6ff,
+    secondary: 0x1e356f,
+    tertiary: 0xdeebff,
+    accent: 0x23304f,
+    weapon: "dagger",
+  },
+  {
+    base: "anim_player_guardian_sword",
+    family: "humanoid",
+    primary: 0x809eff,
+    secondary: 0x243f8a,
+    tertiary: 0xd6e6ff,
+    accent: 0x2d3960,
+    weapon: "sword",
+  },
+  {
+    base: "anim_player_guardian_greatsword",
+    family: "humanoid",
+    primary: 0x7895f1,
+    secondary: 0x1e326a,
+    tertiary: 0xd9e6ff,
+    accent: 0x213151,
+    weapon: "greatsword",
   },
   {
     base: "anim_player_ranger",
@@ -79,7 +106,34 @@ export const REMASTER_UNIT_PACKS: PalettePack[] = [
     secondary: 0x5d3d19,
     tertiary: 0xffefb5,
     accent: 0x5a4421,
-    weapon: "blade",
+    weapon: "sword",
+  },
+  {
+    base: "anim_player_sovereign_dagger",
+    family: "humanoid",
+    primary: 0xdcbe72,
+    secondary: 0x5d3116,
+    tertiary: 0xfff0bc,
+    accent: 0x4e331a,
+    weapon: "dagger",
+  },
+  {
+    base: "anim_player_sovereign_sword",
+    family: "humanoid",
+    primary: 0xd8bb6c,
+    secondary: 0x5d3d19,
+    tertiary: 0xffefb5,
+    accent: 0x5a4421,
+    weapon: "sword",
+  },
+  {
+    base: "anim_player_sovereign_greatsword",
+    family: "humanoid",
+    primary: 0xd4b25b,
+    secondary: 0x533412,
+    tertiary: 0xffeab3,
+    accent: 0x4a3317,
+    weapon: "greatsword",
   },
   {
     base: "anim_npc_weapon",
@@ -232,7 +286,7 @@ export function getRemasterFrameDefinitions(): RemasterFrameDefinition[] {
         });
       });
 
-      [0, 1, 2, 3].forEach((frame) => {
+      [0, 1, 2].forEach((frame) => {
         definitions.push({
           key: `${pack.base}_walk_${direction}_${frame}`,
           base: pack.base,

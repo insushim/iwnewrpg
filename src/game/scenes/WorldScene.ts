@@ -3576,6 +3576,54 @@ export class WorldScene extends Phaser.Scene {
         : sprite.animState === "attack"
           ? [-1, -3.5, 2, 0][sprite.animFrame % 4]
           : 0;
+    const walkSway =
+      sprite.animState === "walk"
+        ? ({
+            n: [0, 0.5, -0.5],
+            ne: [1.4, 2.8, 1],
+            e: [1.8, 3.2, 1.2],
+            se: [1.4, 2.6, 1],
+            s: [0, 0.7, -0.7],
+            sw: [-1.4, -2.8, -1],
+            w: [-1.8, -3.2, -1.2],
+            nw: [-1.4, -2.6, -1],
+          } as const)[sprite.facing][sprite.animFrame % 3]
+        : sprite.animState === "attack"
+          ? ({
+              n: 0,
+              ne: 1.4,
+              e: 1.8,
+              se: 1.4,
+              s: 0,
+              sw: -1.4,
+              w: -1.8,
+              nw: -1.4,
+            } as const)[sprite.facing]
+          : 0;
+    const walkLean =
+      sprite.animState === "walk"
+        ? ({
+            n: 0,
+            ne: 0.04,
+            e: 0.06,
+            se: 0.035,
+            s: 0,
+            sw: -0.035,
+            w: -0.06,
+            nw: -0.04,
+          } as const)[sprite.facing]
+        : sprite.animState === "attack"
+          ? ({
+              n: 0,
+              ne: 0.07,
+              e: 0.09,
+              se: 0.05,
+              s: 0,
+              sw: -0.05,
+              w: -0.09,
+              nw: -0.07,
+            } as const)[sprite.facing]
+          : 0;
     const pulseBase =
       "playerId" in sprite && sprite.playerId === this.selfId
         ? 0.2
@@ -3592,9 +3640,14 @@ export class WorldScene extends Phaser.Scene {
           : sprite.monsterId === this.selectedMonsterId
             ? 1.03
             : 0.95;
+    sprite.spriteBody.x = walkSway;
     sprite.spriteBody.y = bob;
+    sprite.spriteBody.rotation = walkLean;
+    sprite.glowBody.x = walkSway * 0.72;
     sprite.glowBody.y = bob - 1;
+    sprite.glowBody.rotation = walkLean * 0.8;
     sprite.glowBody.alpha = pulseBase + Math.sin(now / 180) * 0.04;
+    sprite.auraRing.x = walkSway * 0.2;
     sprite.auraRing.y = 10 + bob * 0.2;
     sprite.auraRing.scaleX = auraPulse + Math.sin(now / 220) * 0.04;
     sprite.auraRing.scaleY = auraPulse * 0.82 + Math.cos(now / 260) * 0.03;

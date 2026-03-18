@@ -32,7 +32,7 @@ export function registerRemasterUnitTextures(scene: Phaser.Scene) {
           state: "idle",
         }),
       );
-      [0, 1, 2, 3].forEach((frame) =>
+      [0, 1, 2].forEach((frame) =>
         createFrame(scene, `${pack.base}_walk_${direction}_${frame}`, {
           ...pack,
           direction,
@@ -74,7 +74,7 @@ function createFrame(scene: Phaser.Scene, key: string, spec: FrameSpec) {
 
   const bob =
     spec.state === "walk"
-      ? [0, 4, 1, 3][spec.frame % 4]
+      ? [0, 4, 1][spec.frame % 3]
       : isBowAttack
         ? [-1, -4, 0, -1][spec.frame % 4]   // 활: 살짝 뒤로 당기는 자세
         : spec.state === "attack"
@@ -82,7 +82,7 @@ function createFrame(scene: Phaser.Scene, key: string, spec: FrameSpec) {
           : [0, -1][spec.frame % 2];
   const stride =
     spec.state === "walk"
-      ? [-6, 6, -3, 3][spec.frame % 4]
+      ? [-6, 6, -2][spec.frame % 3]
       : isBowAttack
         ? [0, -3, 2, 0][spec.frame % 4]     // 활: 뒤로 체중이동 후 release
         : spec.state === "attack"
@@ -116,107 +116,112 @@ function drawHumanoid(
   stride: number,
   swing: number,
 ) {
+  const isDagger = spec.weapon === "dagger";
+  const isGreatsword = spec.weapon === "greatsword";
+  const facingFront = dir.y > 0;
+  const facingBack = dir.y < 0;
+  const sideBias = Math.abs(dir.x);
+  const diagonalBias = sideBias > 0 && dir.y !== 0;
+  const shoulderWidth = facingFront ? 38 : facingBack ? 32 : sideBias ? 30 : 36;
+  const cloakWidth = (isGreatsword ? 28 : isDagger ? 20 : 24) + (facingBack ? 5 : sideBias ? -2 : 0);
+  const torsoY = (isGreatsword ? y - 12 : y - 10) + (facingBack ? 2 : 0);
+  const torsoHeight = (isGreatsword ? 36 : 34) + (facingFront ? 2 : facingBack ? -2 : 0);
+  const torsoInset = facingBack ? 2 : 0;
+  const headY = y - 24 + (facingBack ? 1 : facingFront ? -1 : 0);
+  const headRadius = facingBack ? 12 : 13;
+  const leftArmX = isDagger
+    ? x - 22 - dir.x * 3 - sideBias
+    : isGreatsword
+      ? x - 30 - dir.x * 5 - sideBias
+      : x - 26 - dir.x * 4 - sideBias;
+  const rightArmX = isDagger
+    ? x + 14 + dir.x * 3 + sideBias
+    : isGreatsword
+      ? x + 22 + dir.x * 5 + sideBias
+      : x + 18 + dir.x * 4 + sideBias;
+  const armY = (isGreatsword ? y + 0 : y + 2) + (facingBack ? 1 : 0);
+  const armHeight = (isDagger ? 19 : isGreatsword ? 25 : 21) + (facingFront ? 1 : 0);
+  const frontArmTint = facingFront ? color(lighten(spec.tertiary, 8)) : color(spec.tertiary);
+  const backArmTint = facingBack ? color(darken(spec.tertiary, 10), 0.92) : color(spec.tertiary, 0.88);
+  const frontLegTint = facingFront ? color(lighten(spec.accent, 8)) : color(spec.accent);
+  const backLegTint = facingBack ? color(darken(spec.accent, 8), 0.88) : color(spec.accent, 0.9);
+  const frontShadowTint = color(0x000000, facingFront ? 0.1 : 0.14);
+  const backShadowTint = color(0x000000, facingBack ? 0.18 : 0.12);
+  const leftInFront = dir.x >= 0;
+  const leftLegX = x - 13 + stride + (isDagger ? 1 : isGreatsword ? -2 : 0);
+  const rightLegX = x + 5 - stride + (isDagger ? -1 : isGreatsword ? 2 : 0);
+  const legHeight = isGreatsword ? 24 : 22;
+
   ellipse(ctx, x, y + 36, 54, 16, color(0x04080d, 0.34));
 
   const cloak = ctx.createLinearGradient(x, y - 34, x, y + 28);
   cloak.addColorStop(0, color(lighten(spec.secondary, 18), 0.95));
   cloak.addColorStop(1, color(darken(spec.secondary, 22), 0.94));
-  triangle(
-    ctx,
-    x - 24,
-    y + 26,
-    x,
-    y - 28,
-    x + 24,
-    y + 26,
-    cloak,
-  );
+  triangle(ctx, x - cloakWidth, y + 28, x, y - (facingBack ? 30 : 28), x + cloakWidth, y + 28, cloak);
+  if (facingBack) {
+    roundRect(ctx, x - 14, y - 16, 28, 8, 4, color(spec.secondary, 0.5));
+  }
 
   const torso = ctx.createLinearGradient(x, y - 16, x, y + 28);
   torso.addColorStop(0, color(lighten(spec.primary, 18)));
   torso.addColorStop(1, color(darken(spec.primary, 18)));
-  roundRect(ctx, x - 18, y - 10, 36, 34, 12, torso);
-  roundRect(ctx, x - 16, y + 7, 32, 10, 5, color(spec.primary, 0.26));
-  roundRect(ctx, x - 17, y + 7, 34, 4, 4, color(0xffffff, 0.08));
-
-  roundRect(
-    ctx,
-    x - 26 - dir.x * 4,
-    y + 2,
-    8,
-    21,
-    4,
-    color(spec.tertiary),
-  );
-  roundRect(
-    ctx,
-    x + 18 + dir.x * 4,
-    y + 2,
-    8,
-    21,
-    4,
-    color(spec.tertiary),
-  );
-  roundRect(
-    ctx,
-    x - 26 - dir.x * 4,
-    y + 14,
-    8,
-    9,
-    4,
-    color(0x000000, 0.12),
-  );
-  roundRect(
-    ctx,
-    x + 18 + dir.x * 4,
-    y + 14,
-    8,
-    9,
-    4,
-    color(0x000000, 0.12),
-  );
-  if (spec.weapon === "blade") {
-    roundRect(ctx, x - 20, y - 4, 40, 5, 3, color(spec.secondary, 0.9));
-    triangle(ctx, x - 16, y - 6, x - 24, y - 20, x - 8, y - 12, color(spec.secondary, 0.7));
-  } else if (spec.weapon === "bow") {
-    roundRect(ctx, x - 19, y - 6, 38, 4, 3, color(spec.secondary, 0.82));
-    roundRect(ctx, x - 8, y + 0, 16, 5, 3, color(spec.primary, 0.4));
-  } else if (spec.weapon === "staff") {
-    triangle(ctx, x - 16, y - 6, x, y - 26, x + 16, y - 6, color(spec.secondary, 0.68));
-    ellipse(ctx, x, y - 14, 18, 8, color(spec.tertiary, 0.18));
+  roundRect(ctx, x - shoulderWidth / 2, torsoY, shoulderWidth, torsoHeight, 12, torso);
+  roundRect(ctx, x - (shoulderWidth / 2 - torsoInset), y + 7, shoulderWidth - torsoInset * 2, 10, 5, color(spec.primary, facingBack ? 0.18 : 0.26));
+  roundRect(ctx, x - shoulderWidth / 2 + 1, y + 7, shoulderWidth - 2, 4, 4, color(0xffffff, facingBack ? 0.04 : 0.08));
+  if (facingFront) {
+    roundRect(ctx, x - 8, y - 6, 16, 8, 4, color(spec.tertiary, 0.22));
+  } else if (diagonalBias) {
+    roundRect(ctx, x - 11 + dir.x * 2, y - 6, 14, 7, 4, color(spec.tertiary, 0.16));
   }
 
-  const head = ctx.createRadialGradient(x - 5, y - 29, 3, x, y - 22, 18);
+  const backArmX = leftInFront ? rightArmX : leftArmX;
+  const frontArmX = leftInFront ? leftArmX : rightArmX;
+  roundRect(ctx, backArmX, armY, 8, armHeight - (sideBias ? 1 : 0), 4, backArmTint);
+  roundRect(ctx, backArmX, y + (isGreatsword ? 16 : 14), 8, 9, 4, backShadowTint);
+  roundRect(ctx, frontArmX, armY - (facingFront ? 1 : 0), 8, armHeight, 4, frontArmTint);
+  roundRect(ctx, frontArmX, y + (isGreatsword ? 16 : 14), 8, 9, 4, frontShadowTint);
+  if (spec.weapon === "dagger") {
+    roundRect(ctx, x - 16 + dir.x, y - 2 + (facingBack ? 1 : 0), 32, 4, 3, color(spec.secondary, 0.76));
+    triangle(ctx, x + 6 + dir.x, y - 4, x + 18 + dir.x * 2, y - 8, x + 8 + dir.x, y + 2, color(spec.tertiary, 0.55));
+    roundRect(ctx, x - 6, y + 0, 12, 4, 2, color(spec.accent, 0.82));
+  } else if (spec.weapon === "greatsword") {
+    roundRect(ctx, x - 24 + dir.x * 2, y - 6 + (facingBack ? 1 : 0), 48, 6, 3, color(spec.secondary, 0.92));
+    triangle(ctx, x - 20 + dir.x, y - 8, x - 32 + dir.x, y - 26, x - 8 + dir.x * 2, y - 18, color(spec.secondary, 0.72));
+    roundRect(ctx, x - 7, y + 0, 14, 5, 2, color(spec.accent, 0.88));
+  } else if (spec.weapon === "sword" || spec.weapon === "blade") {
+    roundRect(ctx, x - 20 + dir.x * 2, y - 4 + (facingBack ? 1 : 0), 40, 5, 3, color(spec.secondary, 0.9));
+    triangle(ctx, x - 16 + dir.x, y - 6, x - 24 + dir.x, y - 20, x - 8 + dir.x * 2, y - 12, color(spec.secondary, 0.7));
+  } else if (spec.weapon === "bow") {
+    roundRect(ctx, x - 19 + dir.x, y - 6, 38, 4, 3, color(spec.secondary, 0.82));
+    roundRect(ctx, x - 8, y + 0, 16, 5, 3, color(spec.primary, 0.4));
+  } else if (spec.weapon === "staff") {
+    triangle(ctx, x - 16 + dir.x, y - 6, x + dir.x, y - 26, x + 16 + dir.x, y - 6, color(spec.secondary, 0.68));
+    ellipse(ctx, x + dir.x, y - 14, 18, 8, color(spec.tertiary, 0.18));
+  }
+
+  const head = ctx.createRadialGradient(x - 5, headY - 5, 3, x, headY + 2, 18);
   head.addColorStop(0, color(lighten(spec.tertiary, 12)));
   head.addColorStop(1, color(darken(spec.tertiary, 8)));
-  circle(ctx, x, y - 24, 13, head);
-  ellipse(ctx, x - 3, y - 27, 16, 7, color(0xffffff, 0.18));
-  circle(ctx, x - 5 + dir.x * 1.5, y - 25, 1.8, color(0x111111, 0.5));
-  circle(ctx, x + 5 + dir.x * 1.5, y - 25, 1.8, color(0x111111, 0.5));
+  circle(ctx, x, headY, headRadius, head);
+  ellipse(ctx, x - 3 + dir.x, headY - 3, facingBack ? 11 : 16, facingBack ? 5 : 7, color(0xffffff, facingBack ? 0.08 : 0.18));
+  if (!facingBack) {
+    if (sideBias) {
+      circle(ctx, x + 4 * dir.x, headY - 1, 2.1, color(0x111111, 0.52));
+    } else {
+      circle(ctx, x - 5 + dir.x * 1.5, headY - 1, 1.8, color(0x111111, 0.5));
+      circle(ctx, x + 5 + dir.x * 1.5, headY - 1, 1.8, color(0x111111, 0.5));
+    }
+  }
 
-  roundRect(ctx, x - 13 + stride, y + 23, 8, 22, 4, color(spec.accent));
-  roundRect(ctx, x + 5 - stride, y + 23, 8, 22, 4, color(spec.accent));
-  roundRect(
-    ctx,
-    x - 13 + stride,
-    y + 36,
-    8,
-    9,
-    4,
-    color(0x000000, 0.14),
-  );
-  roundRect(
-    ctx,
-    x + 5 - stride,
-    y + 36,
-    8,
-    9,
-    4,
-    color(0x000000, 0.14),
-  );
+  const backLegX = leftInFront ? rightLegX : leftLegX;
+  const frontLegX = leftInFront ? leftLegX : rightLegX;
+  roundRect(ctx, backLegX, y + 23, 8, legHeight - (sideBias ? 1 : 0), 4, backLegTint);
+  roundRect(ctx, backLegX, y + 36, 8, 9, 4, backShadowTint);
+  roundRect(ctx, frontLegX, y + 23, 8, legHeight, 4, frontLegTint);
+  roundRect(ctx, frontLegX, y + 36, 8, 9, 4, frontShadowTint);
 
   drawWeapon(ctx, spec.weapon ?? "none", x, y, dir, swing, spec.accent);
-  strokeRoundRect(ctx, x - 18, y - 10, 36, 34, 12, color(0xffffff, 0.08), 1.5);
+  strokeRoundRect(ctx, x - shoulderWidth / 2, torsoY, shoulderWidth, torsoHeight, 12, color(0xffffff, facingBack ? 0.04 : 0.08), 1.5);
 }
 
 function drawSlime(
@@ -396,21 +401,50 @@ function drawWeapon(
     return;
   }
 
-  if (weapon === "blade") {
-    roundRect(ctx, x + 13 + dir.x * 5, y - 2 - swing, 5, 14, 2, color(0xc79a4e));
+  const depthTilt = dir.y < 0 ? -4 : dir.y > 0 ? 3 : 0;
+  const sideReach = Math.abs(dir.x) > 0 ? 5 : 0;
+
+  if (weapon === "dagger") {
+    roundRect(ctx, x + 15 + dir.x * 4 + sideReach, y + 1 + depthTilt - swing * 0.55, 4, 12, 2, color(0xc28b47));
     triangle(
       ctx,
-      x + 18 + dir.x * 5,
-      y - 18 - swing,
-      x + 38 + dir.x * 7,
-      y - 9 - swing,
-      x + 18 + dir.x * 5,
-      y - 1 - swing,
+      x + 19 + dir.x * 4 + sideReach,
+      y - 6 + depthTilt - swing * 0.55,
+      x + 31 + dir.x * 5 + sideReach,
+      y - 2 + depthTilt - swing * 0.55,
+      x + 19 + dir.x * 4 + sideReach,
+      y + 2 + depthTilt - swing * 0.55,
+      color(0xe4edf2),
+    );
+    roundRect(ctx, x + 13 + dir.x * 4 + sideReach, y - 1 + depthTilt - swing * 0.55, 9, 4, 2, color(accent));
+  } else if (weapon === "greatsword") {
+    roundRect(ctx, x + 12 + dir.x * 6 + sideReach, y - 6 + depthTilt - swing * 1.1, 6, 18, 2, color(0xb9853d));
+    triangle(
+      ctx,
+      x + 18 + dir.x * 6 + sideReach,
+      y - 28 + depthTilt - swing * 1.1,
+      x + 46 + dir.x * 9 + sideReach,
+      y - 15 + depthTilt - swing * 1.1,
+      x + 18 + dir.x * 6 + sideReach,
+      y - 2 + depthTilt - swing * 1.1,
       color(0xe2ebf0),
     );
-    roundRect(ctx, x + 11 + dir.x * 5, y - 3 - swing, 10, 5, 2, color(accent));
+    roundRect(ctx, x + 8 + dir.x * 6 + sideReach, y - 4 + depthTilt - swing * 1.1, 14, 6, 2, color(accent));
+  } else if (weapon === "sword" || weapon === "blade") {
+    roundRect(ctx, x + 13 + dir.x * 5 + sideReach, y - 2 + depthTilt - swing, 5, 14, 2, color(0xc79a4e));
+    triangle(
+      ctx,
+      x + 18 + dir.x * 5 + sideReach,
+      y - 18 + depthTilt - swing,
+      x + 38 + dir.x * 7 + sideReach,
+      y - 9 + depthTilt - swing,
+      x + 18 + dir.x * 5 + sideReach,
+      y - 1 + depthTilt - swing,
+      color(0xe2ebf0),
+    );
+    roundRect(ctx, x + 11 + dir.x * 5 + sideReach, y - 3 + depthTilt - swing, 10, 5, 2, color(accent));
   } else if (weapon === "bow") {
-    const bx = x + 24 + dir.x * 4;
+    const bx = x + 24 + dir.x * 4 + sideReach;
     // 활 몸체
     strokeEllipse(ctx, bx, y + 3, 16, 34, color(0x7a4c1d), 3);
     if (swing < -2) {
@@ -430,12 +464,12 @@ function drawWeapon(
       strokeLine(ctx, bx, y - 14, bx, y + 20, color(0xdac9ab, 0.9), 1.6);
     }
   } else if (weapon === "staff") {
-    const sx = x + 18 + dir.x * 4;
-    roundRect(ctx, sx, y - 16 - swing * 0.4, 4, 34, 2, color(0x7a4c1d));
+    const sx = x + 18 + dir.x * 4 + sideReach;
+    roundRect(ctx, sx, y - 16 + depthTilt - swing * 0.4, 4, 34, 2, color(0x7a4c1d));
     // 마법구: swing에 따라 밝아짐
     const glowR = 9 + swing * 0.3;
-    circle(ctx, sx + 2, y - 20 - swing * 0.4, glowR, color(0x8cc7ff, 0.12 + swing * 0.015));
-    circle(ctx, sx + 2, y - 20 - swing * 0.4, 4.5, color(0x8cc7ff));
+    circle(ctx, sx + 2, y - 20 + depthTilt - swing * 0.4, glowR, color(0x8cc7ff, 0.12 + swing * 0.015));
+    circle(ctx, sx + 2, y - 20 + depthTilt - swing * 0.4, 4.5, color(0x8cc7ff));
     if (swing > 8) {
       // 시전 순간 작은 마법 이펙트
       circle(ctx, sx + 12, y - 20, 3, color(0xffffff, 0.5));
