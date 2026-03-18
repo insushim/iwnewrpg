@@ -52,14 +52,15 @@ export function InventoryPanel() {
     !isSummonStone &&
     !isTamingStone &&
     (selectedItemData?.type === "consumable" ||
+      selectedItemData?.type === "scroll" ||
       selectedItemData?.id === "return_scroll" ||
       selectedItemData?.id === "teleport_scroll");
 
   const gearSlots = [
-    ["weapon", "WEAPON"],
-    ["armor", "ARMOR"],
-    ["helmet", "HELM"],
-    ["ring1", "RING"],
+    ["weapon", "무기"],
+    ["armor", "갑옷"],
+    ["helmet", "투구"],
+    ["ring1", "반지"],
   ] as const;
 
   if (!inventoryOpen) {
@@ -102,7 +103,7 @@ export function InventoryPanel() {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#f0d060] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-              ⚔ INVENTORY ⚔
+              ⚔ 인벤토리 ⚔
             </p>
             <div className="mt-1 h-px w-24 bg-gradient-to-r from-[#d4a647] to-transparent"></div>
           </div>
@@ -123,7 +124,7 @@ export function InventoryPanel() {
                   "inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3)",
               }}
             >
-              ✕ CLOSE
+              ✕ 닫기
             </button>
           </div>
         </div>
@@ -138,7 +139,7 @@ export function InventoryPanel() {
         >
           <div className="mb-3 text-center">
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d4a647] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-              ⚜ EQUIPPED GEAR ⚜
+              ⚜ 장착 장비 ⚜
             </p>
             <div className="mx-auto mt-1 h-px w-20 bg-gradient-to-r from-transparent via-[#d4a647] to-transparent"></div>
           </div>
@@ -189,7 +190,7 @@ export function InventoryPanel() {
         >
           <div className="mb-3 text-center">
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d4a647] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-              📦 ITEM STORAGE 📦
+              📦 아이템 보관함 📦
             </p>
             <div className="mx-auto mt-1 h-px w-24 bg-gradient-to-r from-transparent via-[#d4a647] to-transparent"></div>
           </div>
@@ -376,7 +377,7 @@ export function InventoryPanel() {
                       "inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.3)",
                   }}
                 >
-                  ✦ SUMMON
+                  ✦ 소환
                 </button>
               ) : isTamingStone ? (
                 <button
@@ -392,7 +393,7 @@ export function InventoryPanel() {
                       "inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.3)",
                   }}
                 >
-                  ♦ TAME
+                  ♦ 포획
                 </button>
               ) : usable ? (
                 <button
@@ -405,7 +406,7 @@ export function InventoryPanel() {
                       "inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.3)",
                   }}
                 >
-                  🍶 USE
+                  🍶 사용
                 </button>
               ) : null}
               {equippable && (
@@ -419,7 +420,7 @@ export function InventoryPanel() {
                       "inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3)",
                   }}
                 >
-                  ⚔ EQUIP
+                  ⚔ 장착
                 </button>
               )}
             </div>

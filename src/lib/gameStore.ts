@@ -180,6 +180,9 @@ type EnchantOutcome = {
 type GameStore = {
   player: PlayerSnapshot;
   serverName: string;
+  grade: number;
+  usedWordIds: Set<string>;
+  wrongWordIds: Set<string>;
   currentMapId: string;
   pendingLevelUp: boolean;
   pendingDailyBonus: boolean;
@@ -204,6 +207,9 @@ type GameStore = {
   quiz: QuizState;
   setPlayer: (player: Partial<PlayerSnapshot>) => void;
   setServerName: (serverName: string) => void;
+  setGrade: (grade: number) => void;
+  markWordUsed: (wordId: string) => void;
+  markWordWrong: (wordId: string) => void;
   setInventory: (items: InventoryItem[]) => void;
   setEquipment: (equipment: EquipmentState) => void;
   setQuests: (quests: QuestProgress[]) => void;
@@ -213,7 +219,11 @@ type GameStore = {
   checkDailyLogin: () => void;
   claimAchievement: (achievementId: string) => void;
   registerKill: (monsterId: string, isBoss: boolean) => void;
-  updateAchievementProgress: (trackType: string, value: number, mode?: "add" | "max" | "set") => void;
+  updateAchievementProgress: (
+    trackType: string,
+    value: number,
+    mode?: "add" | "max" | "set",
+  ) => void;
   setTitle: (title: string) => void;
   addDroppedLoot: (items: DroppedLoot[]) => void;
   removeDroppedLoot: (lootId: string) => void;
@@ -311,12 +321,14 @@ const INITIAL_QUESTS: QuestProgress[] = QUESTS.map((quest) => ({
   progress: 0,
 }));
 
-const INITIAL_ACHIEVEMENTS: AchievementState[] = ACHIEVEMENTS.map((achievement) => ({
-  id: achievement.id,
-  progress: 0,
-  completed: false,
-  claimed: false,
-}));
+const INITIAL_ACHIEVEMENTS: AchievementState[] = ACHIEVEMENTS.map(
+  (achievement) => ({
+    id: achievement.id,
+    progress: 0,
+    completed: false,
+    claimed: false,
+  }),
+);
 
 const INITIAL_SYSTEM_TIMESTAMP = 0;
 
@@ -336,6 +348,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     buffs: [{ id: "starter-blessing", name: "초심자의 축복", remaining: 1200 }],
   },
   serverName: "아스카론 01",
+  grade: 3,
+  usedWordIds: new Set<string>(),
+  wrongWordIds: new Set<string>(),
   currentMapId: "speakingIsland",
   pendingLevelUp: false,
   pendingDailyBonus: false,
@@ -405,6 +420,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       },
     })),
   setServerName: (serverName) => set(() => ({ serverName })),
+  setGrade: (grade) =>
+    set(() => ({ grade, usedWordIds: new Set(), wrongWordIds: new Set() })),
+  markWordUsed: (wordId) =>
+    set((state) => {
+      const next = new Set(state.usedWordIds);
+      next.add(wordId);
+      return { usedWordIds: next };
+    }),
+  markWordWrong: (wordId) =>
+    set((state) => {
+      const next = new Set(state.wrongWordIds);
+      next.add(wordId);
+      return { wrongWordIds: next };
+    }),
   setInventory: (items) => set(() => ({ inventory: items })),
   setEquipment: (equipment) => set(() => ({ equipment })),
   setQuests: (quests) => set(() => ({ quests })),
@@ -460,12 +489,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
-      const playerWithGold = { ...state.player, gold: state.player.gold + reward.gold };
+      const playerWithGold = {
+        ...state.player,
+        gold: state.player.gold + reward.gold,
+      };
       const nextPlayer = applyExpReward(playerWithGold, reward.exp);
 
       const updatedAchievements = state.achievements.map((ach) => {
         const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
-        if (!def || ach.completed || def.trackType !== "login_streak") return ach;
+        if (!def || ach.completed || def.trackType !== "login_streak")
+          return ach;
         const newProg = Math.max(ach.progress, state.loginStreak);
         return { ...ach, progress: newProg, completed: newProg >= def.goal };
       });
@@ -497,7 +530,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (def.rewards.itemId) {
         const itemData = ITEMS[def.rewards.itemId];
         if (itemData) {
-          const existing = nextInventory.find((e) => e.id === def.rewards.itemId);
+          const existing = nextInventory.find(
+            (e) => e.id === def.rewards.itemId,
+          );
           if (existing && itemData.stackable) {
             existing.quantity += 1;
           } else {
@@ -507,7 +542,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
               quantity: 1,
               rarity: itemData.rarity,
               type: itemData.type,
-              uid: itemData.stackable ? undefined : `uid_${crypto.randomUUID()}`,
+              uid: itemData.stackable
+                ? undefined
+                : `uid_${crypto.randomUUID()}`,
               enchantLevel: itemData.stackable ? undefined : 0,
             });
           }
@@ -582,7 +619,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         bossKills: newBossKills,
         achievements: updatedAchievements,
         ...(newMessages.length > 0 && {
-          chat: [...state.chat.slice(-(50 - newMessages.length)), ...newMessages],
+          chat: [
+            ...state.chat.slice(-(50 - newMessages.length)),
+            ...newMessages,
+          ],
         }),
       };
     }),
@@ -592,9 +632,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
         if (!def || ach.completed || def.trackType !== trackType) return ach;
         const newProg =
-          mode === "set" ? value :
-          mode === "max" ? Math.max(ach.progress, value) :
-          ach.progress + value;
+          mode === "set"
+            ? value
+            : mode === "max"
+              ? Math.max(ach.progress, value)
+              : ach.progress + value;
         return { ...ach, progress: newProg, completed: newProg >= def.goal };
       });
       return { achievements: updatedAchievements };
@@ -861,18 +903,69 @@ export const useGameStore = create<GameStore>((set, get) => ({
         )
         .filter((entry) => entry.quantity > 0);
 
+      let newHp = Math.min(
+        derived.maxHp,
+        state.player.hp + (itemData.stats.hp ?? 0),
+      );
+      let newMp = Math.min(
+        derived.maxMp,
+        state.player.mp + (itemData.stats.mp ?? 0),
+      );
+      let effectMsg = `${itemData.name}을(를) 사용했습니다.`;
+      const newBuffs = [...state.player.buffs];
+
+      // 순간이동 주문서 - 근처 랜덤 위치로 이동
+      if (itemId === "teleport_scroll") {
+        const EventBus = (globalThis as Record<string, unknown>).__eventBus as
+          | { emit?: (e: string, d: unknown) => void }
+          | undefined;
+        EventBus?.emit?.("teleport_random", {});
+        effectMsg = "순간이동 주문서를 사용했습니다! 근처로 이동합니다.";
+      }
+
+      // 귀환 주문서 - 마을로 귀환
+      if (itemId === "return_scroll") {
+        const EventBus = (globalThis as Record<string, unknown>).__eventBus as
+          | { emit?: (e: string, d: unknown) => void }
+          | undefined;
+        EventBus?.emit?.("return_to_town", {});
+        effectMsg = "귀환 주문서를 사용했습니다! 마을로 돌아갑니다.";
+      }
+
+      // 초록 물약 (헤이스트) - 공격/이동 속도 버프
+      if (itemId === "haste_potion") {
+        newBuffs.push({
+          id: "haste_" + Date.now(),
+          name: "신속",
+          remaining: 30,
+        });
+        effectMsg = "초록 물약을 마셨습니다! 30초간 이동/공격 속도 증가!";
+      }
+
+      // 경험치 물약 - 30초간 경험치 50% 증가 버프
+      if (itemId === "exp_potion") {
+        newBuffs.push({
+          id: "exp_boost_" + Date.now(),
+          name: "경험치 부스트",
+          remaining: 30,
+        });
+        effectMsg = "경험치 물약을 사용했습니다! 30초간 경험치 50% 증가!";
+      }
+
+      // 완전 회복약
+      if (itemId === "full_restore") {
+        newHp = derived.maxHp;
+        newMp = derived.maxMp;
+        effectMsg = "완전 회복약을 사용했습니다! HP/MP 완전 회복!";
+      }
+
       return {
         inventory: nextInventory,
         player: {
           ...state.player,
-          hp: Math.min(
-            derived.maxHp,
-            state.player.hp + (itemData.stats.hp ?? 0),
-          ),
-          mp: Math.min(
-            derived.maxMp,
-            state.player.mp + (itemData.stats.mp ?? 0),
-          ),
+          hp: newHp,
+          mp: newMp,
+          buffs: newBuffs,
         },
         chat: [
           ...state.chat.slice(-48),
@@ -880,7 +973,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             id: crypto.randomUUID(),
             channel: "system",
             author: "시스템",
-            message: `${itemData.name}을 사용했습니다.`,
+            message: effectMsg,
             timestamp: Date.now(),
           },
         ],
@@ -982,7 +1075,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (weapon?.subtype === "bow" || player.className === "Ranger") {
       return {
         str: 2,
-        dex: 3 + derived.maxAttack + (weapon?.stats.rangedDamage ?? 0) + lvBonus,
+        dex:
+          3 + derived.maxAttack + (weapon?.stats.rangedDamage ?? 0) + lvBonus,
         int: 1,
       };
     }
@@ -1020,15 +1114,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         })
         .filter(Boolean) as InventoryItem[];
 
-      const nextInventory = (blessed
-        ? nextInventoryBase
-            .map((inv) => {
+      const nextInventory = (
+        blessed
+          ? nextInventoryBase.map((inv) => {
               if (inv.id === blessingId && inv.quantity > 0) {
                 return { ...inv, quantity: inv.quantity - 1 };
               }
               return inv;
             })
-        : nextInventoryBase)
+          : nextInventoryBase
+      )
         .map((inv) => {
           if (inv.id === scrollId && inv.quantity > 0) {
             return { ...inv, quantity: inv.quantity - 1 };
@@ -1041,14 +1136,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (result.result === "success") {
         updatedAchievements = state.achievements.map((ach) => {
           const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
-          if (!def || ach.completed || def.trackType !== "enchant_level") return ach;
+          if (!def || ach.completed || def.trackType !== "enchant_level")
+            return ach;
           const newProg = Math.max(ach.progress, result.newLevel);
           return { ...ach, progress: newProg, completed: newProg >= def.goal };
         });
       }
 
       const resultIcon =
-        result.result === "success" ? "✨" : result.result === "destroy" ? "💥" : "❌";
+        result.result === "success"
+          ? "✨"
+          : result.result === "destroy"
+            ? "💥"
+            : "❌";
       return {
         inventory: nextInventory,
         achievements: updatedAchievements,

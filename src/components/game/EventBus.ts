@@ -10,7 +10,13 @@ type LootPayloadItem = {
 type EventPayloadMap = {
   world_init: {
     selfId: string;
-    players: Array<{ id: string; name: string; mapId: string; x: number; y: number }>;
+    players: Array<{
+      id: string;
+      name: string;
+      mapId: string;
+      x: number;
+      y: number;
+    }>;
     monsters: Array<{
       id: string;
       mapId: string;
@@ -23,7 +29,13 @@ type EventPayloadMap = {
     }>;
   };
   player_joined: { id: string; name: string };
-  player_moved: { id: string; name: string; mapId: string; x: number; y: number };
+  player_moved: {
+    id: string;
+    name: string;
+    mapId: string;
+    x: number;
+    y: number;
+  };
   player_left: { id: string };
   monster_updated: {
     id: string;
@@ -82,6 +94,12 @@ type EventPayloadMap = {
     stoneId: string;
   };
   attempt_tame: Record<string, never>;
+  teleport_random: Record<string, never>;
+  return_to_town: Record<string, never>;
+  chat_bubble: {
+    playerId: string;
+    message: string;
+  };
 };
 
 type EventKey = keyof EventPayloadMap;
@@ -106,3 +124,6 @@ class TypedEventBus {
 }
 
 export const EventBus = new TypedEventBus();
+
+// gameStore에서 아이템 사용 시 EventBus에 접근할 수 있도록 글로벌 등록
+(globalThis as Record<string, unknown>).__eventBus = EventBus;

@@ -19,11 +19,14 @@ export class PreloadScene extends Phaser.Scene {
     const savedRaw = localStorage.getItem("iwnewrpg_save");
     if (savedRaw) {
       try {
-        const { name, className, serverName } = JSON.parse(savedRaw);
+        const { name, className, serverName, grade } = JSON.parse(savedRaw);
         const store = useGameStore.getState();
         store.setServerName(serverName ?? "아스카론 01");
+        if (grade) store.setGrade(grade);
         store.setPlayer({ name, className });
-        this.scene.start("WorldScene", { serverName: serverName ?? "아스카론 01" });
+        this.scene.start("WorldScene", {
+          serverName: serverName ?? "아스카론 01",
+        });
         return;
       } catch {
         localStorage.removeItem("iwnewrpg_save");

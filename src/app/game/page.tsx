@@ -68,15 +68,15 @@ export default function GamePage() {
         <PhaserGame />
       </div>
 
-      <div className="pointer-events-auto absolute bottom-[96px] left-3 z-10 w-[300px]">
+      <div className="pointer-events-auto absolute bottom-[110px] left-1 z-10 w-[240px]">
         <ChatWindow />
       </div>
 
-      <div className="pointer-events-auto absolute right-3 top-3 z-10 w-[208px]">
+      <div className="pointer-events-auto absolute right-1 top-1 z-10 w-[180px]">
         <MiniMap />
       </div>
 
-      <div className="pointer-events-auto absolute right-3 top-[216px] z-10">
+      <div className="pointer-events-auto absolute right-1 top-[200px] z-10">
         <InventoryPanel />
       </div>
 

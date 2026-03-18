@@ -57,11 +57,18 @@ type JobConfig = (typeof JOBS)[number];
 
 export class CharacterCreateScene extends Phaser.Scene {
   private selectedServerIndex = 0;
+  private selectedGrade = 3;
   private nameBuffer = "견습 모험가";
   private pendingJob: JobConfig | null = null;
   private gateOverlay?: Phaser.GameObjects.Container;
   private nameInputEl: HTMLInputElement | null = null;
   private readonly servers = ["아스카론 01"];
+  private readonly grades = [
+    { value: 3, label: "3학년", desc: "기초 단어 300개" },
+    { value: 4, label: "4학년", desc: "기초+중급 500개" },
+    { value: 5, label: "5학년", desc: "중급+고급 700개" },
+    { value: 6, label: "6학년", desc: "전체 1000개" },
+  ];
 
   constructor() {
     super("CharacterCreateScene");
@@ -128,11 +135,29 @@ export class CharacterCreateScene extends Phaser.Scene {
     }
 
     const vignetteTop = this.add.graphics();
-    vignetteTop.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.68, 0.68, 0, 0);
+    vignetteTop.fillGradientStyle(
+      0x000000,
+      0x000000,
+      0x000000,
+      0x000000,
+      0.68,
+      0.68,
+      0,
+      0,
+    );
     vignetteTop.fillRect(0, 0, w, h * 0.24);
 
     const vignetteBottom = this.add.graphics();
-    vignetteBottom.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0, 0.6, 0.6);
+    vignetteBottom.fillGradientStyle(
+      0x000000,
+      0x000000,
+      0x000000,
+      0x000000,
+      0,
+      0,
+      0.6,
+      0.6,
+    );
     vignetteBottom.fillRect(0, h * 0.72, w, h * 0.28);
 
     const frame = this.add.graphics();
@@ -185,10 +210,15 @@ export class CharacterCreateScene extends Phaser.Scene {
       .setShadow(0, 0, "#c0860a", 18, false, true);
 
     this.add
-      .text(w / 2, ty + 40, "실제 클래스 atlas를 확인하고 전장으로 진입하십시오", {
-        color: "#6f8195",
-        fontSize: "13px",
-      })
+      .text(
+        w / 2,
+        ty + 40,
+        "실제 클래스 atlas를 확인하고 전장으로 진입하십시오",
+        {
+          color: "#6f8195",
+          fontSize: "13px",
+        },
+      )
       .setOrigin(0.5);
 
     const underline = this.add.graphics();
@@ -323,7 +353,13 @@ export class CharacterCreateScene extends Phaser.Scene {
       fill.fillStyle(job.col, 0.72);
       fill.fillRoundedRect(barX0, sy - 4, barW * pct, 7, 4);
       fill.fillStyle(0xffffff, 0.14);
-      fill.fillRoundedRect(barX0 + 1, sy - 3, Math.max(8, barW * pct - 2), 2, 2);
+      fill.fillRoundedRect(
+        barX0 + 1,
+        sy - 3,
+        Math.max(8, barW * pct - 2),
+        2,
+        2,
+      );
       card.add(fill);
     });
 
@@ -495,13 +531,20 @@ export class CharacterCreateScene extends Phaser.Scene {
     const fy = h * 0.92;
     const dots = this.add.graphics();
     dots.fillStyle(0x324255, 0.72);
-    [-2, -1, 0, 1, 2].forEach((n) => dots.fillCircle(w / 2 + n * 14, fy - 16, 1.5));
+    [-2, -1, 0, 1, 2].forEach((n) =>
+      dots.fillCircle(w / 2 + n * 14, fy - 16, 1.5),
+    );
 
     this.add
-      .text(w / 2, fy, "선택한 클래스는 장비 성향과 전투 감각에 직접적인 영향을 줍니다", {
-        color: "#415468",
-        fontSize: "12px",
-      })
+      .text(
+        w / 2,
+        fy,
+        "선택한 클래스는 장비 성향과 전투 감각에 직접적인 영향을 줍니다",
+        {
+          color: "#415468",
+          fontSize: "12px",
+        },
+      )
       .setOrigin(0.5);
   }
 
@@ -519,17 +562,35 @@ export class CharacterCreateScene extends Phaser.Scene {
     overlay.add(backdrop);
 
     const panelWidth = 460;
-    const panelHeight = 364;
+    const panelHeight = 480;
     const px = width / 2;
     const py = height / 2;
 
     const panel = this.add.graphics();
     panel.fillStyle(0x0a0f17, 0.96);
-    panel.fillRoundedRect(px - panelWidth / 2, py - panelHeight / 2, panelWidth, panelHeight, 24);
+    panel.fillRoundedRect(
+      px - panelWidth / 2,
+      py - panelHeight / 2,
+      panelWidth,
+      panelHeight,
+      24,
+    );
     panel.lineStyle(2, 0xb48a46, 0.52);
-    panel.strokeRoundedRect(px - panelWidth / 2, py - panelHeight / 2, panelWidth, panelHeight, 24);
+    panel.strokeRoundedRect(
+      px - panelWidth / 2,
+      py - panelHeight / 2,
+      panelWidth,
+      panelHeight,
+      24,
+    );
     panel.lineStyle(1, job.col, 0.22);
-    panel.strokeRoundedRect(px - panelWidth / 2 + 8, py - panelHeight / 2 + 8, panelWidth - 16, panelHeight - 16, 20);
+    panel.strokeRoundedRect(
+      px - panelWidth / 2 + 8,
+      py - panelHeight / 2 + 8,
+      panelWidth - 16,
+      panelHeight - 16,
+      20,
+    );
     overlay.add(panel);
 
     const shimmer = this.add.graphics();
@@ -591,7 +652,9 @@ export class CharacterCreateScene extends Phaser.Scene {
           color: index === this.selectedServerIndex ? "#140d04" : "#f2e4c2",
           fontSize: "13px",
           backgroundColor:
-            index === this.selectedServerIndex ? "#dfbe73" : "rgba(255,255,255,0.04)",
+            index === this.selectedServerIndex
+              ? "#dfbe73"
+              : "rgba(255,255,255,0.04)",
           padding: { left: 12, right: 12, top: 8, bottom: 8 },
         })
         .setOrigin(0, 0.5)
@@ -599,9 +662,13 @@ export class CharacterCreateScene extends Phaser.Scene {
       button.on("pointerdown", () => {
         this.selectedServerIndex = index;
         serverButtons.forEach((entry, entryIndex) => {
-          entry.setColor(entryIndex === this.selectedServerIndex ? "#140d04" : "#f2e4c2");
+          entry.setColor(
+            entryIndex === this.selectedServerIndex ? "#140d04" : "#f2e4c2",
+          );
           entry.setBackgroundColor(
-            entryIndex === this.selectedServerIndex ? "#dfbe73" : "rgba(255,255,255,0.04)",
+            entryIndex === this.selectedServerIndex
+              ? "#dfbe73"
+              : "rgba(255,255,255,0.04)",
           );
         });
       });
@@ -609,8 +676,55 @@ export class CharacterCreateScene extends Phaser.Scene {
       overlay.add(button);
     });
 
+    // ── 학년 선택 ──
+    const gradeLabel = this.add
+      .text(px - 26, py + 38, "학년 선택 (영어 단어 난이도)", {
+        color: "#b79660",
+        fontSize: "12px",
+      })
+      .setOrigin(0, 0.5);
+    overlay.add(gradeLabel);
+
+    const gradeButtons: Phaser.GameObjects.Text[] = [];
+    this.grades.forEach((g, index) => {
+      const bx = px - 26 + index * 90;
+      const isSelected = g.value === this.selectedGrade;
+      const btn = this.add
+        .text(bx, py + 68, `${g.label}`, {
+          color: isSelected ? "#140d04" : "#f2e4c2",
+          fontSize: "13px",
+          backgroundColor: isSelected ? "#dfbe73" : "rgba(255,255,255,0.04)",
+          padding: { left: 8, right: 8, top: 6, bottom: 6 },
+        })
+        .setOrigin(0, 0.5)
+        .setInteractive({ useHandCursor: true });
+      btn.on("pointerdown", () => {
+        this.selectedGrade = g.value;
+        gradeButtons.forEach((entry, entryIndex) => {
+          const sel = this.grades[entryIndex].value === this.selectedGrade;
+          entry.setColor(sel ? "#140d04" : "#f2e4c2");
+          entry.setBackgroundColor(sel ? "#dfbe73" : "rgba(255,255,255,0.04)");
+        });
+      });
+      gradeButtons.push(btn);
+      overlay.add(btn);
+    });
+
+    const gradeDesc = this.add
+      .text(
+        px - 26,
+        py + 94,
+        "학년이 높을수록 더 많은 영어 단어가 출제됩니다",
+        {
+          color: "#5a6a7d",
+          fontSize: "10px",
+        },
+      )
+      .setOrigin(0, 0.5);
+    overlay.add(gradeDesc);
+
     const nameLabel = this.add
-      .text(px - 26, py + 112, "닉네임", {
+      .text(px - 26, py + 120, "닉네임", {
         color: "#b79660",
         fontSize: "12px",
       })
@@ -619,20 +733,20 @@ export class CharacterCreateScene extends Phaser.Scene {
 
     const inputBg = this.add.graphics();
     inputBg.fillStyle(0x05070b, 0.86);
-    inputBg.fillRoundedRect(px - 26, py + 126, 184, 46, 14);
+    inputBg.fillRoundedRect(px - 26, py + 134, 184, 46, 14);
     inputBg.lineStyle(1, 0xffffff, 0.1);
-    inputBg.strokeRoundedRect(px - 26, py + 126, 184, 46, 14);
+    inputBg.strokeRoundedRect(px - 26, py + 134, 184, 46, 14);
     overlay.add(inputBg);
 
     // nameText는 DOM input 뒤에 숨어 있으므로 placeholder 역할만 함
     const nameText = this.add
-      .text(px - 12, py + 149, "", { color: "#f2e4c2", fontSize: "18px" })
+      .text(px - 12, py + 157, "", { color: "#f2e4c2", fontSize: "18px" })
       .setOrigin(0, 0.5)
       .setAlpha(0);
     overlay.add(nameText);
 
     const guideText = this.add
-      .text(px - 26, py + 182, "한글, 영문, 숫자 2-12자", {
+      .text(px - 26, py + 190, "한글, 영문, 숫자 2-12자", {
         color: "#708196",
         fontSize: "11px",
       })
@@ -640,7 +754,7 @@ export class CharacterCreateScene extends Phaser.Scene {
     overlay.add(guideText);
 
     const cancelButton = this.add
-      .text(px - 26, py + 232, "취소", {
+      .text(px - 26, py + 216, "취소", {
         color: "#f2e4c2",
         fontSize: "14px",
         backgroundColor: "rgba(255,255,255,0.06)",
@@ -652,7 +766,7 @@ export class CharacterCreateScene extends Phaser.Scene {
     overlay.add(cancelButton);
 
     const enterButton = this.add
-      .text(px + 56, py + 232, "입장", {
+      .text(px + 56, py + 216, "입장", {
         color: "#140d04",
         fontSize: "14px",
         fontStyle: "bold",
@@ -677,9 +791,9 @@ export class CharacterCreateScene extends Phaser.Scene {
     inputEl.placeholder = "닉네임 입력";
     Object.assign(inputEl.style, {
       position: "fixed",
-      left:   `${cr.left + (px - 26 + 10) * sx}px`,
-      top:    `${cr.top  + (py + 126 + 11) * sy}px`,
-      width:  `${164 * sx}px`,
+      left: `${cr.left + (px - 26 + 10) * sx}px`,
+      top: `${cr.top + (py + 134 + 11) * sy}px`,
+      width: `${164 * sx}px`,
       height: `${26 * sy}px`,
       fontSize: `${Math.max(12, Math.round(15 * sy))}px`,
       color: "#f2e4c2",
@@ -699,22 +813,34 @@ export class CharacterCreateScene extends Phaser.Scene {
 
     // 한글 IME 조합 중에는 value를 건드리지 않아야 조합이 끊기지 않음
     let isComposing = false;
-    inputEl.addEventListener("compositionstart", () => { isComposing = true; });
+    inputEl.addEventListener("compositionstart", () => {
+      isComposing = true;
+    });
     inputEl.addEventListener("compositionend", () => {
       isComposing = false;
-      const filtered = inputEl.value.replace(/[^0-9A-Za-z가-힣 ]/g, "").slice(0, 12);
+      const filtered = inputEl.value
+        .replace(/[^0-9A-Za-z가-힣 ]/g, "")
+        .slice(0, 12);
       inputEl.value = filtered;
       this.nameBuffer = filtered;
     });
     inputEl.addEventListener("input", () => {
       if (isComposing) return;
-      const filtered = inputEl.value.replace(/[^0-9A-Za-z가-힣 ]/g, "").slice(0, 12);
+      const filtered = inputEl.value
+        .replace(/[^0-9A-Za-z가-힣 ]/g, "")
+        .slice(0, 12);
       inputEl.value = filtered;
       this.nameBuffer = filtered;
     });
     inputEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter")  { e.preventDefault(); this.confirmEntry(); }
-      if (e.key === "Escape") { e.preventDefault(); this.closeGateOverlay(); }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.confirmEntry();
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        this.closeGateOverlay();
+      }
     });
 
     overlay.once(Phaser.GameObjects.Events.DESTROY, () => {
@@ -748,10 +874,16 @@ export class CharacterCreateScene extends Phaser.Scene {
 
     localStorage.setItem(
       "iwnewrpg_save",
-      JSON.stringify({ name: trimmedName, className: String(this.pendingJob.id), serverName }),
+      JSON.stringify({
+        name: trimmedName,
+        className: String(this.pendingJob.id),
+        serverName,
+        grade: this.selectedGrade,
+      }),
     );
 
     store.setServerName(serverName);
+    store.setGrade(this.selectedGrade);
     store.setPlayer({
       name: trimmedName,
       className: String(this.pendingJob.id),
