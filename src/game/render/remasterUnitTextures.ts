@@ -1742,7 +1742,15 @@ function ellipse(
   fill: string | CanvasGradient,
 ) {
   ctx.beginPath();
-  ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y,
+    Math.max(0.1, w / 2),
+    Math.max(0.1, h / 2),
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fillStyle = fill;
   ctx.fill();
 }
@@ -1757,7 +1765,15 @@ function strokeEllipse(
   lineWidth: number,
 ) {
   ctx.beginPath();
-  ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y,
+    Math.max(0.1, w / 2),
+    Math.max(0.1, h / 2),
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.strokeStyle = stroke;
   ctx.lineWidth = lineWidth;
   ctx.stroke();
@@ -1771,7 +1787,7 @@ function circle(
   fill: string | CanvasGradient,
 ) {
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.arc(x, y, Math.max(0.1, r), 0, Math.PI * 2);
   ctx.fillStyle = fill;
   ctx.fill();
 }
