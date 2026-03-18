@@ -36,10 +36,10 @@ export default function GamePage() {
   }, [checkDailyLogin]);
 
   return (
-    <main className="relative h-screen overflow-hidden bg-[#04070c]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,211,120,0.18),transparent_26%),radial-gradient(circle_at_100%_24%,rgba(111,201,255,0.15),transparent_24%),radial-gradient(circle_at_0%_100%,rgba(68,153,110,0.12),transparent_22%),linear-gradient(180deg,#07101a_0%,#03060b_100%)]" />
-      <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:46px_46px]" />
-      <div className="absolute inset-x-0 top-0 h-[28vh] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent)]" />
+    <main className="relative h-screen overflow-hidden bg-[#040608]">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_5%,rgba(180,138,70,0.1),transparent_35%),radial-gradient(ellipse_at_85%_95%,rgba(40,20,60,0.12),transparent_35%),linear-gradient(180deg,#060810_0%,#040608_100%)]" />
+      <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(180,138,70,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(180,138,70,0.06)_1px,transparent_1px)] [background-size:48px_48px]" />
+      <div className="absolute inset-x-0 top-0 h-[20vh] bg-[linear-gradient(180deg,rgba(180,138,70,0.03),transparent)]" />
       <GameSocketBridge />
 
       <div className="pointer-events-none absolute inset-3 bottom-[98px] rounded-[30px] border border-[#b48a46]/24 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_32px_80px_rgba(0,0,0,0.42)]">
@@ -54,8 +54,12 @@ export default function GamePage() {
       <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2">
         <div className="rounded-[20px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(18,22,30,0.95),rgba(8,10,16,0.98))] px-6 py-3 text-center shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
           <div className="mb-2 h-px bg-[linear-gradient(90deg,transparent,rgba(255,222,150,0.45),transparent)]" />
-          <div className="text-[10px] uppercase tracking-[0.34em] text-[#b79660]">World Channel</div>
-          <div className="mt-1 text-sm font-semibold text-[#f2e4c2]">{serverName}</div>
+          <div className="text-[10px] uppercase tracking-[0.34em] text-[#b79660]">
+            World Channel
+          </div>
+          <div className="mt-1 text-sm font-semibold text-[#f2e4c2]">
+            {serverName}
+          </div>
           <div className="mt-2 h-px bg-[linear-gradient(90deg,transparent,rgba(255,222,150,0.18),transparent)]" />
         </div>
       </div>

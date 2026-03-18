@@ -10,7 +10,15 @@ export const MAPS: Record<string, GameMap> = {
     width: 240,
     height: 200,
     tiles: [TileType.GRASS, TileType.SAND, TileType.WATER, TileType.STONE_PATH],
-    monsters: ["slime", "goblin_child", "wild_boar", "skeleton_warrior"],
+    monsters: [
+      "slime",
+      "goblin_child",
+      "wild_boar",
+      "skeleton_warrior",
+      "slime_boss",
+      "goblin_boss",
+      "skeleton_boss",
+    ],
     npcs: [
       { id: "elder", x: 12, y: 10 },
       { id: "radar", x: 8, y: 14 },
@@ -22,7 +30,11 @@ export const MAPS: Record<string, GameMap> = {
     bgm: "peaceful_island",
     description: "모든 모험가가 처음 발을 디디는 출발 지점입니다.",
     connections: [
-      { to: "silverKnightTown", fromPortalName: "대륙행 부두", spawn: { x: 4, y: 20 } },
+      {
+        to: "silverKnightTown",
+        fromPortalName: "대륙행 부두",
+        spawn: { x: 4, y: 20 },
+      },
     ],
   },
   silverKnightTown: {
@@ -43,10 +55,26 @@ export const MAPS: Record<string, GameMap> = {
     bgm: "medieval_town",
     description: "기사단이 수호하는 첫 번째 대륙 마을입니다.",
     connections: [
-      { to: "speakingIsland", fromPortalName: "항구 부두", spawn: { x: 42, y: 24 } },
-      { to: "windwoodForest", fromPortalName: "바람숲 입구", spawn: { x: 50, y: 18 } },
-      { to: "orcForest", fromPortalName: "오크 부락지 방면", spawn: { x: 10, y: 48 } },
-      { to: "gludioPlain", fromPortalName: "남쪽 평원", spawn: { x: 46, y: 38 } },
+      {
+        to: "speakingIsland",
+        fromPortalName: "항구 부두",
+        spawn: { x: 42, y: 24 },
+      },
+      {
+        to: "windwoodForest",
+        fromPortalName: "바람숲 입구",
+        spawn: { x: 50, y: 18 },
+      },
+      {
+        to: "orcForest",
+        fromPortalName: "오크 부락지 방면",
+        spawn: { x: 10, y: 48 },
+      },
+      {
+        to: "gludioPlain",
+        fromPortalName: "남쪽 평원",
+        spawn: { x: 46, y: 38 },
+      },
     ],
   },
   windwoodForest: {
@@ -57,15 +85,27 @@ export const MAPS: Record<string, GameMap> = {
     width: 280,
     height: 220,
     tiles: [TileType.FOREST_GRASS, TileType.MOSS, TileType.DIRT],
-    monsters: ["poison_spider", "werewolf"],
+    monsters: ["poison_spider", "werewolf", "forest_sprite"],
     npcs: [],
     safeZone: false,
     bgm: "mystical_forest",
     description: "거대한 나무와 안개가 뒤엉켜 있는 숲입니다.",
     connections: [
-      { to: "silverKnightTown", fromPortalName: "마을 귀환길", spawn: { x: 2, y: 12 } },
-      { to: "giranTown", fromPortalName: "상단 교역로", spawn: { x: 60, y: 32 } },
-      { to: "moonlitWetland", fromPortalName: "달안개 습지", spawn: { x: 54, y: 46 } },
+      {
+        to: "silverKnightTown",
+        fromPortalName: "마을 귀환길",
+        spawn: { x: 2, y: 12 },
+      },
+      {
+        to: "giranTown",
+        fromPortalName: "상단 교역로",
+        spawn: { x: 60, y: 32 },
+      },
+      {
+        to: "moonlitWetland",
+        fromPortalName: "달안개 습지",
+        spawn: { x: 54, y: 46 },
+      },
     ],
   },
   orcForest: {
@@ -76,13 +116,17 @@ export const MAPS: Record<string, GameMap> = {
     width: 260,
     height: 200,
     tiles: [TileType.DIRT, TileType.MOSS, TileType.DARK_STONE],
-    monsters: ["orc_archer", "orc_chief"],
+    monsters: ["orc_archer", "orc_chief", "kobold_raider"],
     npcs: [],
     safeZone: false,
     bgm: "tribal_drums",
     description: "전투 북소리가 멀리서 울려 퍼지는 거친 사냥터입니다.",
     connections: [
-      { to: "silverKnightTown", fromPortalName: "마을 방면", spawn: { x: 4, y: 4 } },
+      {
+        to: "silverKnightTown",
+        fromPortalName: "마을 방면",
+        spawn: { x: 4, y: 4 },
+      },
     ],
   },
   gludioPlain: {
@@ -93,13 +137,17 @@ export const MAPS: Record<string, GameMap> = {
     width: 300,
     height: 240,
     tiles: [TileType.GRASS, TileType.DIRT, TileType.STONE_PATH],
-    monsters: ["wild_boar", "goblin_child"],
+    monsters: ["wild_boar", "goblin_child", "lizard_scout"],
     npcs: [],
     safeZone: false,
     bgm: "frontier_plain",
     description: "은기사의 마을 남쪽에 펼쳐진 개활지 사냥터입니다.",
     connections: [
-      { to: "silverKnightTown", fromPortalName: "마을 성문", spawn: { x: 6, y: 18 } },
+      {
+        to: "silverKnightTown",
+        fromPortalName: "마을 성문",
+        spawn: { x: 6, y: 18 },
+      },
     ],
   },
   moonlitWetland: {
@@ -110,13 +158,17 @@ export const MAPS: Record<string, GameMap> = {
     width: 300,
     height: 240,
     tiles: [TileType.MOSS, TileType.WET_STONE, TileType.WATER],
-    monsters: ["poison_spider", "werewolf"],
+    monsters: ["bog_frog", "stone_golem", "swamp_witch", "ice_troll"],
     npcs: [],
     safeZone: false,
     bgm: "wetland_whispers",
     description: "늪물과 안개가 뒤섞여 시야를 흐리는 위험한 습지입니다.",
     connections: [
-      { to: "windwoodForest", fromPortalName: "숲 가장자리", spawn: { x: 8, y: 14 } },
+      {
+        to: "windwoodForest",
+        fromPortalName: "숲 가장자리",
+        spawn: { x: 8, y: 14 },
+      },
     ],
   },
   giranTown: {
@@ -136,8 +188,16 @@ export const MAPS: Record<string, GameMap> = {
     bgm: "grand_bazaar",
     description: "상업과 제작이 집약된 대륙의 중심 도시입니다.",
     connections: [
-      { to: "windwoodForest", fromPortalName: "북쪽 관문", spawn: { x: 6, y: 40 } },
-      { to: "dragonValley", fromPortalName: "용의 계곡 길목", spawn: { x: 68, y: 28 } },
+      {
+        to: "windwoodForest",
+        fromPortalName: "북쪽 관문",
+        spawn: { x: 6, y: 40 },
+      },
+      {
+        to: "dragonValley",
+        fromPortalName: "용의 계곡 길목",
+        spawn: { x: 68, y: 28 },
+      },
     ],
   },
   dragonValley: {
@@ -148,13 +208,25 @@ export const MAPS: Record<string, GameMap> = {
     width: 340,
     height: 260,
     tiles: [TileType.VOLCANIC_ROCK, TileType.LAVA, TileType.DIRT],
-    monsters: ["drake", "red_dragon"],
+    monsters: [
+      "drake",
+      "ash_wyvern",
+      "red_dragon",
+      "dark_elf_scout",
+      "fire_elemental",
+      "stone_giant",
+      "ancient_dragon",
+    ],
     npcs: [],
     safeZone: false,
     bgm: "dragon_roar",
     description: "용의 흔적과 화염의 숨결이 남아 있는 고위험 지역입니다.",
     connections: [
-      { to: "giranTown", fromPortalName: "기란 방면 길", spawn: { x: 5, y: 30 } },
+      {
+        to: "giranTown",
+        fromPortalName: "기란 방면 길",
+        spawn: { x: 5, y: 30 },
+      },
     ],
   },
   ancientCave: {
@@ -165,13 +237,25 @@ export const MAPS: Record<string, GameMap> = {
     width: 110,
     height: 90,
     tiles: [TileType.DARK_STONE, TileType.VOLCANIC_ROCK],
-    monsters: ["skeleton_warrior", "skeleton_boss", "goblin_boss"],
+    monsters: [
+      "skeleton_warrior",
+      "skeleton_boss",
+      "goblin_boss",
+      "vampire_bat",
+      "bone_archer",
+      "shadow_lich",
+    ],
     npcs: [],
     safeZone: false,
     bgm: "dungeon_cave",
-    description: "고대의 비밀이 잠든 어두운 동굴입니다. 강력한 언데드 전사가 배회합니다.",
+    description:
+      "고대의 비밀이 잠든 어두운 동굴입니다. 강력한 언데드 전사가 배회합니다.",
     connections: [
-      { to: "speakingIsland", fromPortalName: "동굴 출구", spawn: { x: 13, y: 3 } },
+      {
+        to: "speakingIsland",
+        fromPortalName: "동굴 출구",
+        spawn: { x: 13, y: 3 },
+      },
     ],
   },
 };

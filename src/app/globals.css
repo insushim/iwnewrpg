@@ -1,24 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090a0e;
+  --background: #060810;
   --foreground: #f3e7bf;
-  --panel: rgba(12, 14, 22, 0.84);
-  --panel-border: rgba(214, 180, 77, 0.5);
+  --panel: rgba(8, 10, 18, 0.92);
+  --panel-border: rgba(180, 138, 70, 0.45);
+  --gold-primary: #d4a647;
+  --gold-light: #f0d060;
+  --gold-dark: #8e7540;
+  --stone-dark: #0a0e18;
+  --stone-mid: #141c2a;
+  --blood-red: #c2263e;
+  --royal-blue: #2b58d8;
+  --arcane-purple: #7b3bb8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-game-dark: #0a0a0f;
-  --color-game-gold: #ffd700;
-  --color-game-hp: #ff3333;
-  --color-game-mp: #3366ff;
-  --color-game-exp: #33ff33;
-  --color-game-rare: #3366ff;
+  --color-game-dark: #060810;
+  --color-game-gold: #d4a647;
+  --color-game-hp: #c2263e;
+  --color-game-mp: #2b58d8;
+  --color-game-exp: #c9a13d;
+  --color-game-rare: #4488ff;
   --color-game-epic: #9933ff;
-  --color-game-legendary: #ff9900;
-  --color-game-mythic: #ff0033;
+  --color-game-legendary: #ff8c00;
+  --color-game-mythic: #ff2244;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -30,12 +38,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-mono), sans-serif;
+  font-family: var(--font-geist-mono), "Noto Sans KR", sans-serif;
   min-height: 100vh;
   background-image:
-    radial-gradient(circle at top, rgba(45, 64, 126, 0.4), transparent 28%),
-    radial-gradient(circle at bottom left, rgba(132, 43, 22, 0.28), transparent 24%),
-    linear-gradient(180deg, #11131b 0%, #090a0e 100%);
+    radial-gradient(ellipse at 20% 10%, rgba(180, 138, 70, 0.12), transparent 40%),
+    radial-gradient(ellipse at 80% 90%, rgba(40, 20, 60, 0.18), transparent 40%),
+    linear-gradient(180deg, #0a0c14 0%, #060810 50%, #040608 100%);
 }
 
 a {
@@ -43,40 +51,126 @@ a {
   text-decoration: none;
 }
 
+/* ══════════════════════════════════════════════
+   Lineage Classic Style Panel System
+   ══════════════════════════════════════════════ */
+
 .panel {
   background:
-    linear-gradient(180deg, rgba(18, 24, 34, 0.9), rgba(8, 12, 18, 0.92)),
-    radial-gradient(circle at top, rgba(255, 216, 118, 0.08), transparent 34%);
+    linear-gradient(180deg, rgba(14, 18, 28, 0.95), rgba(6, 8, 14, 0.98)),
+    radial-gradient(ellipse at top center, rgba(212, 166, 71, 0.06), transparent 50%);
   border: 1px solid var(--panel-border);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 243, 205, 0.04);
-  backdrop-filter: blur(14px);
+    0 4px 32px rgba(0, 0, 0, 0.6),
+    0 0 1px rgba(180, 138, 70, 0.3),
+    inset 0 1px 0 rgba(255, 240, 200, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
 }
 
 .fantasy-frame {
   position: relative;
-  border: 1px solid rgba(214, 180, 77, 0.5);
+  border: 2px solid rgba(180, 138, 70, 0.5);
   background:
-    linear-gradient(180deg, rgba(54, 40, 20, 0.9), rgba(14, 12, 11, 0.96));
+    linear-gradient(180deg, rgba(30, 24, 16, 0.95), rgba(10, 8, 6, 0.98));
+  box-shadow:
+    0 0 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .fantasy-frame::before {
   content: "";
   position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(255, 215, 0, 0.12);
+  inset: 4px;
+  border: 1px solid rgba(212, 166, 71, 0.15);
   pointer-events: none;
 }
 
-.text-shadow {
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+.fantasy-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 240, 200, 0.03) 0%, transparent 20%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, transparent 15%);
+  pointer-events: none;
 }
+
+/* ══════════════════════════════════════════════
+   Ornate Corner Decorations
+   ══════════════════════════════════════════════ */
+
+.ornate-corners {
+  position: relative;
+}
+
+.ornate-corners::before,
+.ornate-corners::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--gold-primary);
+  border-style: solid;
+  border-width: 0;
+}
+
+.ornate-corners::before {
+  top: 2px;
+  left: 2px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.ornate-corners::after {
+  bottom: 2px;
+  right: 2px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* ══════════════════════════════════════════════
+   Text Effects
+   ══════════════════════════════════════════════ */
+
+.text-shadow {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 8px rgba(212, 166, 71, 0.4), 0 0 20px rgba(212, 166, 71, 0.15);
+}
+
+.text-glow-red {
+  text-shadow: 0 0 8px rgba(194, 38, 62, 0.5), 0 0 20px rgba(194, 38, 62, 0.2);
+}
+
+/* ══════════════════════════════════════════════
+   Scrollbar
+   ══════════════════════════════════════════════ */
 
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: rgba(214, 180, 77, 0.5) transparent;
+  scrollbar-color: rgba(180, 138, 70, 0.4) rgba(10, 14, 24, 0.6);
 }
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(10, 14, 24, 0.6);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(180, 138, 70, 0.5), rgba(120, 90, 40, 0.5));
+  border-radius: 3px;
+}
+
+/* ══════════════════════════════════════════════
+   HUD System
+   ══════════════════════════════════════════════ */
 
 .hud-panel {
   position: relative;
@@ -90,12 +184,48 @@ a {
   border-radius: inherit;
   pointer-events: none;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 228, 168, 0.06),
-    inset 0 16px 40px rgba(255, 208, 102, 0.04);
+    inset 0 0 0 1px rgba(180, 138, 70, 0.08),
+    inset 0 1px 0 rgba(255, 240, 200, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .hud-chip {
-  border: 1px solid rgba(255, 228, 168, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(180, 138, 70, 0.18);
+  background: linear-gradient(180deg, rgba(20, 24, 34, 0.8), rgba(10, 12, 18, 0.9));
   border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
+
+/* ══════════════════════════════════════════════
+   Item Rarity Glow Effects
+   ══════════════════════════════════════════════ */
+
+.rarity-common { border-color: rgba(180, 180, 180, 0.3); }
+.rarity-uncommon { border-color: rgba(68, 204, 68, 0.5); box-shadow: 0 0 8px rgba(68, 204, 68, 0.15); }
+.rarity-rare { border-color: rgba(68, 136, 255, 0.5); box-shadow: 0 0 10px rgba(68, 136, 255, 0.2); }
+.rarity-epic { border-color: rgba(153, 51, 255, 0.5); box-shadow: 0 0 12px rgba(153, 51, 255, 0.2); }
+.rarity-legendary { border-color: rgba(255, 140, 0, 0.5); box-shadow: 0 0 14px rgba(255, 140, 0, 0.25); }
+.rarity-mythic { border-color: rgba(255, 34, 68, 0.6); box-shadow: 0 0 16px rgba(255, 34, 68, 0.3); }
+
+/* ══════════════════════════════════════════════
+   Animations
+   ══════════════════════════════════════════════ */
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 8px rgba(212, 166, 71, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(212, 166, 71, 0.4); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-pulse-gold { animation: pulse-gold 2s ease-in-out infinite; }
+.animate-shimmer { animation: shimmer 3s linear infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }

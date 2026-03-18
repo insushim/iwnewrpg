@@ -5,10 +5,17 @@ import { MAPS } from "@/game/data/maps";
 import { useGameStore } from "@/lib/gameStore";
 import { getSocket } from "@/lib/socket";
 
-function getPortalMarkers(mapId: string, worldWidth: number, worldHeight: number) {
+function getPortalMarkers(
+  mapId: string,
+  worldWidth: number,
+  worldHeight: number,
+) {
   switch (mapId) {
     case "speakingIsland":
-      return [{ x: worldWidth - 150, y: 400 }, { x: 900, y: 162 }];
+      return [
+        { x: worldWidth - 150, y: 400 },
+        { x: 900, y: 162 },
+      ];
     case "ancientCave":
       return [{ x: worldWidth * 0.5, y: worldHeight - 120 }];
     case "silverKnightTown":
@@ -51,7 +58,15 @@ function drawMapLandmarkOverlay(
   if (mapId === "speakingIsland") {
     ctx.fillStyle = "rgba(245,221,160,0.2)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(520), toMapY(330), toMapX(110), toMapY(56), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(520),
+      toMapY(330),
+      toMapX(110),
+      toMapY(56),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = "rgba(140,214,255,0.18)";
@@ -68,7 +83,15 @@ function drawMapLandmarkOverlay(
   if (mapId === "silverKnightTown") {
     ctx.fillStyle = "rgba(220,230,240,0.16)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(760), toMapY(352), toMapX(140), toMapY(54), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(760),
+      toMapY(352),
+      toMapX(140),
+      toMapY(54),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = "rgba(210,220,230,0.16)";
@@ -85,22 +108,54 @@ function drawMapLandmarkOverlay(
   if (mapId === "windwoodForest") {
     ctx.fillStyle = "rgba(196,242,168,0.16)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(760), toMapY(314), toMapX(86), toMapY(36), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(760),
+      toMapY(314),
+      toMapX(86),
+      toMapY(36),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = "rgba(72,108,80,0.2)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(332), toMapY(286), toMapX(70), toMapY(30), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(332),
+      toMapY(286),
+      toMapX(70),
+      toMapY(30),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(toMapX(1188), toMapY(286), toMapX(70), toMapY(30), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(1188),
+      toMapY(286),
+      toMapX(70),
+      toMapY(30),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
   if (mapId === "orcForest") {
     ctx.fillStyle = "rgba(194,126,86,0.2)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(821), toMapY(360), toMapX(102), toMapY(44), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(821),
+      toMapY(360),
+      toMapX(102),
+      toMapY(44),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = "rgba(128,86,56,0.2)";
@@ -111,10 +166,26 @@ function drawMapLandmarkOverlay(
   if (mapId === "gludioPlain") {
     ctx.fillStyle = "rgba(230,212,156,0.18)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(480), toMapY(332), toMapX(98), toMapY(42), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(480),
+      toMapY(332),
+      toMapX(98),
+      toMapY(42),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(toMapX(1034), toMapY(420), toMapX(88), toMapY(38), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(1034),
+      toMapY(420),
+      toMapX(88),
+      toMapY(38),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = "rgba(166,182,109,0.18)";
@@ -124,22 +195,54 @@ function drawMapLandmarkOverlay(
   if (mapId === "moonlitWetland") {
     ctx.fillStyle = "rgba(190,255,240,0.16)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(820), toMapY(360), toMapX(96), toMapY(40), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(820),
+      toMapY(360),
+      toMapX(96),
+      toMapY(40),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(toMapX(1090), toMapY(424), toMapX(102), toMapY(42), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(1090),
+      toMapY(424),
+      toMapX(102),
+      toMapY(42),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = "rgba(60,96,82,0.18)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(820), toMapY(360), toMapX(58), toMapY(18), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(820),
+      toMapY(360),
+      toMapX(58),
+      toMapY(18),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
   if (mapId === "giranTown") {
     ctx.fillStyle = "rgba(232,216,177,0.18)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(760), toMapY(330), toMapX(120), toMapY(48), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(760),
+      toMapY(330),
+      toMapX(120),
+      toMapY(48),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = "rgba(192,155,98,0.18)";
@@ -150,26 +253,74 @@ function drawMapLandmarkOverlay(
   if (mapId === "dragonValley") {
     ctx.fillStyle = "rgba(255,170,100,0.16)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(870), toMapY(418), toMapX(92), toMapY(38), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(870),
+      toMapY(418),
+      toMapX(92),
+      toMapY(38),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(toMapX(395), toMapY(314), toMapX(64), toMapY(30), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(395),
+      toMapY(314),
+      toMapX(64),
+      toMapY(30),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
   if (mapId === "ancientCave") {
     ctx.fillStyle = "rgba(144,222,255,0.18)";
     ctx.beginPath();
-    ctx.ellipse(toMapX(760), toMapY(226), toMapX(96), toMapY(34), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(760),
+      toMapY(226),
+      toMapX(96),
+      toMapY(34),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(toMapX(760), toMapY(360), toMapX(92), toMapY(36), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(760),
+      toMapY(360),
+      toMapX(92),
+      toMapY(36),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(toMapX(486), toMapY(340), toMapX(74), toMapY(30), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(486),
+      toMapY(340),
+      toMapX(74),
+      toMapY(30),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(toMapX(1034), toMapY(340), toMapX(74), toMapY(30), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      toMapX(1034),
+      toMapY(340),
+      toMapX(74),
+      toMapY(30),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 }
@@ -182,7 +333,9 @@ export function MiniMap() {
   const worldPlayers = useGameStore((state) => state.worldPlayers);
   const selfId = useGameStore((state) => state.selfId);
   const setCurrentMapId = useGameStore((state) => state.setCurrentMapId);
-  const updateQuestProgress = useGameStore((state) => state.updateQuestProgress);
+  const updateQuestProgress = useGameStore(
+    (state) => state.updateQuestProgress,
+  );
 
   const map = MAPS[currentMapId] ?? MAPS.speakingIsland;
   const selfPlayer = worldPlayers.find((player) => player.id === selfId);
@@ -235,7 +388,9 @@ export function MiniMap() {
     }
 
     if (
-      ["speakingIsland", "moonlitWetland", "windwoodForest"].includes(currentMapId)
+      ["speakingIsland", "moonlitWetland", "windwoodForest"].includes(
+        currentMapId,
+      )
     ) {
       ctx.fillStyle = "rgba(43,131,170,0.55)";
       if (currentMapId === "speakingIsland") {
@@ -390,19 +545,21 @@ export function MiniMap() {
       ctx.shadowBlur = 0;
     }
 
-    getPortalMarkers(currentMapId, worldWidth, worldHeight).forEach(({ x, y }) => {
-      const px = toMapX(x);
-      const py = toMapY(y);
-      ctx.beginPath();
-      ctx.arc(px, py, 2.4, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(141,214,255,0.9)";
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(px, py, 5.2, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(141,214,255,0.26)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    });
+    getPortalMarkers(currentMapId, worldWidth, worldHeight).forEach(
+      ({ x, y }) => {
+        const px = toMapX(x);
+        const py = toMapY(y);
+        ctx.beginPath();
+        ctx.arc(px, py, 2.4, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(141,214,255,0.9)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(px, py, 5.2, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(141,214,255,0.26)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      },
+    );
 
     ctx.strokeStyle = "rgba(246,223,149,0.25)";
     ctx.lineWidth = 1;
@@ -443,73 +600,194 @@ export function MiniMap() {
       <button
         type="button"
         onClick={() => setVisible(true)}
-        className="rounded-xl border border-amber-200/20 bg-black/50 px-3 py-1.5 text-xs text-amber-50 hover:bg-black/70"
+        className="rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#0a0e18,#060a14)] px-3 py-2 text-xs font-bold text-[#f0d060] hover:brightness-110 transition"
+        style={{
+          textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+          boxShadow:
+            "inset 0 1px 3px rgba(240,208,96,0.2), 0 2px 4px rgba(0,0,0,0.5)",
+        }}
       >
-        [M] 지도
+        🗺️ MAP [M]
       </button>
     );
   }
 
   return (
-    <div className="relative flex w-[220px] flex-col gap-2 overflow-hidden rounded-[24px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.96))] p-3 shadow-[0_20px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.1),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
-      <div className="pointer-events-none absolute inset-[10px] rounded-[18px] border border-white/5" />
+    <div
+      className="relative flex w-[260px] flex-col gap-3 overflow-hidden rounded-lg border-4 border-[#8e7540] bg-[#f2e4c2] p-4"
+      style={{
+        backgroundImage: `
+          radial-gradient(circle at 20% 30%, rgba(212, 166, 71, 0.1) 0%, transparent 40%),
+          radial-gradient(circle at 80% 70%, rgba(180, 138, 70, 0.1) 0%, transparent 40%),
+          linear-gradient(45deg,
+            rgba(242, 228, 194, 0.95) 0%,
+            rgba(232, 216, 186, 0.98) 25%,
+            rgba(222, 204, 178, 0.95) 50%,
+            rgba(232, 216, 186, 0.98) 75%,
+            rgba(242, 228, 194, 0.95) 100%
+          )
+        `,
+        boxShadow: `
+          0 4px 20px rgba(0, 0, 0, 0.6),
+          inset 0 2px 6px rgba(212, 166, 71, 0.3),
+          inset 0 -2px 6px rgba(142, 117, 64, 0.3)
+        `,
+      }}
+    >
+      {/* Ornate map corners */}
+      <div className="absolute top-2 left-2 w-6 h-6 border-l-4 border-t-4 border-[#8e7540] opacity-60 rounded-tl"></div>
+      <div className="absolute top-2 right-2 w-6 h-6 border-r-4 border-t-4 border-[#8e7540] opacity-60 rounded-tr"></div>
+      <div className="absolute bottom-2 left-2 w-6 h-6 border-l-4 border-b-4 border-[#8e7540] opacity-60 rounded-bl"></div>
+      <div className="absolute bottom-2 right-2 w-6 h-6 border-r-4 border-b-4 border-[#8e7540] opacity-60 rounded-br"></div>
 
-      <div className="relative flex items-center justify-between">
+      {/* Parchment texture overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(
+              0deg,
+              transparent 0px,
+              rgba(142, 117, 64, 0.1) 1px,
+              transparent 2px,
+              transparent 18px
+            ),
+            repeating-linear-gradient(
+              90deg,
+              transparent 0px,
+              rgba(142, 117, 64, 0.05) 1px,
+              transparent 2px,
+              transparent 22px
+            )
+          `,
+        }}
+      ></div>
+
+      <div className="relative flex items-center justify-between border-b border-[#8e7540] pb-2">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-amber-200/50">
-            Field Map
+          <p
+            className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#6b5530]"
+            style={{ textShadow: "1px 1px 2px rgba(212,166,71,0.3)" }}
+          >
+            🗺️ FIELD MAP
           </p>
           <button
             type="button"
             onClick={() => setShowTravel((value) => !value)}
-            className="text-left text-sm font-semibold text-amber-50 hover:text-amber-200"
+            className="text-left text-sm font-bold text-[#8e1d2f] hover:text-[#c2263e] transition"
+            style={{ textShadow: "1px 1px 2px rgba(212,166,71,0.3)" }}
           >
-            {map.name} →
+            📍 {map.name} →
           </button>
         </div>
         <button
           type="button"
           onClick={() => setVisible(false)}
-          className="rounded-md bg-black/30 px-1.5 py-0.5 text-[10px] text-amber-200/50 hover:text-amber-200"
+          className="rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#c2263e,#8e1d2f)] px-2 py-1 text-[10px] font-bold text-[#f2e4c2] transition hover:brightness-110 active:scale-95"
+          style={{
+            textShadow: "0 1px 1px rgba(0,0,0,0.8)",
+            boxShadow:
+              "inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3)",
+          }}
         >
           [M]
         </button>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        width={196}
-        height={120}
-        className="rounded-[18px] border border-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-        style={{ imageRendering: "pixelated", background: "rgba(4,7,10,0.7)" }}
-      />
+      {/* Map Canvas with Circular Frame */}
+      <div className="relative">
+        <div
+          className="rounded-lg border-4 border-[#8e7540] overflow-hidden"
+          style={{
+            boxShadow:
+              "inset 0 2px 6px rgba(0,0,0,0.8), 0 2px 8px rgba(142,117,64,0.4)",
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            width={220}
+            height={140}
+            className="block"
+            style={{
+              imageRendering: "pixelated",
+              background: "rgba(6,10,20,0.9)",
+              filter: "sepia(10%) saturate(120%) contrast(110%)",
+            }}
+          />
+        </div>
 
-      <div className="relative flex items-center justify-between text-[10px] text-amber-100/60">
-        <span>좌표 {coordLabel}</span>
-        <span>인원 {worldPlayers.length}</span>
+        {/* Ornate compass rose overlay */}
+        <div className="absolute top-2 right-2">
+          <div
+            className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#d4a647] bg-[#f2e4c2] text-[8px] font-bold text-[#6b5530]"
+            style={{
+              textShadow: "0 1px 1px rgba(212,166,71,0.3)",
+              boxShadow:
+                "inset 0 1px 2px rgba(212,166,71,0.3), 0 2px 4px rgba(0,0,0,0.3)",
+            }}
+          >
+            ⊕
+          </div>
+        </div>
       </div>
 
-      {showTravel && map.connections.length > 0 ? (
-        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-xl border border-amber-200/20 bg-black/90 p-1.5 shadow-xl">
-          <p className="mb-1 text-[10px] uppercase tracking-widest text-amber-200/50">
-            이동
+      {/* Coordinates and Player Count */}
+      <div
+        className="relative flex items-center justify-between rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#d8c3a1,#b48a46)] px-3 py-2 text-[10px] font-bold text-[#060a14]"
+        style={{
+          textShadow: "0 1px 1px rgba(255,255,255,0.3)",
+          boxShadow:
+            "inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3)",
+        }}
+      >
+        <span>📍 {coordLabel}</span>
+        <span>👥 {worldPlayers.length}</span>
+      </div>
+
+      {/* Travel Dropdown */}
+      {showTravel && map.connections.length > 0 && (
+        <div
+          className="absolute left-0 top-full z-50 mt-2 w-full rounded-lg border-4 border-[#8e7540] bg-[#f2e4c2] p-3 shadow-xl"
+          style={{
+            backgroundImage: `
+              linear-gradient(45deg,
+                rgba(242, 228, 194, 0.95) 0%,
+                rgba(232, 216, 186, 0.98) 50%,
+                rgba(242, 228, 194, 0.95) 100%
+              )
+            `,
+            boxShadow:
+              "0 6px 20px rgba(0,0,0,0.6), inset 0 1px 3px rgba(212,166,71,0.3)",
+          }}
+        >
+          <p
+            className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#6b5530]"
+            style={{ textShadow: "1px 1px 2px rgba(212,166,71,0.3)" }}
+          >
+            🚪 TRAVEL OPTIONS
           </p>
-          {map.connections.map((connection) => (
-            <button
-              key={`${map.id}-${connection.to}`}
-              type="button"
-              onClick={() => travel(connection.to)}
-              className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs text-amber-50 hover:bg-amber-200/10"
-            >
-              <span>{connection.fromPortalName}</span>
-              <span className="text-amber-200/60">
-                {MAPS[connection.to]?.name ?? connection.to}
-              </span>
-            </button>
-          ))}
+          <div className="space-y-1">
+            {map.connections.map((connection) => (
+              <button
+                key={`${map.id}-${connection.to}`}
+                type="button"
+                onClick={() => travel(connection.to)}
+                className="flex w-full items-center justify-between rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#d8c3a1,#b48a46)] px-3 py-2 text-left text-[11px] font-bold text-[#060a14] transition hover:brightness-110 active:scale-95"
+                style={{
+                  textShadow: "0 1px 1px rgba(255,255,255,0.3)",
+                  boxShadow:
+                    "inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3)",
+                }}
+              >
+                <span>🚪 {connection.fromPortalName}</span>
+                <span className="text-[#8e1d2f]">
+                  → {MAPS[connection.to]?.name ?? connection.to}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
