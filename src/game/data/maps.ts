@@ -4,7 +4,7 @@ import type { GameMap } from "@/types/map";
 export const MAPS: Record<string, GameMap> = {
   speakingIsland: {
     id: "speakingIsland",
-    name: "이야기의 섬",
+    name: "시작의 섬",
     level: "1~10",
     type: "starter",
     width: 240,
@@ -27,7 +27,7 @@ export const MAPS: Record<string, GameMap> = {
   },
   silverKnightTown: {
     id: "silverKnightTown",
-    name: "은기사의 마을",
+    name: "철성 마을",
     level: "10~20",
     type: "town",
     width: 220,
@@ -37,6 +37,7 @@ export const MAPS: Record<string, GameMap> = {
     npcs: [
       { id: "julie", x: 14, y: 11 },
       { id: "knight_captain", x: 18, y: 9 },
+      { id: "summon_master", x: 20, y: 11 },
     ],
     safeZone: true,
     bgm: "medieval_town",
@@ -86,7 +87,7 @@ export const MAPS: Record<string, GameMap> = {
   },
   gludioPlain: {
     id: "gludioPlain",
-    name: "글루디오 평원",
+    name: "서부 대초원",
     level: "10~18",
     type: "hunting",
     width: 300,
@@ -120,7 +121,7 @@ export const MAPS: Record<string, GameMap> = {
   },
   giranTown: {
     id: "giranTown",
-    name: "기란 도시",
+    name: "황금 거래 도시",
     level: "30~40",
     type: "town",
     width: 260,

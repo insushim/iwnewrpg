@@ -78,6 +78,9 @@ type EventPayloadMap = {
     channel: "system" | "normal" | "party" | "clan" | "trade";
     timestamp: number;
   };
+  use_summon_stone: {
+    stoneId: string;
+  };
 };
 
 type EventKey = keyof EventPayloadMap;

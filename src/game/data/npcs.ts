@@ -65,8 +65,12 @@ export const NPCS: Record<string, NpcData> = {
     mapId: "speakingIsland",
     role: "magic",
     position: { x: 13, y: 14 },
-    dialogue: ["마나는 흐름이 중요해. 필요한 순간에는 아끼지 말게."],
-    shopInventory: [{ itemId: "blue_potion" }, { itemId: "teleport_scroll" }],
+    dialogue: ["마나는 흐름이 중요해. 필요한 순간에는 아끼지 말게.", "소환석을 써보게. 정령들이 자네를 도울 거야."],
+    shopInventory: [
+      { itemId: "blue_potion" },
+      { itemId: "teleport_scroll" },
+      { itemId: "summon_stone_lesser" },
+    ],
   },
   betty: {
     id: "betty",
@@ -109,6 +113,22 @@ export const NPCS: Record<string, NpcData> = {
     position: { x: 23, y: 18 },
     dialogue: ["재료만 있다면 무기든 갑옷이든 만들어 주지."],
     shopInventory: [{ itemId: "weapon_enchant_scroll" }, { itemId: "mithril_ore" }, { itemId: "magic_crystal" }],
+  },
+  summon_master: {
+    id: "summon_master",
+    name: "소환사 마이아",
+    mapId: "silverKnightTown",
+    role: "magic",
+    position: { x: 20, y: 11 },
+    dialogue: [
+      "소환석에 마력을 담아 정령을 불러낼 수 있다네.",
+      "상급 소환석일수록 더 강력한 전사들이 나타나지.",
+    ],
+    shopInventory: [
+      { itemId: "summon_stone_lesser" },
+      { itemId: "summon_stone_mid" },
+      { itemId: "summon_stone_greater" },
+    ],
   },
 };
 

@@ -197,6 +197,23 @@ export class WorldScene extends Phaser.Scene {
   private spawnY = 400;
   private serverName = "아스카론 01";
 
+  // 소환 시스템
+  private summonedAllies: Array<{
+    sprite: Phaser.GameObjects.Container & {
+      hpFill: Phaser.GameObjects.Rectangle;
+      lastX: number;
+      lastY: number;
+    };
+    hp: number;
+    maxHp: number;
+    atk: number;
+    expireAt: number;
+    targetId: string | null;
+    lastAttackAt: number;
+  }> = [];
+  private summonHudText?: Phaser.GameObjects.Text;
+  private summonHudBg?: Phaser.GameObjects.Graphics;
+
   constructor() {
     super("WorldScene");
   }
@@ -253,6 +270,7 @@ export class WorldScene extends Phaser.Scene {
     this.sortActorLayer();
     this.updateNpcProximity();
     this.updateMonsterAI();
+    this.updateSummonedAllies();
     this.checkPortalTransitions();
 
     if (this.targetMarker.visible) {
@@ -357,6 +375,7 @@ export class WorldScene extends Phaser.Scene {
 
   shutdown() {
     this.stopAutoAttack();
+    this.clearSummons();
     this.quizResultUnsubscribe?.();
     this.unsubscribe.forEach((off) => off());
     this.unsubscribe = [];
@@ -857,6 +876,7 @@ export class WorldScene extends Phaser.Scene {
       EventBus.on("monster_updated", (payload) => this.upsertMonster(payload)),
       EventBus.on("loot_spawn", (payload) => this.spawnLoot(payload)),
       EventBus.on("loot_picked", (payload) => this.removeLoot(payload.lootId)),
+      EventBus.on("use_summon_stone", (payload: { stoneId: string }) => this.activateSummonStone(payload.stoneId)),
     );
   }
 
@@ -4965,6 +4985,297 @@ export class WorldScene extends Phaser.Scene {
       burstTint: 0x9ab8ff,
       afterimageTint: 0xb4ceff,
     };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // 소환 시스템 (마법의 돌 → 정령/전사 소환)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  private activateSummonStone(stoneId: string) {
+    if (!this.localPlayer) return;
+
+    const SUMMON_CONFIG = {
+      summon_stone_lesser:  { count: [1, 2] as [number,number], duration: 60000,  hp: 35,  atk: 10, name: "하급 정령",  tier: "lesser"  },
+      summon_stone_mid:     { count: [2, 3] as [number,number], duration: 90000,  hp: 70,  atk: 20, name: "중급 정령",  tier: "mid"     },
+      summon_stone_greater: { count: [3, 5] as [number,number], duration: 120000, hp: 120, atk: 35, name: "상급 전사",  tier: "greater" },
+    };
+
+    const cfg = SUMMON_CONFIG[stoneId as keyof typeof SUMMON_CONFIG];
+    if (!cfg) return;
+
+    this.clearSummons();
+
+    const count = cfg.count[0] + Math.floor(Math.random() * (cfg.count[1] - cfg.count[0] + 1));
+    const expireAt = this.time.now + cfg.duration;
+
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const spawnX = this.localPlayer.x + Math.cos(angle) * 90;
+      const spawnY = this.localPlayer.y + Math.sin(angle) * 60;
+      const sprite = this.createSummonSprite(spawnX, spawnY, cfg.name, cfg.tier);
+      this.summonedAllies.push({
+        sprite,
+        hp: cfg.hp,
+        maxHp: cfg.hp,
+        atk: cfg.atk,
+        expireAt,
+        targetId: null,
+        lastAttackAt: 0,
+      });
+    }
+
+    this.spawnSummonEffect(this.localPlayer.x, this.localPlayer.y, cfg.tier);
+    this.updateSummonHud();
+
+    useGameStore.getState().addChat({
+      id: crypto.randomUUID(),
+      channel: "system",
+      author: "소환",
+      message: `✦ ${cfg.name} ${count}마리 소환! ${cfg.duration / 1000}초간 함께 싸웁니다.`,
+      timestamp: Date.now(),
+    });
+  }
+
+  private createSummonSprite(x: number, y: number, name: string, tier: string) {
+    const tintColor = tier === "greater" ? 0xffd700 : tier === "mid" ? 0x88aaff : 0x44ee88;
+    const container = this.add.container(x, y) as Phaser.GameObjects.Container & {
+      hpFill: Phaser.GameObjects.Rectangle;
+      lastX: number;
+      lastY: number;
+    };
+
+    const shadow = this.add.ellipse(0, 18, 40, 22, 0x000000, 0.28);
+    const aura = this.add.ellipse(0, 10, 56, 34, tintColor, 0.10).setStrokeStyle(1.5, tintColor, 0.55);
+    const body = this.add.ellipse(0, -8, 34, 42, tintColor, 0.82).setStrokeStyle(2, 0xffffff, 0.25);
+    const glow = this.add.ellipse(0, -14, 16, 20, 0xffffff, 0.20);
+    const label = this.add.text(0, -46, name, {
+      fontSize: "9px",
+      color: `#${tintColor.toString(16).padStart(6, "0")}`,
+      stroke: "#000000",
+      strokeThickness: 3,
+      resolution: 2,
+    }).setOrigin(0.5, 1);
+    const hpBack = this.add.rectangle(0, 28, 42, 5, 0x1a0000, 0.85);
+    const hpFill = this.add.rectangle(-21, 28, 42, 5, 0x44ff88, 0.9).setOrigin(0, 0.5);
+
+    container.add([shadow, aura, body, glow, label, hpBack, hpFill]);
+    container.hpFill = hpFill;
+    container.lastX = x;
+    container.lastY = y;
+
+    this.actorLayer?.add(container);
+
+    container.setAlpha(0).setScale(0.3);
+    this.tweens.add({ targets: container, alpha: 1, scaleX: 1, scaleY: 1, duration: 400, ease: "Back.Out" });
+
+    return container;
+  }
+
+  private updateSummonedAllies() {
+    if (!this.isOfflineMode || !this.localPlayer || this.summonedAllies.length === 0) return;
+    const now = this.time.now;
+
+    // Remove expired or dead allies
+    this.summonedAllies = this.summonedAllies.filter(ally => {
+      if (now >= ally.expireAt || ally.hp <= 0) {
+        this.tweens.add({
+          targets: ally.sprite,
+          alpha: 0,
+          scaleX: 0.3,
+          scaleY: 0.3,
+          duration: 320,
+          ease: "Power2.In",
+          onComplete: () => { if (ally.sprite.active) ally.sprite.destroy(); },
+        });
+        return false;
+      }
+      return true;
+    });
+
+    this.updateSummonHud();
+    if (this.summonedAllies.length === 0) return;
+
+    const SUMMON_ATTACK_RANGE = 58;
+    const SUMMON_CHASE_RANGE = 300;
+    const SUMMON_MOVE_SPEED = 130;
+    const SUMMON_ATTACK_INTERVAL = 900;
+
+    this.summonedAllies.forEach(ally => {
+      if (!ally.sprite.active) return;
+
+      // Find nearest live monster
+      let nearestId: string | null = null;
+      let nearestDist = Infinity;
+
+      this.monsterSprites.forEach((ms, mid) => {
+        if (!ms.visible) return;
+        const monData = this.offlineMonsterHp.get(mid);
+        if (!monData || monData.hp <= 0) return;
+        const dist = Phaser.Math.Distance.Between(ally.sprite.x, ally.sprite.y, ms.x, ms.y);
+        if (dist < SUMMON_CHASE_RANGE && dist < nearestDist) {
+          nearestDist = dist;
+          nearestId = mid;
+        }
+      });
+
+      ally.targetId = nearestId;
+
+      if (nearestId) {
+        const lockedId = nearestId as string; // narrow type for closures
+        const target = this.monsterSprites.get(lockedId);
+        if (!target) return;
+
+        if (nearestDist > SUMMON_ATTACK_RANGE) {
+          // Chase
+          const angle = Phaser.Math.Angle.Between(ally.sprite.x, ally.sprite.y, target.x, target.y);
+          ally.sprite.lastX = ally.sprite.x;
+          ally.sprite.lastY = ally.sprite.y;
+          ally.sprite.x += Math.cos(angle) * SUMMON_MOVE_SPEED * (1 / 60);
+          ally.sprite.y += Math.sin(angle) * SUMMON_MOVE_SPEED * (1 / 60);
+        } else {
+          // Attack
+          if (now - ally.lastAttackAt >= SUMMON_ATTACK_INTERVAL) {
+            ally.lastAttackAt = now;
+            const monData = this.offlineMonsterHp.get(lockedId);
+            if (monData && monData.hp > 0) {
+              const dmg = ally.atk + Math.floor(Math.random() * 5);
+              const newHp = Math.max(0, monData.hp - dmg);
+              this.offlineMonsterHp.set(lockedId, { ...monData, hp: newHp });
+
+              this.showDamageNumber(target.x, target.y - 10, dmg, false);
+
+              if (target.spriteBody) {
+                this.tweens.add({ targets: target.spriteBody, alpha: 0.18, duration: 50, yoyo: true });
+              }
+
+              // Update monster HP bar
+              const ratio = newHp / monData.maxHp;
+              target.hpFill.width = 50 * ratio;
+
+              // Monster dies
+              if (newHp <= 0) {
+                const mBase = lockedId.split("-offline-")[0];
+                const mDef = MONSTERS[mBase];
+                const goldMin = mDef?.goldRange?.[0] ?? 5;
+                const goldMax = mDef?.goldRange?.[1] ?? 15;
+                const gold = goldMin + Math.floor(Math.random() * (goldMax - goldMin + 1));
+                const exp = Math.floor((mDef?.exp ?? 10) * 0.5);
+
+                useGameStore.getState().applyOfflineReward({ gold, exp, items: [] });
+                useGameStore.getState().registerKill(mBase, mDef?.isBoss ?? false);
+
+                const ai = this.monsterAI.get(lockedId);
+                const respawnMs = (mDef?.respawnTime ?? 30) * 1000;
+                target.setVisible(false);
+                this.showDeathEffect(target.x, target.y);
+
+                this.time.delayedCall(respawnMs, () => {
+                  if (!target.active) return;
+                  this.offlineMonsterHp.set(lockedId, { ...monData, hp: monData.maxHp });
+                  if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
+                  target.setPosition(ai?.spawnX ?? target.x, ai?.spawnY ?? target.y);
+                  target.hpFill.width = 50;
+                  target.setVisible(true);
+                  target.setAlpha(0);
+                  this.tweens.add({ targets: target, alpha: 1, duration: 600 });
+                });
+              }
+            }
+          }
+        }
+      } else {
+        // No target: loosely follow player
+        const distToPlayer = Phaser.Math.Distance.Between(
+          ally.sprite.x, ally.sprite.y,
+          this.localPlayer!.x, this.localPlayer!.y,
+        );
+        if (distToPlayer > 110) {
+          const angle = Phaser.Math.Angle.Between(
+            ally.sprite.x, ally.sprite.y,
+            this.localPlayer!.x, this.localPlayer!.y,
+          );
+          ally.sprite.lastX = ally.sprite.x;
+          ally.sprite.lastY = ally.sprite.y;
+          ally.sprite.x += Math.cos(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
+          ally.sprite.y += Math.sin(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
+        }
+      }
+    });
+  }
+
+  private updateSummonHud() {
+    if (this.summonedAllies.length === 0) {
+      this.summonHudText?.setVisible(false);
+      this.summonHudBg?.setVisible(false);
+      return;
+    }
+
+    const now = this.time.now;
+    const minExpire = Math.min(...this.summonedAllies.map(a => a.expireAt));
+    const secsLeft = Math.max(0, Math.ceil((minExpire - now) / 1000));
+
+    if (!this.summonHudText) {
+      const w = this.scale.width;
+      this.summonHudBg = this.add.graphics().setScrollFactor(0).setDepth(1500);
+      this.summonHudText = this.add.text(w / 2, 145, "", {
+        fontSize: "11px",
+        color: "#88ffbb",
+        stroke: "#001a08",
+        strokeThickness: 4,
+        resolution: 2,
+      }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(1501);
+    }
+
+    const w = this.scale.width;
+    this.summonHudBg!.clear();
+    this.summonHudBg!.fillStyle(0x061a0c, 0.88);
+    this.summonHudBg!.fillRoundedRect(w / 2 - 90, 133, 180, 24, 8);
+    this.summonHudBg!.lineStyle(1, 0x44ff88, 0.45);
+    this.summonHudBg!.strokeRoundedRect(w / 2 - 90, 133, 180, 24, 8);
+
+    this.summonHudText!.setText(`✦ 소환수 ${this.summonedAllies.length}마리 활성 · ${secsLeft}s`);
+    this.summonHudText!.setVisible(true);
+    this.summonHudBg!.setVisible(true);
+  }
+
+  private clearSummons() {
+    this.summonedAllies.forEach(ally => {
+      if (ally.sprite.active) ally.sprite.destroy();
+    });
+    this.summonedAllies = [];
+    this.summonHudText?.setVisible(false);
+    this.summonHudBg?.setVisible(false);
+  }
+
+  private spawnSummonEffect(x: number, y: number, tier: string) {
+    const color = tier === "greater" ? 0xffd700 : tier === "mid" ? 0x88aaff : 0x44ee88;
+    for (let i = 0; i < 14; i++) {
+      const angle = (i / 14) * Math.PI * 2;
+      const r = 45 + Math.random() * 35;
+      const p = this.add.ellipse(x + Math.cos(angle) * 22, y + Math.sin(angle) * 14, 6, 6, color, 0.9);
+      this.effectLayer?.add(p);
+      this.tweens.add({
+        targets: p,
+        x: x + Math.cos(angle) * r,
+        y: y + Math.sin(angle) * r * 0.65,
+        alpha: 0,
+        scale: 0.18,
+        duration: 520 + Math.random() * 200,
+        ease: "Power2.Out",
+        onComplete: () => p.destroy(),
+      });
+    }
+    const ring = this.add.ellipse(x, y, 90, 54, color, 0.12).setStrokeStyle(2, color, 0.72);
+    this.effectLayer?.add(ring);
+    this.tweens.add({
+      targets: ring,
+      scaleX: 2.6,
+      scaleY: 2.6,
+      alpha: 0,
+      duration: 650,
+      ease: "Power2.Out",
+      onComplete: () => ring.destroy(),
+    });
   }
 
   private showDeathEffect(x: number, y: number) {

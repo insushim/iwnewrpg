@@ -446,6 +446,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: "trainee_dagger", rate: 0.15 },
       { itemId: "red_potion", rate: 0.3, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "summon_stone_lesser", rate: 0.08 },
     ],
     aggressive: true,
     respawnTime: 180,
@@ -471,6 +472,8 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: "iron_sword", rate: 0.08 },
       { itemId: "weapon_enchant_scroll", rate: 0.02 },
+      { itemId: "summon_stone_lesser", rate: 0.12 },
+      { itemId: "summon_stone_mid", rate: 0.03 },
     ],
     aggressive: true,
     respawnTime: 300,
