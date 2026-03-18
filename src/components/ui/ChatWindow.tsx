@@ -33,7 +33,7 @@ export function ChatWindow() {
 
   if (minimized) {
     return (
-      <div className="relative overflow-hidden rounded-[22px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.96))] p-3 shadow-[0_18px_32px_rgba(0,0,0,0.35)]">
+      <div className="relative overflow-hidden rounded-[24px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.96))] p-3 shadow-[0_18px_32px_rgba(0,0,0,0.35)]">
         <button type="button" onClick={() => setMinimized(false)} className="flex items-center gap-2">
           <span className="text-sm font-semibold text-[#f2e4c2]">채팅</span>
           <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] tracking-[0.18em] text-[#c7ae83]">
@@ -45,8 +45,9 @@ export function ChatWindow() {
   }
 
   return (
-    <section className="relative flex h-[284px] flex-col overflow-hidden rounded-[24px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.97))] p-4 shadow-[0_22px_40px_rgba(0,0,0,0.42)]">
+    <section className="relative flex h-[300px] flex-col overflow-hidden rounded-[26px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(15,19,28,0.94),rgba(6,8,14,0.97))] p-4 shadow-[0_22px_40px_rgba(0,0,0,0.42)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.09),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+      <div className="pointer-events-none absolute inset-[10px] rounded-[18px] border border-white/5" />
 
       <div className="relative mb-3 flex items-center justify-between">
         <div>
@@ -77,7 +78,7 @@ export function ChatWindow() {
                 : "text-stone-100";
 
           return (
-            <div key={message.id} className="leading-5">
+            <div key={message.id} className="rounded-[12px] border border-white/[0.04] bg-white/[0.02] px-2 py-1.5 leading-5">
               <span className="mr-2 text-[#9f8d72]">
                 {message.timestamp > 0
                   ? new Date(message.timestamp).toLocaleTimeString("ko-KR", {

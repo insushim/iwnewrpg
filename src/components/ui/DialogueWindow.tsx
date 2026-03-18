@@ -13,8 +13,9 @@ export function DialogueWindow() {
   }
 
   return (
-    <div className="absolute left-1/2 top-24 z-30 w-[min(92vw,620px)] -translate-x-1/2 overflow-hidden rounded-[30px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(17,21,30,0.97),rgba(7,9,15,0.98))] p-5 shadow-[0_28px_52px_rgba(0,0,0,0.45)]">
+    <div className="absolute left-1/2 top-24 z-30 w-[min(92vw,640px)] -translate-x-1/2 overflow-hidden rounded-[32px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(17,21,30,0.97),rgba(7,9,15,0.98))] p-5 shadow-[0_28px_52px_rgba(0,0,0,0.45)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.08),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+      <div className="pointer-events-none absolute inset-[12px] rounded-[24px] border border-white/5" />
 
       <div className="relative mb-4 flex items-center justify-between">
         <div>
@@ -38,11 +39,12 @@ export function DialogueWindow() {
       </div>
 
       <div className="relative rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(6,8,12,0.68),rgba(14,17,24,0.92))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+        <div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-[#b79660]">Chronicle Script</div>
         <div className="space-y-3">
           {ui.activeDialogue.map((line, index) => (
             <p
               key={`${ui.activeNpcId}-${index}`}
-              className="text-sm leading-7 text-[#f1e6cf]/90"
+              className="rounded-[16px] border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-sm leading-7 text-[#f1e6cf]/90"
             >
               {line}
             </p>

@@ -13,6 +13,7 @@ export function DeathScreen() {
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-[radial-gradient(circle_at_top,rgba(118,24,24,0.32),transparent_34%),rgba(0,0,0,0.82)] p-4 backdrop-blur-sm">
       <div className="w-full max-w-md overflow-hidden rounded-[34px] border border-[#b48a46]/28 bg-[linear-gradient(180deg,rgba(18,12,14,0.96),rgba(8,6,10,0.98))] p-6 text-center shadow-[0_36px_72px_rgba(0,0,0,0.55)]">
+        <div className="pointer-events-none absolute inset-[10px] rounded-[24px] border border-white/5" />
         <div className="pointer-events-none absolute inset-0" />
         <p className="text-sm uppercase tracking-[0.35em] text-red-300/78">Defeat</p>
         <h2 className="mt-3 text-3xl font-semibold text-[#f2e4c2]">당신은 쓰러졌습니다</h2>

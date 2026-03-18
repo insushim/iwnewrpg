@@ -80,6 +80,12 @@ export class CharacterCreateScene extends Phaser.Scene {
     const bg = this.add.graphics();
     bg.fillGradientStyle(0x040810, 0x040810, 0x090512, 0x090512, 1);
     bg.fillRect(0, 0, w, h);
+    bg.fillStyle(0xffffff, 0.02);
+    for (let x = 0; x < w; x += 24) {
+      for (let y = 0; y < h; y += 24) {
+        bg.fillRect(x + ((y / 24) % 2) * 2, y, 1, 1);
+      }
+    }
 
     const haze = this.add.graphics();
     haze.fillStyle(0xd8bb6c, 0.08);
@@ -128,6 +134,19 @@ export class CharacterCreateScene extends Phaser.Scene {
     const vignetteBottom = this.add.graphics();
     vignetteBottom.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0, 0.6, 0.6);
     vignetteBottom.fillRect(0, h * 0.72, w, h * 0.28);
+
+    const frame = this.add.graphics();
+    frame.lineStyle(2, 0x8e7540, 0.22);
+    frame.strokeRoundedRect(18, 18, w - 36, h - 36, 28);
+    frame.lineStyle(1, 0xffffff, 0.06);
+    frame.strokeRoundedRect(30, 30, w - 60, h - 60, 22);
+
+    const ribbonLeft = this.add.graphics();
+    ribbonLeft.fillStyle(0xd8bb6c, 0.08);
+    ribbonLeft.fillTriangle(0, h * 0.16, 180, h * 0.2, 0, h * 0.24);
+    const ribbonRight = this.add.graphics();
+    ribbonRight.fillStyle(0x7ec7ff, 0.06);
+    ribbonRight.fillTriangle(w, h * 0.12, w - 200, h * 0.18, w, h * 0.26);
   }
 
   private buildTitle(w: number, h: number) {
@@ -145,6 +164,8 @@ export class CharacterCreateScene extends Phaser.Scene {
     diamonds.fillStyle(0xd8bb6c, 1);
     diamonds.fillRect(w / 2 - 102, ty - 4, 8, 8);
     diamonds.fillRect(w / 2 + 94, ty - 4, 8, 8);
+    diamonds.fillStyle(0x6a94ff, 0.85);
+    diamonds.fillCircle(w / 2, ty - 2, 3);
 
     this.add
       .text(w / 2, ty - 24, "CHRONICLE GATE", {
@@ -169,6 +190,10 @@ export class CharacterCreateScene extends Phaser.Scene {
         fontSize: "13px",
       })
       .setOrigin(0.5);
+
+    const underline = this.add.graphics();
+    underline.fillStyle(0xf2d98a, 0.18);
+    underline.fillRoundedRect(w / 2 - 140, ty + 58, 280, 4, 3);
   }
 
   private buildCards(w: number, h: number) {
@@ -227,6 +252,13 @@ export class CharacterCreateScene extends Phaser.Scene {
     portraitAura.fillStyle(job.col, 0.1);
     portraitAura.fillCircle(0, -CH / 2 + PH / 2 + 2, 50);
     card.add(portraitAura);
+
+    const portraitHalo = this.add.graphics();
+    portraitHalo.lineStyle(2, job.col, 0.18);
+    portraitHalo.strokeEllipse(0, -CH / 2 + PH / 2 + 6, 126, 126);
+    portraitHalo.lineStyle(1, 0xffffff, 0.08);
+    portraitHalo.strokeEllipse(0, -CH / 2 + PH / 2 + 6, 96, 96);
+    card.add(portraitHalo);
 
     const sym = this.add
       .text(0, -CH / 2 + 28, job.sym, {

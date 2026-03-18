@@ -25,8 +25,9 @@ export function QuestWindow() {
   const quests = getNpcQuests(ui.activeNpcId);
 
   return (
-    <div className="absolute left-4 top-28 z-30 w-[min(92vw,460px)] overflow-hidden rounded-[28px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(17,21,30,0.96),rgba(6,8,14,0.98))] p-4 shadow-[0_26px_48px_rgba(0,0,0,0.45)]">
+    <div className="absolute left-4 top-28 z-30 w-[min(92vw,480px)] overflow-hidden rounded-[30px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(17,21,30,0.96),rgba(6,8,14,0.98))] p-4 shadow-[0_26px_48px_rgba(0,0,0,0.45)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.08),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+      <div className="pointer-events-none absolute inset-[10px] rounded-[22px] border border-white/5" />
 
       <div className="relative mb-4 flex items-center justify-between">
         <div>
@@ -55,7 +56,7 @@ export function QuestWindow() {
         {quests.map((quest) => (
           <div
             key={quest.id}
-            className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(10,13,19,0.88),rgba(16,20,28,0.96))] p-4"
+            className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(10,13,19,0.88),rgba(16,20,28,0.96))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -81,7 +82,7 @@ export function QuestWindow() {
 
             <p className="mt-3 text-sm leading-6 text-[#f1e6cf]/90">{quest.description}</p>
 
-            <div className="mt-3 space-y-1 text-xs text-[#d8c4a0]/80">
+            <div className="mt-3 rounded-[16px] border border-white/[0.05] bg-white/[0.02] p-3 text-xs text-[#d8c4a0]/80">
               {quest.objectives.map((objective, index) => (
                 <p key={`${quest.id}-${index}`}>
                   목표: {objective.type}

@@ -175,6 +175,16 @@ function drawHumanoid(
     4,
     color(0x000000, 0.12),
   );
+  if (spec.weapon === "blade") {
+    roundRect(ctx, x - 20, y - 4, 40, 5, 3, color(spec.secondary, 0.9));
+    triangle(ctx, x - 16, y - 6, x - 24, y - 20, x - 8, y - 12, color(spec.secondary, 0.7));
+  } else if (spec.weapon === "bow") {
+    roundRect(ctx, x - 19, y - 6, 38, 4, 3, color(spec.secondary, 0.82));
+    roundRect(ctx, x - 8, y + 0, 16, 5, 3, color(spec.primary, 0.4));
+  } else if (spec.weapon === "staff") {
+    triangle(ctx, x - 16, y - 6, x, y - 26, x + 16, y - 6, color(spec.secondary, 0.68));
+    ellipse(ctx, x, y - 14, 18, 8, color(spec.tertiary, 0.18));
+  }
 
   const head = ctx.createRadialGradient(x - 5, y - 29, 3, x, y - 22, 18);
   head.addColorStop(0, color(lighten(spec.tertiary, 12)));
@@ -257,6 +267,8 @@ function drawBeast(
       ellipse(ctx, x, y + 8, 36, 26, color(spec.primary));
       ellipse(ctx, x, y + 3, 16, 10, color(spec.secondary, 0.5));
       ellipse(ctx, x - 5, y + 0, 14, 4, color(0xffffff, 0.1));
+      circle(ctx, x - 8, y + 6, 2.2, color(spec.tertiary));
+      circle(ctx, x + 8, y + 6, 2.2, color(spec.tertiary));
       break;
     case "wolf":
       ellipse(ctx, x - dir.x * 3, y + 34, 52, 12, color(0x071015, 0.26));
@@ -274,6 +286,7 @@ function drawBeast(
       ellipse(ctx, x - 8, y + 12, 18, 6, color(0xffffff, 0.16));
       roundRect(ctx, x - 19 + stride, y + 20, 6, 18, 3, color(spec.primary));
       roundRect(ctx, x + 8 - stride, y + 20, 6, 18, 3, color(spec.primary));
+      triangle(ctx, x + 24 + dir.x * 5, y + 8, x + 34 + dir.x * 4, y - 8, x + 18 + dir.x * 2, y - 2, color(spec.secondary));
       triangle(
         ctx,
         x - 24 - dir.x * 5,
@@ -294,6 +307,8 @@ function drawBeast(
       roundRect(ctx, x - 10 + swing / 2, y + 18, 6, 5, 2, color(0xe8e4cd));
       roundRect(ctx, x + 4 + swing / 2, y + 18, 6, 5, 2, color(0xe8e4cd));
       roundRect(ctx, x - 12, y + 4, 24, 4, 2, color(0xffffff, 0.1));
+      triangle(ctx, x - 14, y + 9, x - 24, y + 2, x - 18, y + 16, color(darken(spec.secondary, 12)));
+      triangle(ctx, x + 14, y + 9, x + 24, y + 2, x + 18, y + 16, color(darken(spec.secondary, 12)));
       break;
     case "boar":
       ellipse(ctx, x, y + 31, 50, 12, color(0x07090c, 0.24));
@@ -303,6 +318,7 @@ function drawBeast(
       roundRect(ctx, x + 26 + dir.x * 3, y + 18, 8, 3, 2, color(0xf3dfc5));
       ellipse(ctx, x + 4, y + 11, 16, 6, color(0xffffff, 0.14));
       triangle(ctx, x - 18, y + 5, x - 24, y - 8, x - 10, y - 2, color(darken(spec.primary, 18)));
+      triangle(ctx, x - 6, y + 2, x - 16, y - 10, x + 2, y - 4, color(darken(spec.primary, 10)));
       break;
     case "wisp":
       circle(ctx, x, y + 4, 34 + swing * 0.5, color(spec.secondary, 0.12));
@@ -310,6 +326,7 @@ function drawBeast(
       circle(ctx, x, y, 31 + swing * 0.35, color(spec.secondary, 0.45));
       triangle(ctx, x - 9, y + 16, x + 9, y + 16, x, y + 40, color(spec.primary, 0.58));
       circle(ctx, x - 5, y - 7, 6, color(0xffffff, 0.32));
+      circle(ctx, x + 7, y - 2, 3, color(0xffffff, 0.2));
       break;
     case "dragon":
       ellipse(ctx, x, y + 31, 58, 13, color(0x08090e, 0.28));
@@ -327,6 +344,7 @@ function drawBeast(
         color(0xffb08e),
       );
       ellipse(ctx, x - 8, y + 7, 18, 6, color(0xffffff, 0.1));
+      triangle(ctx, x - 30, y + 10, x - 48, y + 2, x - 30, y + 22, color(darken(spec.primary, 18)));
       break;
     case "golem":
       ellipse(ctx, x, y + 31, 52, 12, color(0x05080d, 0.28));
@@ -336,6 +354,8 @@ function drawBeast(
       roundRect(ctx, x - 27, y + 8, 10, 20, 4, color(spec.primary));
       roundRect(ctx, x + 17, y + 8, 10, 20, 4, color(spec.primary));
       roundRect(ctx, x - 14, y + 3, 20, 6, 3, color(0xffffff, 0.08));
+      circle(ctx, x - 7, y + 6, 6, color(spec.secondary, 0.18));
+      circle(ctx, x + 7, y + 6, 6, color(spec.secondary, 0.18));
       break;
     case "skeleton":
       ellipse(ctx, x, y + 33, 42, 11, color(0x06080b, 0.2));

@@ -46,8 +46,9 @@ export function InventoryPanel() {
   }
 
   return (
-    <section className="relative w-[316px] overflow-hidden rounded-[24px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(16,20,28,0.95),rgba(7,9,15,0.97))] p-3 shadow-[0_24px_44px_rgba(0,0,0,0.45)]">
+    <section className="relative w-[328px] overflow-hidden rounded-[26px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(16,20,28,0.95),rgba(7,9,15,0.97))] p-3.5 shadow-[0_24px_44px_rgba(0,0,0,0.45)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.08),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+      <div className="pointer-events-none absolute inset-[10px] rounded-[20px] border border-white/5" />
 
       <div className="relative mb-3 flex items-center justify-between">
         <div>
@@ -68,7 +69,9 @@ export function InventoryPanel() {
         </div>
       </div>
 
-      <div className="relative mb-3 grid grid-cols-4 gap-1.5">
+      <div className="relative mb-3 rounded-[18px] border border-white/6 bg-white/[0.03] p-2">
+        <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[#b79660]">Equipped</div>
+        <div className="grid grid-cols-4 gap-1.5">
         {gearSlots.map(([slot, label]) => {
           const equipped = equipment[slot];
           const icon = equipped ? (ITEMS[equipped.id]?.icon ?? "unknown") : "unknown";
@@ -85,9 +88,12 @@ export function InventoryPanel() {
             </button>
           );
         })}
+        </div>
       </div>
 
-      <div className="relative grid grid-cols-7 gap-1.5">
+      <div className="relative rounded-[18px] border border-white/6 bg-black/18 p-2.5">
+        <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[#b79660]">Inventory Grid</div>
+        <div className="grid grid-cols-7 gap-1.5">
         {Array.from({ length: 28 }).map((_, index) => {
           const item = items[index];
           const itemData = item ? ITEMS[item.id] : null;
@@ -133,6 +139,7 @@ export function InventoryPanel() {
             </button>
           );
         })}
+        </div>
       </div>
 
       {selectedItem && selectedItemData ? (

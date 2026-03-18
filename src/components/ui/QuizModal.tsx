@@ -130,6 +130,7 @@ export function QuizModal() {
     >
       <div className="w-full max-w-2xl overflow-hidden rounded-[34px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(17,21,30,0.97),rgba(6,8,14,0.98))] p-6 shadow-[0_32px_64px_rgba(0,0,0,0.45)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.08),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+        <div className="pointer-events-none absolute inset-[12px] rounded-[24px] border border-white/5" />
 
         <div className="relative mb-4 flex items-center justify-between text-sm text-[#d8c4a0]">
           <span>{question.type === "en_to_kr" ? "영어 → 한국어" : "한국어 → 영어"}</span>
@@ -143,7 +144,7 @@ export function QuizModal() {
             <span>제한 시간</span>
             <span>{quiz.remaining}초</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-black/40">
+          <div className="h-2 overflow-hidden rounded-full border border-white/8 bg-black/40">
             <div
               className="h-full bg-[linear-gradient(90deg,#c9a13d,#f0d16c)] transition-[width] duration-300"
               style={{ width: `${progress}%` }}
@@ -166,7 +167,7 @@ export function QuizModal() {
               type="button"
               disabled={Boolean(quiz.feedback)}
               onClick={() => submitAnswer(choice)}
-              className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(10,13,19,0.88),rgba(16,20,28,0.96))] px-4 py-4 text-left text-lg text-[#f2e4c2] transition hover:border-[#d4b377]/35 hover:bg-black/40 disabled:opacity-60"
+              className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(10,13,19,0.88),rgba(16,20,28,0.96))] px-4 py-4 text-left text-lg text-[#f2e4c2] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition hover:border-[#d4b377]/35 hover:bg-black/40 disabled:opacity-60"
             >
               {choice}
             </button>

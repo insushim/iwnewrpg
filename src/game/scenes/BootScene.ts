@@ -40,9 +40,17 @@ export class BootScene extends Phaser.Scene {
   private createSpriteTextures() {
     this.createTileTexture("tile_grass_a", 0x335f39, 0x15301a, 0x5b9a56);
     this.createTileTexture("tile_grass_b", 0x2b5130, 0x142a17, 0x4d8649);
+    this.createTileTexture("tile_meadow", 0x5b7d3f, 0x2e421d, 0x8fbe62);
+    this.createTileTexture("tile_forest", 0x28462d, 0x102118, 0x52704d);
+    this.createTileTexture("tile_moss", 0x42583a, 0x1f2d1e, 0x779566);
+    this.createTileTexture("tile_dirt", 0x69533a, 0x342518, 0xa48761);
     this.createTileTexture("tile_path", 0x8f7c58, 0x463622, 0xb8a27c);
     this.createTileTexture("tile_cobble", 0x667071, 0x343a3b, 0xaab4b5);
     this.createTileTexture("tile_water", 0x2e7e9a, 0x124d63, 0x77d4e5);
+    this.createTileTexture("tile_wet_stone", 0x506167, 0x243139, 0x8db5bb);
+    this.createTileTexture("tile_marble", 0xc5c0b3, 0x676358, 0xf8f1dc);
+    this.createTileTexture("tile_volcanic", 0x4f4746, 0x241a19, 0x88766b);
+    this.createTileTexture("tile_lava", 0x9b3319, 0x3e0c07, 0xffb35a);
     this.createArrowTexture("projectile_arrow");
     this.createGemTexture("loot_gem");
     this.createTreeTexture("prop_tree");
@@ -62,6 +70,8 @@ export class BootScene extends Phaser.Scene {
     if (this.textures.exists(key)) return;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
     g.fillStyle(base, 1).fillRect(0, 0, 96, 72);
+    g.fillGradientStyle(highlight, highlight, base, shadow, 0.08);
+    g.fillRect(0, 0, 96, 72);
     g.fillStyle(highlight, 0.05);
     for (let x = 6; x < 96; x += 18) {
       for (let y = 6; y < 72; y += 16) {
@@ -77,6 +87,14 @@ export class BootScene extends Phaser.Scene {
     g.fillStyle(highlight, 0.06).fillEllipse(56, 48, 26, 10);
     g.fillStyle(shadow, 0.1).fillEllipse(76, 58, 38, 14);
     g.fillStyle(shadow, 0.08).fillEllipse(16, 54, 26, 10);
+    g.fillStyle(highlight, 0.04);
+    for (let index = 0; index < 9; index += 1) {
+      g.fillCircle(10 + index * 10, 10 + ((index * 7) % 36), 2 + (index % 3));
+    }
+    g.fillStyle(shadow, 0.06);
+    for (let index = 0; index < 8; index += 1) {
+      g.fillEllipse(12 + index * 11, 62 - ((index * 9) % 28), 10, 4);
+    }
     g.lineStyle(2, shadow, 0.18).strokeRoundedRect(1, 1, 94, 70, 12);
     g.lineStyle(1, highlight, 0.16).strokeRoundedRect(4, 4, 88, 64, 10);
     g.lineStyle(1, shadow, 0.08);
@@ -228,12 +246,14 @@ export class BootScene extends Phaser.Scene {
   private createTreeTexture(key: string) {
     if (this.textures.exists(key)) return;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
-    g.fillStyle(0x0a0f10, 0.22).fillEllipse(32, 50, 34, 10);
-    g.fillStyle(0x4b2f18, 1).fillRect(27, 30, 10, 22);
-    g.fillStyle(0x173a25, 1).fillEllipse(32, 24, 36, 24);
-    g.fillStyle(0x295736, 0.92).fillEllipse(22, 22, 24, 20);
-    g.fillStyle(0x3d704a, 0.92).fillEllipse(42, 18, 24, 18);
-    g.fillStyle(0x4e8758, 0.68).fillEllipse(31, 16, 18, 10);
+    g.fillStyle(0x0a0f10, 0.22).fillEllipse(32, 52, 40, 12);
+    g.fillStyle(0x4b2f18, 1).fillRect(26, 30, 12, 24);
+    g.fillStyle(0x173a25, 1).fillEllipse(32, 24, 42, 28);
+    g.fillStyle(0x234b30, 0.96).fillEllipse(20, 26, 24, 22);
+    g.fillStyle(0x295736, 0.92).fillEllipse(42, 24, 28, 22);
+    g.fillStyle(0x3d704a, 0.92).fillEllipse(28, 16, 26, 18);
+    g.fillStyle(0x4e8758, 0.68).fillEllipse(40, 14, 18, 10);
+    g.fillStyle(0x93ca91, 0.18).fillEllipse(28, 14, 12, 6);
     g.generateTexture(key, 64, 64);
     g.destroy();
   }
@@ -310,6 +330,7 @@ export class BootScene extends Phaser.Scene {
       true,
     );
     g.fillStyle(0xffffff, 0.18).fillEllipse(25, 18, 8, 18);
+    g.fillStyle(0xffffff, 0.32).fillEllipse(30, 14, 5, 12);
     g.generateTexture(key, 56, 56);
     g.destroy();
   }
