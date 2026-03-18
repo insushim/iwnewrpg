@@ -123,7 +123,7 @@ const STARTER_TOWN_RECT = new Phaser.Geom.Rectangle(220, 180, 760, 430);
 const MOVE_SPEED = 110;
 const MELEE_RANGE = 92;
 const RANGED_RANGE = 420;
-const WALK_FRAME_COUNT = 2;
+const WALK_FRAME_COUNT = 3;
 const IDLE_FRAME_COUNT = 2;
 const ATTACK_FRAME_COUNT = 4;
 
@@ -210,7 +210,7 @@ export class WorldScene extends Phaser.Scene {
     this.serverName = data?.serverName ?? useGameStore.getState().serverName;
 
     this.cameras.main.setBackgroundColor("#07101a");
-    this.cameras.main.setZoom(0.94);
+    this.cameras.main.setZoom(0.72);
     this.cameras.main.roundPixels = true;
 
     this.groundLayer = this.add.container(0, 0);
@@ -446,132 +446,132 @@ export class WorldScene extends Phaser.Scene {
     // 몬스터 간격 300-400px, 맵 공간 활용으로 자연스러운 사냥터 분리
     // ══════════════════════════════════════════════════════════════════════
 
-    // 이야기의 섬 (speakingIsland) 8960w×5460h — Lv 1-10
+    // 이야기의 섬 (speakingIsland) 17600w×10660h — Lv 1-10
     const speakingIsland: SpawnEntry[] = [
       // ── 슬라임 서쪽 늪 (lv1-2) ─ 마을 서남쪽, 완전 초보 사냥터
-      { monsterId:"slime", x:220,y:1800 }, { monsterId:"slime", x:520,y:2150 },
-      { monsterId:"slime", x:240,y:2550 }, { monsterId:"slime", x:540,y:2950 },
+      { monsterId:"slime", x:440,y:3600 }, { monsterId:"slime", x:1040,y:4300 },
+      { monsterId:"slime", x:480,y:5100 }, { monsterId:"slime", x:1080,y:5900 },
       // ── 고블린 야영지 (lv3-5) ─ 중앙 평원
-      { monsterId:"goblin_child", x:2200,y:1100 }, { monsterId:"goblin_child", x:2600,y:1450 },
-      { monsterId:"goblin_child", x:2200,y:1900 }, { monsterId:"goblin_child", x:2600,y:2350 },
+      { monsterId:"goblin_child", x:4400,y:2200 }, { monsterId:"goblin_child", x:5200,y:2900 },
+      { monsterId:"goblin_child", x:4400,y:3800 }, { monsterId:"goblin_child", x:5200,y:4700 },
       // ── 멧돼지 동쪽 들판 (lv5-7) ─ 마을 반대편 넓은 평원
-      { monsterId:"wild_boar", x:5800,y:1800 }, { monsterId:"wild_boar", x:6250,y:2200 },
-      { monsterId:"wild_boar", x:5800,y:2700 }, { monsterId:"wild_boar", x:6250,y:3200 },
+      { monsterId:"wild_boar", x:11600,y:3600 }, { monsterId:"wild_boar", x:12500,y:4400 },
+      { monsterId:"wild_boar", x:11600,y:5400 }, { monsterId:"wild_boar", x:12500,y:6400 },
       // ── [보스] 고블린 두목 ─ 동쪽 깊은 곳
-      { monsterId:"goblin_boss", x:7500, y:2800 },
+      { monsterId:"goblin_boss", x:15000, y:5600 },
     ];
 
-    // 은기사의 마을 (silverKnightTown) 8240w×4940h — Lv 10-20
+    // 은기사의 마을 (silverKnightTown) 16160w×9620h — Lv 10-20
     const silverKnightTown: SpawnEntry[] = [
       // ── 해골 북쪽 폐허 (lv7-10) ─ 마을 북단 고위험 지역
-      { monsterId:"skeleton_warrior", x:2400,y:380 }, { monsterId:"skeleton_warrior", x:2900,y:600 },
-      { monsterId:"skeleton_warrior", x:3500,y:380 }, { monsterId:"skeleton_warrior", x:4100,y:600 },
+      { monsterId:"skeleton_warrior", x:4800,y:760 }, { monsterId:"skeleton_warrior", x:5800,y:1200 },
+      { monsterId:"skeleton_warrior", x:7000,y:760 }, { monsterId:"skeleton_warrior", x:8200,y:1200 },
       // ── 독거미 동쪽 심연 숲 (lv15-17) ─ 마을 동쪽
-      { monsterId:"poison_spider", x:6000,y:1800 }, { monsterId:"poison_spider", x:6500,y:2200 },
-      { monsterId:"poison_spider", x:6000,y:2700 }, { monsterId:"poison_spider", x:6500,y:3200 },
+      { monsterId:"poison_spider", x:12000,y:3600 }, { monsterId:"poison_spider", x:13000,y:4400 },
+      { monsterId:"poison_spider", x:12000,y:5400 }, { monsterId:"poison_spider", x:13000,y:6400 },
       // ── 워울프 남서 깊은 숲 (lv18-20) ─ 고위험 남서 지역
-      { monsterId:"werewolf", x:900,y:3500 }, { monsterId:"werewolf", x:1350,y:3900 },
-      { monsterId:"werewolf", x:900,y:4350 }, { monsterId:"werewolf", x:1350,y:4700 },
+      { monsterId:"werewolf", x:1800,y:7000 }, { monsterId:"werewolf", x:2700,y:7800 },
+      { monsterId:"werewolf", x:1800,y:8700 }, { monsterId:"werewolf", x:2700,y:9400 },
       // ── [보스] 오크 족장 ─ 남동 끝
-      { monsterId:"orc_chief", x:7200, y:4200 },
+      { monsterId:"orc_chief", x:14400, y:8400 },
     ];
 
-    // 바람숲 (windwoodForest) 10400w×5980h — Lv 15-25
+    // 바람숲 (windwoodForest) 20480w×11700h — Lv 15-25
     const windwoodForest: SpawnEntry[] = [
       // ── 독거미 서쪽 입구 (lv17-19) ─ 숲 진입로
-      { monsterId:"poison_spider", x:600,y:2000 }, { monsterId:"poison_spider", x:1050,y:2450 },
-      { monsterId:"poison_spider", x:600,y:2950 }, { monsterId:"poison_spider", x:1050,y:3450 },
+      { monsterId:"poison_spider", x:1200,y:4000 }, { monsterId:"poison_spider", x:2100,y:4900 },
+      { monsterId:"poison_spider", x:1200,y:5900 }, { monsterId:"poison_spider", x:2100,y:6900 },
       // ── 워울프 중앙 울창 숲 (lv20-22) ─ 핵심 사냥터
-      { monsterId:"werewolf", x:4500,y:2000 }, { monsterId:"werewolf", x:5000,y:2500 },
-      { monsterId:"werewolf", x:4500,y:3100 }, { monsterId:"werewolf", x:5000,y:3700 },
+      { monsterId:"werewolf", x:9000,y:4000 }, { monsterId:"werewolf", x:10000,y:5000 },
+      { monsterId:"werewolf", x:9000,y:6200 }, { monsterId:"werewolf", x:10000,y:7400 },
       // ── 포레스트 스프라이트 동쪽 심부 (lv22-25) ─ 고위험
-      { monsterId:"forest_sprite", x:8500,y:1800 }, { monsterId:"forest_sprite", x:9000,y:2300 },
-      { monsterId:"forest_sprite", x:8500,y:2900 }, { monsterId:"forest_sprite", x:9000,y:3500 },
+      { monsterId:"forest_sprite", x:17000,y:3600 }, { monsterId:"forest_sprite", x:18000,y:4600 },
+      { monsterId:"forest_sprite", x:17000,y:5800 }, { monsterId:"forest_sprite", x:18000,y:7000 },
       // ── [보스] 석재 골렘 ─ 동쪽 끝 폐허
-      { monsterId:"stone_golem", x:9800, y:3000 },
+      { monsterId:"stone_golem", x:19600, y:6000 },
     ];
 
-    // 오크 부락지 (orcForest) 9680w×5460h — Lv 18-28
+    // 오크 부락지 (orcForest) 19040w×10660h — Lv 18-28
     const orcForest: SpawnEntry[] = [
       // ── 오크 궁수 서쪽 야영지 (lv18-20) ─ 부락 입구
-      { monsterId:"orc_archer", x:500,y:1300 }, { monsterId:"orc_archer", x:900,y:1700 },
-      { monsterId:"orc_archer", x:500,y:2200 }, { monsterId:"orc_archer", x:900,y:2700 },
+      { monsterId:"orc_archer", x:1000,y:2600 }, { monsterId:"orc_archer", x:1800,y:3400 },
+      { monsterId:"orc_archer", x:1000,y:4400 }, { monsterId:"orc_archer", x:1800,y:5400 },
       // ── 코볼드 중앙 광산 (lv20-22) ─ 부락 중심부
-      { monsterId:"kobold_raider", x:4200,y:2000 }, { monsterId:"kobold_raider", x:4700,y:2500 },
-      { monsterId:"kobold_raider", x:4200,y:3100 }, { monsterId:"kobold_raider", x:4700,y:3700 },
+      { monsterId:"kobold_raider", x:8400,y:4000 }, { monsterId:"kobold_raider", x:9400,y:5000 },
+      { monsterId:"kobold_raider", x:8400,y:6200 }, { monsterId:"kobold_raider", x:9400,y:7400 },
       // ── 오크 동쪽 요새 (lv22-25) ─ 부락 심부
-      { monsterId:"orc_archer", x:7500,y:1500 }, { monsterId:"orc_archer", x:7900,y:2000 },
-      { monsterId:"orc_archer", x:7500,y:2600 }, { monsterId:"orc_archer", x:7900,y:3200 },
+      { monsterId:"orc_archer", x:15000,y:3000 }, { monsterId:"orc_archer", x:15800,y:4000 },
+      { monsterId:"orc_archer", x:15000,y:5200 }, { monsterId:"orc_archer", x:15800,y:6400 },
       // ── [보스] 오크 족장 ─ 동쪽 끝 요새
-      { monsterId:"orc_chief", x:9000, y:4000 },
+      { monsterId:"orc_chief", x:18000, y:8000 },
     ];
 
-    // 글루디오 평원 (gludioPlain) 11120w×6500h — Lv 10-18
+    // 글루디오 평원 (gludioPlain) 21920w×12740h — Lv 10-18
     const gludioPlain: SpawnEntry[] = [
       // ── 멧돼지 서북 초원 (lv5-8) ─ 평원 진입 초기 구역
-      { monsterId:"wild_boar", x:700,y:800 }, { monsterId:"wild_boar", x:1100,y:1200 },
-      { monsterId:"wild_boar", x:700,y:1700 }, { monsterId:"wild_boar", x:1100,y:2200 },
+      { monsterId:"wild_boar", x:1400,y:1600 }, { monsterId:"wild_boar", x:2200,y:2400 },
+      { monsterId:"wild_boar", x:1400,y:3400 }, { monsterId:"wild_boar", x:2200,y:4400 },
       // ── 고블린 중앙 캠프 (lv5-8) ─ 평원 중심
-      { monsterId:"goblin_child", x:4800,y:2800 }, { monsterId:"goblin_child", x:5300,y:3300 },
-      { monsterId:"goblin_child", x:4800,y:3900 }, { monsterId:"goblin_child", x:5300,y:4500 },
+      { monsterId:"goblin_child", x:9600,y:5600 }, { monsterId:"goblin_child", x:10600,y:6600 },
+      { monsterId:"goblin_child", x:9600,y:7800 }, { monsterId:"goblin_child", x:10600,y:9000 },
       // ── 도마뱀 동쪽 척후대 (lv14-16) ─ 동쪽 고위험
-      { monsterId:"lizard_scout", x:8800,y:1500 }, { monsterId:"lizard_scout", x:9300,y:2000 },
-      { monsterId:"lizard_scout", x:8800,y:2600 }, { monsterId:"lizard_scout", x:9300,y:3200 },
+      { monsterId:"lizard_scout", x:17600,y:3000 }, { monsterId:"lizard_scout", x:18600,y:4000 },
+      { monsterId:"lizard_scout", x:17600,y:5200 }, { monsterId:"lizard_scout", x:18600,y:6400 },
     ];
 
-    // 달안개 습지 (moonlitWetland) 11120w×6500h — Lv 20-28
+    // 달안개 습지 (moonlitWetland) 21920w×12740h — Lv 20-28
     const moonlitWetland: SpawnEntry[] = [
       // ── 늪개구리 서쪽 늪 (lv21-23) ─ 습지 입구
-      { monsterId:"bog_frog", x:600,y:1800 }, { monsterId:"bog_frog", x:1050,y:2300 },
-      { monsterId:"bog_frog", x:600,y:2900 }, { monsterId:"bog_frog", x:1050,y:3500 },
+      { monsterId:"bog_frog", x:1200,y:3600 }, { monsterId:"bog_frog", x:2100,y:4600 },
+      { monsterId:"bog_frog", x:1200,y:5800 }, { monsterId:"bog_frog", x:2100,y:7000 },
       // ── 독거미 중앙 오염 지대 (lv17-20) ─ 습지 중심
-      { monsterId:"poison_spider", x:5200,y:2200 }, { monsterId:"poison_spider", x:5700,y:2700 },
-      { monsterId:"poison_spider", x:5200,y:3300 }, { monsterId:"poison_spider", x:5700,y:3900 },
+      { monsterId:"poison_spider", x:10400,y:4400 }, { monsterId:"poison_spider", x:11400,y:5400 },
+      { monsterId:"poison_spider", x:10400,y:6600 }, { monsterId:"poison_spider", x:11400,y:7800 },
       // ── 워울프 동쪽 안개 숲 (lv20-25) ─ 고위험
-      { monsterId:"werewolf", x:8800,y:1800 }, { monsterId:"werewolf", x:9300,y:2300 },
-      { monsterId:"werewolf", x:8800,y:2900 }, { monsterId:"werewolf", x:9300,y:3500 },
+      { monsterId:"werewolf", x:17600,y:3600 }, { monsterId:"werewolf", x:18600,y:4600 },
+      { monsterId:"werewolf", x:17600,y:5800 }, { monsterId:"werewolf", x:18600,y:7000 },
     ];
 
-    // 기란 도시 (giranTown) 9680w×5460h — Lv 30-40
+    // 기란 도시 (giranTown) 19040w×10660h — Lv 30-40
     const giranTown: SpawnEntry[] = [
       // ── 드레이크 북쪽 황무지 (lv35-38) ─ 도시 북단 고위험
-      { monsterId:"drake", x:2000,y:400 }, { monsterId:"drake", x:2500,y:750 },
-      { monsterId:"drake", x:2000,y:1200 }, { monsterId:"drake", x:2500,y:1700 },
+      { monsterId:"drake", x:4000,y:800 }, { monsterId:"drake", x:5000,y:1500 },
+      { monsterId:"drake", x:4000,y:2400 }, { monsterId:"drake", x:5000,y:3400 },
       // ── 석재 골렘 동쪽 폐허 (lv24-26) ─ 도시 동쪽 외곽
-      { monsterId:"stone_golem", x:7000,y:2200 }, { monsterId:"stone_golem", x:7500,y:2700 },
-      { monsterId:"stone_golem", x:7000,y:3300 }, { monsterId:"stone_golem", x:7500,y:3900 },
+      { monsterId:"stone_golem", x:14000,y:4400 }, { monsterId:"stone_golem", x:15000,y:5400 },
+      { monsterId:"stone_golem", x:14000,y:6600 }, { monsterId:"stone_golem", x:15000,y:7800 },
     ];
 
-    // 용의 계곡 (dragonValley) 12560w×7020h — Lv 35-50
+    // 용의 계곡 (dragonValley) 24800w×13780h — Lv 35-50
     const dragonValley: SpawnEntry[] = [
       // ── 드레이크 서쪽 협곡 (lv38-40) ─ 계곡 진입
-      { monsterId:"drake", x:600,y:2000 }, { monsterId:"drake", x:1100,y:2600 },
-      { monsterId:"drake", x:600,y:3300 }, { monsterId:"drake", x:1100,y:4000 },
+      { monsterId:"drake", x:1200,y:4000 }, { monsterId:"drake", x:2200,y:5200 },
+      { monsterId:"drake", x:1200,y:6600 }, { monsterId:"drake", x:2200,y:8000 },
       // ── 와이번 중앙 화염지대 (lv42-45) ─ 핵심 고위험 사냥터
-      { monsterId:"ash_wyvern", x:5800,y:2500 }, { monsterId:"ash_wyvern", x:6400,y:3100 },
-      { monsterId:"ash_wyvern", x:5800,y:3800 }, { monsterId:"ash_wyvern", x:6400,y:4500 },
+      { monsterId:"ash_wyvern", x:11600,y:5000 }, { monsterId:"ash_wyvern", x:12800,y:6200 },
+      { monsterId:"ash_wyvern", x:11600,y:7600 }, { monsterId:"ash_wyvern", x:12800,y:9000 },
       // ── 드레이크 동쪽 잔해지 (lv38-40) ─ 보스 전 구역
-      { monsterId:"drake", x:9800,y:2200 }, { monsterId:"drake", x:10300,y:2800 },
-      { monsterId:"drake", x:9800,y:3500 }, { monsterId:"drake", x:10300,y:4200 },
+      { monsterId:"drake", x:19600,y:4400 }, { monsterId:"drake", x:20600,y:5600 },
+      { monsterId:"drake", x:19600,y:7000 }, { monsterId:"drake", x:20600,y:8400 },
       // ── [보스] 붉은 용 ─ 계곡 최심부 레이드
-      { monsterId:"red_dragon", x:11800, y:3500 },
+      { monsterId:"red_dragon", x:23600, y:7000 },
     ];
 
     // ──────────────────────────────────────────────────────────────────────
-    // 고대 동굴 (ancientCave) 4280w×2600h — Lv 8-15 던전
+    // 고대 동굴 (ancientCave) 8240w×4940h — Lv 8-15 던전
     // ──────────────────────────────────────────────────────────────────────
     const ancientCave: SpawnEntry[] = [
       // ── Hall 1 해골 수호자 (lv7-10) ─ 동굴 입구 구역
-      { monsterId:"skeleton_warrior", x:500,y:700 },
-      { monsterId:"skeleton_warrior", x:900,y:1100 },
-      { monsterId:"skeleton_warrior", x:500,y:1600 },
+      { monsterId:"skeleton_warrior", x:1000,y:1400 },
+      { monsterId:"skeleton_warrior", x:1800,y:2200 },
+      { monsterId:"skeleton_warrior", x:1000,y:3200 },
       // ── Hall 2 해골 심층부 (lv10-13) ─ 동굴 중심부
-      { monsterId:"skeleton_warrior", x:2000,y:700 },
-      { monsterId:"skeleton_warrior", x:2400,y:1100 },
-      { monsterId:"skeleton_warrior", x:2000,y:1600 },
+      { monsterId:"skeleton_warrior", x:4000,y:1400 },
+      { monsterId:"skeleton_warrior", x:4800,y:2200 },
+      { monsterId:"skeleton_warrior", x:4000,y:3200 },
       // ── [보스] 해골/고블린 보스 ─ 최심부 보스방
-      { monsterId:"skeleton_boss", x:3500, y:1000 },
-      { monsterId:"goblin_boss",   x:3800, y:1400 },
+      { monsterId:"skeleton_boss", x:7000, y:2000 },
+      { monsterId:"goblin_boss",   x:7600, y:2800 },
     ];
 
     const mapSpawns: Record<string, SpawnEntry[]> = {
@@ -3572,7 +3572,7 @@ export class WorldScene extends Phaser.Scene {
     );
     const bob =
       sprite.animState === "walk"
-        ? [0, -2.2][sprite.animFrame % 2]
+        ? [0, -2.2, -0.8][sprite.animFrame % 3]
         : sprite.animState === "attack"
           ? [-1, -3.5, 2, 0][sprite.animFrame % 4]
           : 0;
@@ -4236,7 +4236,7 @@ export class WorldScene extends Phaser.Scene {
           this.handleMapTransition("silverKnightTown", 240, 400);
         // 고대 동굴 입구 (픽셀 900, 162)
         if (Math.abs(px - 900) < 55 && Math.abs(py - 162) < 55)
-          this.handleMapTransition("ancientCave", 300, 1200);
+          this.handleMapTransition("ancientCave", 600, 2400);
         break;
       case "ancientCave":
         // 동굴 출구 (맵 하단 중앙)
