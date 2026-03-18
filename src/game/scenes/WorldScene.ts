@@ -4,7 +4,11 @@ import { MAPS } from "@/game/data/maps";
 import { NPCS } from "@/game/data/npcs";
 import { useGameStore } from "@/lib/gameStore";
 import { getSocket } from "@/lib/socket";
-import { ELEMENTARY_VOCABULARY } from "@/data/vocabulary/elementary";
+import { GRADE3_VOCABULARY } from "@/data/vocabulary/grade3";
+import { GRADE4_VOCABULARY } from "@/data/vocabulary/grade4";
+import { GRADE5_VOCABULARY } from "@/data/vocabulary/grade5";
+import { GRADE6_VOCABULARY } from "@/data/vocabulary/grade6";
+import type { VocabularyEntry } from "@/types/quiz";
 import { MONSTERS } from "@/game/data/monsters";
 import { ITEMS } from "@/game/data/items";
 import { WeaponSubType } from "@/types/item";
@@ -730,18 +734,17 @@ export class WorldScene extends Phaser.Scene {
 
     this.pendingOfflineMonsterId = monsterId;
 
-    const vocab = ELEMENTARY_VOCABULARY;
-    const questionIndex = Math.floor(Math.random() * vocab.length);
-    const questionEntry = vocab[questionIndex];
+    const vocab = this.getGradeVocabulary();
+    const { entry: questionEntry, index: questionIndex } =
+      this.pickQuizWord(vocab);
     const useEnToKr = Math.random() > 0.5;
 
-    const wrongIndices: number[] = [];
-    while (wrongIndices.length < 3) {
+    const wrongSet = new Set<number>();
+    while (wrongSet.size < 3) {
       const idx = Math.floor(Math.random() * vocab.length);
-      if (idx !== questionIndex && !wrongIndices.includes(idx)) {
-        wrongIndices.push(idx);
-      }
+      if (idx !== questionIndex) wrongSet.add(idx);
     }
+    const wrongIndices = Array.from(wrongSet);
 
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
     const wrongAnswers = wrongIndices.map((idx) =>
@@ -753,7 +756,7 @@ export class WorldScene extends Phaser.Scene {
 
     EventBus.emit("quiz_trigger", {
       question: {
-        id: `kill-${questionIndex}`,
+        id: `kill-${questionEntry.en}`,
         type: useEnToKr ? "en_to_kr" : "kr_to_en",
         question: useEnToKr ? questionEntry.en : questionEntry.kr,
         correctAnswer,
@@ -777,18 +780,17 @@ export class WorldScene extends Phaser.Scene {
     this.pendingOfflineMonsterId = monsterId;
     this.stopAutoAttack();
 
-    const vocab = ELEMENTARY_VOCABULARY;
-    const questionIndex = Math.floor(Math.random() * vocab.length);
-    const questionEntry = vocab[questionIndex];
+    const vocab = this.getGradeVocabulary();
+    const { entry: questionEntry, index: questionIndex } =
+      this.pickQuizWord(vocab);
     const useEnToKr = Math.random() > 0.5;
 
-    const wrongIndices: number[] = [];
-    while (wrongIndices.length < 3) {
+    const wrongSet = new Set<number>();
+    while (wrongSet.size < 3) {
       const idx = Math.floor(Math.random() * vocab.length);
-      if (idx !== questionIndex && !wrongIndices.includes(idx)) {
-        wrongIndices.push(idx);
-      }
+      if (idx !== questionIndex) wrongSet.add(idx);
     }
+    const wrongIndices = Array.from(wrongSet);
 
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
     const wrongAnswers = wrongIndices.map((idx) =>
@@ -800,7 +802,7 @@ export class WorldScene extends Phaser.Scene {
 
     EventBus.emit("quiz_trigger", {
       question: {
-        id: `offline-${questionIndex}`,
+        id: `offline-${questionEntry.en}`,
         type: useEnToKr ? "en_to_kr" : "kr_to_en",
         question: useEnToKr ? questionEntry.en : questionEntry.kr,
         correctAnswer,
@@ -811,7 +813,7 @@ export class WorldScene extends Phaser.Scene {
       choices,
       streak: this.offlineStreak,
       monsterId,
-      monsterLevel: this.offlineMonsterHp.get(monsterId) ? 1 : 1,
+      monsterLevel: this.offlineMonsterHp.get(monsterId)?.hp ?? 1,
     });
   }
 
@@ -839,6 +841,10 @@ export class WorldScene extends Phaser.Scene {
 
     if (payload.status !== "correct") {
       this.offlineStreak = 0;
+      // 틀린 단어 기록 (나중에 다시 출제)
+      if (payload.answer) {
+        useGameStore.getState().markWordWrong(payload.answer);
+      }
       return;
     }
 
@@ -5020,6 +5026,49 @@ export class WorldScene extends Phaser.Scene {
   private noise(x: number, y: number) {
     const value = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
     return value - Math.floor(value);
+  }
+
+  private getGradeVocabulary(): VocabularyEntry[] {
+    const grade = useGameStore.getState().grade ?? 3;
+    const fullVocab =
+      grade >= 6
+        ? GRADE6_VOCABULARY
+        : grade >= 5
+          ? GRADE5_VOCABULARY
+          : grade >= 4
+            ? GRADE4_VOCABULARY
+            : GRADE3_VOCABULARY;
+
+    const store = useGameStore.getState();
+    const usedIds = store.usedWordIds;
+    const wrongIds = store.wrongWordIds;
+
+    // 아직 안 나온 단어 + 틀렸던 단어 우선
+    const unused = fullVocab.filter((w) => !usedIds.has(w.en));
+    const wrong = fullVocab.filter((w) => wrongIds.has(w.en));
+
+    // 풀에서 아직 안 나온 단어가 충분하면 그것을 사용
+    // 부족하면 틀렸던 단어 포함, 그래도 부족하면 전체 리셋
+    if (unused.length >= 10) {
+      return unused;
+    }
+    if (wrong.length >= 4) {
+      return wrong;
+    }
+    // 모든 단어를 다 풀었으면 리셋
+    useGameStore.getState().usedWordIds.clear();
+    return fullVocab;
+  }
+
+  private pickQuizWord(vocab: VocabularyEntry[]): {
+    entry: VocabularyEntry;
+    index: number;
+  } {
+    const idx = Math.floor(Math.random() * vocab.length);
+    const entry = vocab[idx];
+    // 사용한 단어 기록
+    useGameStore.getState().markWordUsed(entry.en);
+    return { entry, index: idx };
   }
 
   private getFrameKey(
