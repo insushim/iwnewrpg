@@ -165,6 +165,7 @@ export class WorldScene extends Phaser.Scene {
       exp: number;
       goldMin: number;
       goldMax: number;
+      lastPlayerAttack?: number;
     }
   >();
   private pendingOfflineMonsterId: string | null = null;
@@ -237,7 +238,12 @@ export class WorldScene extends Phaser.Scene {
     super("WorldScene");
   }
 
-  create(data?: { mapId?: string; spawnX?: number; spawnY?: number; serverName?: string }) {
+  create(data?: {
+    mapId?: string;
+    spawnX?: number;
+    spawnY?: number;
+    serverName?: string;
+  }) {
     if (data?.mapId) {
       this.mapId = data.mapId;
       if (data.spawnX !== undefined) this.spawnX = data.spawnX;
@@ -316,7 +322,10 @@ export class WorldScene extends Phaser.Scene {
     const player = useGameStore.getState().player;
     const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
     const width = this.scale.width;
-    const banner = this.add.container(width / 2, 94).setDepth(1600).setScrollFactor(0);
+    const banner = this.add
+      .container(width / 2, 94)
+      .setDepth(1600)
+      .setScrollFactor(0);
 
     const plate = this.add.graphics();
     plate.fillStyle(0x091019, 0.88);
@@ -347,12 +356,17 @@ export class WorldScene extends Phaser.Scene {
     );
     banner.add(
       this.add
-        .text(0, 10, `${player.name} · ${this.formatClassLabel(player.className)} 입장`, {
-          color: "#f2e4c2",
-          fontFamily: "serif",
-          fontSize: "22px",
-          fontStyle: "bold",
-        })
+        .text(
+          0,
+          10,
+          `${player.name} · ${this.formatClassLabel(player.className)} 입장`,
+          {
+            color: "#f2e4c2",
+            fontFamily: "serif",
+            fontSize: "22px",
+            fontStyle: "bold",
+          },
+        )
         .setOrigin(0.5),
     );
     banner.add(
@@ -476,8 +490,15 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private generateOfflineMonsters(): Array<{
-    id: string; mapId: string; name: string; level: number;
-    hp: number; maxHp: number; atk: number; x: number; y: number;
+    id: string;
+    mapId: string;
+    name: string;
+    level: number;
+    hp: number;
+    maxHp: number;
+    atk: number;
+    x: number;
+    y: number;
   }> {
     type SpawnEntry = { monsterId: string; x: number; y: number };
 
@@ -489,112 +510,158 @@ export class WorldScene extends Phaser.Scene {
     // 이야기의 섬 (speakingIsland) 17600w×10660h — Lv 1-10
     const speakingIsland: SpawnEntry[] = [
       // ── 슬라임 서쪽 늪 (lv1-2) ─ 마을 서남쪽, 완전 초보 사냥터
-      { monsterId:"slime", x:440,y:3600 }, { monsterId:"slime", x:1040,y:4300 },
-      { monsterId:"slime", x:480,y:5100 }, { monsterId:"slime", x:1080,y:5900 },
+      { monsterId: "slime", x: 440, y: 3600 },
+      { monsterId: "slime", x: 1040, y: 4300 },
+      { monsterId: "slime", x: 480, y: 5100 },
+      { monsterId: "slime", x: 1080, y: 5900 },
       // ── 고블린 야영지 (lv3-5) ─ 중앙 평원
-      { monsterId:"goblin_child", x:4400,y:2200 }, { monsterId:"goblin_child", x:5200,y:2900 },
-      { monsterId:"goblin_child", x:4400,y:3800 }, { monsterId:"goblin_child", x:5200,y:4700 },
+      { monsterId: "goblin_child", x: 4400, y: 2200 },
+      { monsterId: "goblin_child", x: 5200, y: 2900 },
+      { monsterId: "goblin_child", x: 4400, y: 3800 },
+      { monsterId: "goblin_child", x: 5200, y: 4700 },
       // ── 멧돼지 동쪽 들판 (lv5-7) ─ 마을 반대편 넓은 평원
-      { monsterId:"wild_boar", x:11600,y:3600 }, { monsterId:"wild_boar", x:12500,y:4400 },
-      { monsterId:"wild_boar", x:11600,y:5400 }, { monsterId:"wild_boar", x:12500,y:6400 },
+      { monsterId: "wild_boar", x: 11600, y: 3600 },
+      { monsterId: "wild_boar", x: 12500, y: 4400 },
+      { monsterId: "wild_boar", x: 11600, y: 5400 },
+      { monsterId: "wild_boar", x: 12500, y: 6400 },
       // ── [보스] 고블린 두목 ─ 동쪽 깊은 곳
-      { monsterId:"goblin_boss", x:15000, y:5600 },
+      { monsterId: "goblin_boss", x: 15000, y: 5600 },
     ];
 
     // 은기사의 마을 (silverKnightTown) 16160w×9620h — Lv 10-20
     const silverKnightTown: SpawnEntry[] = [
       // ── 해골 북쪽 폐허 (lv7-10) ─ 마을 북단 고위험 지역
-      { monsterId:"skeleton_warrior", x:4800,y:760 }, { monsterId:"skeleton_warrior", x:5800,y:1200 },
-      { monsterId:"skeleton_warrior", x:7000,y:760 }, { monsterId:"skeleton_warrior", x:8200,y:1200 },
+      { monsterId: "skeleton_warrior", x: 4800, y: 760 },
+      { monsterId: "skeleton_warrior", x: 5800, y: 1200 },
+      { monsterId: "skeleton_warrior", x: 7000, y: 760 },
+      { monsterId: "skeleton_warrior", x: 8200, y: 1200 },
       // ── 독거미 동쪽 심연 숲 (lv15-17) ─ 마을 동쪽
-      { monsterId:"poison_spider", x:12000,y:3600 }, { monsterId:"poison_spider", x:13000,y:4400 },
-      { monsterId:"poison_spider", x:12000,y:5400 }, { monsterId:"poison_spider", x:13000,y:6400 },
+      { monsterId: "poison_spider", x: 12000, y: 3600 },
+      { monsterId: "poison_spider", x: 13000, y: 4400 },
+      { monsterId: "poison_spider", x: 12000, y: 5400 },
+      { monsterId: "poison_spider", x: 13000, y: 6400 },
       // ── 워울프 남서 깊은 숲 (lv18-20) ─ 고위험 남서 지역
-      { monsterId:"werewolf", x:1800,y:7000 }, { monsterId:"werewolf", x:2700,y:7800 },
-      { monsterId:"werewolf", x:1800,y:8700 }, { monsterId:"werewolf", x:2700,y:9400 },
+      { monsterId: "werewolf", x: 1800, y: 7000 },
+      { monsterId: "werewolf", x: 2700, y: 7800 },
+      { monsterId: "werewolf", x: 1800, y: 8700 },
+      { monsterId: "werewolf", x: 2700, y: 9400 },
       // ── [보스] 오크 족장 ─ 남동 끝
-      { monsterId:"orc_chief", x:14400, y:8400 },
+      { monsterId: "orc_chief", x: 14400, y: 8400 },
     ];
 
     // 바람숲 (windwoodForest) 20480w×11700h — Lv 15-25
     const windwoodForest: SpawnEntry[] = [
       // ── 독거미 서쪽 입구 (lv17-19) ─ 숲 진입로
-      { monsterId:"poison_spider", x:1200,y:4000 }, { monsterId:"poison_spider", x:2100,y:4900 },
-      { monsterId:"poison_spider", x:1200,y:5900 }, { monsterId:"poison_spider", x:2100,y:6900 },
+      { monsterId: "poison_spider", x: 1200, y: 4000 },
+      { monsterId: "poison_spider", x: 2100, y: 4900 },
+      { monsterId: "poison_spider", x: 1200, y: 5900 },
+      { monsterId: "poison_spider", x: 2100, y: 6900 },
       // ── 워울프 중앙 울창 숲 (lv20-22) ─ 핵심 사냥터
-      { monsterId:"werewolf", x:9000,y:4000 }, { monsterId:"werewolf", x:10000,y:5000 },
-      { monsterId:"werewolf", x:9000,y:6200 }, { monsterId:"werewolf", x:10000,y:7400 },
+      { monsterId: "werewolf", x: 9000, y: 4000 },
+      { monsterId: "werewolf", x: 10000, y: 5000 },
+      { monsterId: "werewolf", x: 9000, y: 6200 },
+      { monsterId: "werewolf", x: 10000, y: 7400 },
       // ── 포레스트 스프라이트 동쪽 심부 (lv22-25) ─ 고위험
-      { monsterId:"forest_sprite", x:17000,y:3600 }, { monsterId:"forest_sprite", x:18000,y:4600 },
-      { monsterId:"forest_sprite", x:17000,y:5800 }, { monsterId:"forest_sprite", x:18000,y:7000 },
+      { monsterId: "forest_sprite", x: 17000, y: 3600 },
+      { monsterId: "forest_sprite", x: 18000, y: 4600 },
+      { monsterId: "forest_sprite", x: 17000, y: 5800 },
+      { monsterId: "forest_sprite", x: 18000, y: 7000 },
       // ── [보스] 석재 골렘 ─ 동쪽 끝 폐허
-      { monsterId:"stone_golem", x:19600, y:6000 },
+      { monsterId: "stone_golem", x: 19600, y: 6000 },
     ];
 
     // 오크 부락지 (orcForest) 19040w×10660h — Lv 18-28
     const orcForest: SpawnEntry[] = [
       // ── 오크 궁수 서쪽 야영지 (lv18-20) ─ 부락 입구
-      { monsterId:"orc_archer", x:1000,y:2600 }, { monsterId:"orc_archer", x:1800,y:3400 },
-      { monsterId:"orc_archer", x:1000,y:4400 }, { monsterId:"orc_archer", x:1800,y:5400 },
+      { monsterId: "orc_archer", x: 1000, y: 2600 },
+      { monsterId: "orc_archer", x: 1800, y: 3400 },
+      { monsterId: "orc_archer", x: 1000, y: 4400 },
+      { monsterId: "orc_archer", x: 1800, y: 5400 },
       // ── 코볼드 중앙 광산 (lv20-22) ─ 부락 중심부
-      { monsterId:"kobold_raider", x:8400,y:4000 }, { monsterId:"kobold_raider", x:9400,y:5000 },
-      { monsterId:"kobold_raider", x:8400,y:6200 }, { monsterId:"kobold_raider", x:9400,y:7400 },
+      { monsterId: "kobold_raider", x: 8400, y: 4000 },
+      { monsterId: "kobold_raider", x: 9400, y: 5000 },
+      { monsterId: "kobold_raider", x: 8400, y: 6200 },
+      { monsterId: "kobold_raider", x: 9400, y: 7400 },
       // ── 오크 동쪽 요새 (lv22-25) ─ 부락 심부
-      { monsterId:"orc_archer", x:15000,y:3000 }, { monsterId:"orc_archer", x:15800,y:4000 },
-      { monsterId:"orc_archer", x:15000,y:5200 }, { monsterId:"orc_archer", x:15800,y:6400 },
+      { monsterId: "orc_archer", x: 15000, y: 3000 },
+      { monsterId: "orc_archer", x: 15800, y: 4000 },
+      { monsterId: "orc_archer", x: 15000, y: 5200 },
+      { monsterId: "orc_archer", x: 15800, y: 6400 },
       // ── [보스] 오크 족장 ─ 동쪽 끝 요새
-      { monsterId:"orc_chief", x:18000, y:8000 },
+      { monsterId: "orc_chief", x: 18000, y: 8000 },
     ];
 
     // 글루디오 평원 (gludioPlain) 21920w×12740h — Lv 10-18
     const gludioPlain: SpawnEntry[] = [
       // ── 멧돼지 서북 초원 (lv5-8) ─ 평원 진입 초기 구역
-      { monsterId:"wild_boar", x:1400,y:1600 }, { monsterId:"wild_boar", x:2200,y:2400 },
-      { monsterId:"wild_boar", x:1400,y:3400 }, { monsterId:"wild_boar", x:2200,y:4400 },
+      { monsterId: "wild_boar", x: 1400, y: 1600 },
+      { monsterId: "wild_boar", x: 2200, y: 2400 },
+      { monsterId: "wild_boar", x: 1400, y: 3400 },
+      { monsterId: "wild_boar", x: 2200, y: 4400 },
       // ── 고블린 중앙 캠프 (lv5-8) ─ 평원 중심
-      { monsterId:"goblin_child", x:9600,y:5600 }, { monsterId:"goblin_child", x:10600,y:6600 },
-      { monsterId:"goblin_child", x:9600,y:7800 }, { monsterId:"goblin_child", x:10600,y:9000 },
+      { monsterId: "goblin_child", x: 9600, y: 5600 },
+      { monsterId: "goblin_child", x: 10600, y: 6600 },
+      { monsterId: "goblin_child", x: 9600, y: 7800 },
+      { monsterId: "goblin_child", x: 10600, y: 9000 },
       // ── 도마뱀 동쪽 척후대 (lv14-16) ─ 동쪽 고위험
-      { monsterId:"lizard_scout", x:17600,y:3000 }, { monsterId:"lizard_scout", x:18600,y:4000 },
-      { monsterId:"lizard_scout", x:17600,y:5200 }, { monsterId:"lizard_scout", x:18600,y:6400 },
+      { monsterId: "lizard_scout", x: 17600, y: 3000 },
+      { monsterId: "lizard_scout", x: 18600, y: 4000 },
+      { monsterId: "lizard_scout", x: 17600, y: 5200 },
+      { monsterId: "lizard_scout", x: 18600, y: 6400 },
     ];
 
     // 달안개 습지 (moonlitWetland) 21920w×12740h — Lv 20-28
     const moonlitWetland: SpawnEntry[] = [
       // ── 늪개구리 서쪽 늪 (lv21-23) ─ 습지 입구
-      { monsterId:"bog_frog", x:1200,y:3600 }, { monsterId:"bog_frog", x:2100,y:4600 },
-      { monsterId:"bog_frog", x:1200,y:5800 }, { monsterId:"bog_frog", x:2100,y:7000 },
+      { monsterId: "bog_frog", x: 1200, y: 3600 },
+      { monsterId: "bog_frog", x: 2100, y: 4600 },
+      { monsterId: "bog_frog", x: 1200, y: 5800 },
+      { monsterId: "bog_frog", x: 2100, y: 7000 },
       // ── 독거미 중앙 오염 지대 (lv17-20) ─ 습지 중심
-      { monsterId:"poison_spider", x:10400,y:4400 }, { monsterId:"poison_spider", x:11400,y:5400 },
-      { monsterId:"poison_spider", x:10400,y:6600 }, { monsterId:"poison_spider", x:11400,y:7800 },
+      { monsterId: "poison_spider", x: 10400, y: 4400 },
+      { monsterId: "poison_spider", x: 11400, y: 5400 },
+      { monsterId: "poison_spider", x: 10400, y: 6600 },
+      { monsterId: "poison_spider", x: 11400, y: 7800 },
       // ── 워울프 동쪽 안개 숲 (lv20-25) ─ 고위험
-      { monsterId:"werewolf", x:17600,y:3600 }, { monsterId:"werewolf", x:18600,y:4600 },
-      { monsterId:"werewolf", x:17600,y:5800 }, { monsterId:"werewolf", x:18600,y:7000 },
+      { monsterId: "werewolf", x: 17600, y: 3600 },
+      { monsterId: "werewolf", x: 18600, y: 4600 },
+      { monsterId: "werewolf", x: 17600, y: 5800 },
+      { monsterId: "werewolf", x: 18600, y: 7000 },
     ];
 
     // 기란 도시 (giranTown) 19040w×10660h — Lv 30-40
     const giranTown: SpawnEntry[] = [
       // ── 드레이크 북쪽 황무지 (lv35-38) ─ 도시 북단 고위험
-      { monsterId:"drake", x:4000,y:800 }, { monsterId:"drake", x:5000,y:1500 },
-      { monsterId:"drake", x:4000,y:2400 }, { monsterId:"drake", x:5000,y:3400 },
+      { monsterId: "drake", x: 4000, y: 800 },
+      { monsterId: "drake", x: 5000, y: 1500 },
+      { monsterId: "drake", x: 4000, y: 2400 },
+      { monsterId: "drake", x: 5000, y: 3400 },
       // ── 석재 골렘 동쪽 폐허 (lv24-26) ─ 도시 동쪽 외곽
-      { monsterId:"stone_golem", x:14000,y:4400 }, { monsterId:"stone_golem", x:15000,y:5400 },
-      { monsterId:"stone_golem", x:14000,y:6600 }, { monsterId:"stone_golem", x:15000,y:7800 },
+      { monsterId: "stone_golem", x: 14000, y: 4400 },
+      { monsterId: "stone_golem", x: 15000, y: 5400 },
+      { monsterId: "stone_golem", x: 14000, y: 6600 },
+      { monsterId: "stone_golem", x: 15000, y: 7800 },
     ];
 
     // 용의 계곡 (dragonValley) 24800w×13780h — Lv 35-50
     const dragonValley: SpawnEntry[] = [
       // ── 드레이크 서쪽 협곡 (lv38-40) ─ 계곡 진입
-      { monsterId:"drake", x:1200,y:4000 }, { monsterId:"drake", x:2200,y:5200 },
-      { monsterId:"drake", x:1200,y:6600 }, { monsterId:"drake", x:2200,y:8000 },
+      { monsterId: "drake", x: 1200, y: 4000 },
+      { monsterId: "drake", x: 2200, y: 5200 },
+      { monsterId: "drake", x: 1200, y: 6600 },
+      { monsterId: "drake", x: 2200, y: 8000 },
       // ── 와이번 중앙 화염지대 (lv42-45) ─ 핵심 고위험 사냥터
-      { monsterId:"ash_wyvern", x:11600,y:5000 }, { monsterId:"ash_wyvern", x:12800,y:6200 },
-      { monsterId:"ash_wyvern", x:11600,y:7600 }, { monsterId:"ash_wyvern", x:12800,y:9000 },
+      { monsterId: "ash_wyvern", x: 11600, y: 5000 },
+      { monsterId: "ash_wyvern", x: 12800, y: 6200 },
+      { monsterId: "ash_wyvern", x: 11600, y: 7600 },
+      { monsterId: "ash_wyvern", x: 12800, y: 9000 },
       // ── 드레이크 동쪽 잔해지 (lv38-40) ─ 보스 전 구역
-      { monsterId:"drake", x:19600,y:4400 }, { monsterId:"drake", x:20600,y:5600 },
-      { monsterId:"drake", x:19600,y:7000 }, { monsterId:"drake", x:20600,y:8400 },
+      { monsterId: "drake", x: 19600, y: 4400 },
+      { monsterId: "drake", x: 20600, y: 5600 },
+      { monsterId: "drake", x: 19600, y: 7000 },
+      { monsterId: "drake", x: 20600, y: 8400 },
       // ── [보스] 붉은 용 ─ 계곡 최심부 레이드
-      { monsterId:"red_dragon", x:23600, y:7000 },
+      { monsterId: "red_dragon", x: 23600, y: 7000 },
     ];
 
     // ──────────────────────────────────────────────────────────────────────
@@ -602,16 +669,16 @@ export class WorldScene extends Phaser.Scene {
     // ──────────────────────────────────────────────────────────────────────
     const ancientCave: SpawnEntry[] = [
       // ── Hall 1 해골 수호자 (lv7-10) ─ 동굴 입구 구역
-      { monsterId:"skeleton_warrior", x:1000,y:1400 },
-      { monsterId:"skeleton_warrior", x:1800,y:2200 },
-      { monsterId:"skeleton_warrior", x:1000,y:3200 },
+      { monsterId: "skeleton_warrior", x: 1000, y: 1400 },
+      { monsterId: "skeleton_warrior", x: 1800, y: 2200 },
+      { monsterId: "skeleton_warrior", x: 1000, y: 3200 },
       // ── Hall 2 해골 심층부 (lv10-13) ─ 동굴 중심부
-      { monsterId:"skeleton_warrior", x:4000,y:1400 },
-      { monsterId:"skeleton_warrior", x:4800,y:2200 },
-      { monsterId:"skeleton_warrior", x:4000,y:3200 },
+      { monsterId: "skeleton_warrior", x: 4000, y: 1400 },
+      { monsterId: "skeleton_warrior", x: 4800, y: 2200 },
+      { monsterId: "skeleton_warrior", x: 4000, y: 3200 },
       // ── [보스] 해골/고블린 보스 ─ 최심부 보스방
-      { monsterId:"skeleton_boss", x:7000, y:2000 },
-      { monsterId:"goblin_boss",   x:7600, y:2800 },
+      { monsterId: "skeleton_boss", x: 7000, y: 2000 },
+      { monsterId: "goblin_boss", x: 7600, y: 2800 },
     ];
 
     const mapSpawns: Record<string, SpawnEntry[]> = {
@@ -645,9 +712,16 @@ export class WorldScene extends Phaser.Scene {
         };
       })
       .filter(Boolean) as Array<{
-        id: string; mapId: string; name: string; level: number;
-        hp: number; maxHp: number; atk: number; x: number; y: number;
-      }>;
+      id: string;
+      mapId: string;
+      name: string;
+      level: number;
+      hp: number;
+      maxHp: number;
+      atk: number;
+      x: number;
+      y: number;
+    }>;
   }
 
   private triggerKillQuiz(monsterId: string) {
@@ -857,7 +931,10 @@ export class WorldScene extends Phaser.Scene {
         const rx = ai?.spawnX ?? sprite.x;
         const ry = ai?.spawnY ?? sprite.y;
         this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: fullHp });
-        if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
+        if (ai) {
+          ai.state = "idle";
+          ai.lastChaseAt = 0;
+        }
         sprite.setPosition(rx, ry);
         sprite.hpFill.width = 50;
         sprite.prevHp = fullHp;
@@ -897,8 +974,12 @@ export class WorldScene extends Phaser.Scene {
       EventBus.on("monster_updated", (payload) => this.upsertMonster(payload)),
       EventBus.on("loot_spawn", (payload) => this.spawnLoot(payload)),
       EventBus.on("loot_picked", (payload) => this.removeLoot(payload.lootId)),
-      EventBus.on("use_summon_stone", (payload: { stoneId: string }) => this.activateSummonStone(payload.stoneId)),
+      EventBus.on("use_summon_stone", (payload: { stoneId: string }) =>
+        this.activateSummonStone(payload.stoneId),
+      ),
       EventBus.on("attempt_tame", () => this.attemptTaming()),
+      EventBus.on("teleport_random", () => this.handleTeleportRandom()),
+      EventBus.on("return_to_town", () => this.handleReturnToTown()),
     );
   }
 
@@ -1132,7 +1213,11 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  private drawTerrainContours(mapId: string, mapWidth: number, mapHeight: number) {
+  private drawTerrainContours(
+    mapId: string,
+    mapWidth: number,
+    mapHeight: number,
+  ) {
     const contour = this.add.graphics();
     contour.lineStyle(2, 0xffffff, 0.03);
 
@@ -1151,7 +1236,12 @@ export class WorldScene extends Phaser.Scene {
 
     if (mapId === "dragonValley" || mapId === "ancientCave") {
       contour.fillStyle(0x0b0807, 0.16);
-      contour.fillEllipse(mapWidth * 0.52, mapHeight * 0.48, mapWidth * 0.72, mapHeight * 0.26);
+      contour.fillEllipse(
+        mapWidth * 0.52,
+        mapHeight * 0.48,
+        mapWidth * 0.72,
+        mapHeight * 0.26,
+      );
     }
 
     this.groundLayer?.add(contour);
@@ -1310,9 +1400,21 @@ export class WorldScene extends Phaser.Scene {
 
     if (mapId === "silverKnightTown" || mapId === "giranTown") {
       g.fillStyle(0xe7d6b5, 0.08);
-      g.fillRoundedRect(mapWidth * 0.5 - 150, mapHeight * 0.5 - 90, 300, 180, 36);
+      g.fillRoundedRect(
+        mapWidth * 0.5 - 150,
+        mapHeight * 0.5 - 90,
+        300,
+        180,
+        36,
+      );
       g.lineStyle(2, 0xf7ebcd, 0.1);
-      g.strokeRoundedRect(mapWidth * 0.5 - 150, mapHeight * 0.5 - 90, 300, 180, 36);
+      g.strokeRoundedRect(
+        mapWidth * 0.5 - 150,
+        mapHeight * 0.5 - 90,
+        300,
+        180,
+        36,
+      );
     }
 
     if (mapId === "speakingIsland") {
@@ -1396,8 +1498,22 @@ export class WorldScene extends Phaser.Scene {
 
     if (mapId === "dragonValley") {
       g.fillStyle(0x1b0b08, 0.24);
-      g.fillTriangle(mapWidth * 0.24, 180, mapWidth * 0.42, mapHeight * 0.62, mapWidth * 0.07, mapHeight * 0.62);
-      g.fillTriangle(mapWidth * 0.82, 160, mapWidth * 0.96, mapHeight * 0.58, mapWidth * 0.64, mapHeight * 0.58);
+      g.fillTriangle(
+        mapWidth * 0.24,
+        180,
+        mapWidth * 0.42,
+        mapHeight * 0.62,
+        mapWidth * 0.07,
+        mapHeight * 0.62,
+      );
+      g.fillTriangle(
+        mapWidth * 0.82,
+        160,
+        mapWidth * 0.96,
+        mapHeight * 0.58,
+        mapWidth * 0.64,
+        mapHeight * 0.58,
+      );
       g.fillStyle(0xffa460, 0.08);
       g.fillEllipse(mapWidth * 0.52, mapHeight * 0.34, 200, 70);
       g.fillStyle(0x3b1710, 0.18);
@@ -1420,7 +1536,11 @@ export class WorldScene extends Phaser.Scene {
     layer.add(g);
   }
 
-  private drawMapStructures(mapId: string, mapWidth: number, mapHeight: number) {
+  private drawMapStructures(
+    mapId: string,
+    mapWidth: number,
+    mapHeight: number,
+  ) {
     const layer = this.propLayer;
     if (!layer) {
       return;
@@ -1450,7 +1570,14 @@ export class WorldScene extends Phaser.Scene {
     if (mapId === "giranTown") {
       this.drawMarketHall(structure, mapWidth * 0.5, 280, 1.08);
       this.drawHouseCluster(structure, 320, 320, 0xb98757, 0x7a4f2d, 0.88);
-      this.drawHouseCluster(structure, mapWidth - 320, 340, 0xa86c48, 0x704125, 0.88);
+      this.drawHouseCluster(
+        structure,
+        mapWidth - 320,
+        340,
+        0xa86c48,
+        0x704125,
+        0.88,
+      );
       this.drawCaravanCanopy(structure, 350, 362, 0.94);
       this.drawCaravanCanopy(structure, mapWidth - 350, 362, 0.94);
       this.drawFountain(structure, mapWidth * 0.5, 334, 0.92);
@@ -1523,7 +1650,14 @@ export class WorldScene extends Phaser.Scene {
     g.fillStyle(wall, 0.95);
     g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 16 * scale);
     g.fillStyle(roof, 0.98);
-    g.fillTriangle(x - w / 2 - 10 * scale, y - h / 2 + 10 * scale, x, y - h / 2 - 34 * scale, x + w / 2 + 10 * scale, y - h / 2 + 10 * scale);
+    g.fillTriangle(
+      x - w / 2 - 10 * scale,
+      y - h / 2 + 10 * scale,
+      x,
+      y - h / 2 - 34 * scale,
+      x + w / 2 + 10 * scale,
+      y - h / 2 + 10 * scale,
+    );
     g.fillStyle(0xe7d2a2, 0.2);
     g.fillRect(x - 10 * scale, y - 4 * scale, 20 * scale, 28 * scale);
     g.fillStyle(0x59311c, 0.9);
@@ -1550,8 +1684,18 @@ export class WorldScene extends Phaser.Scene {
     g.fillStyle(roof, 0.98);
     g.fillRect(x - w / 2, y - h / 2 - 14 * scale, w, 20 * scale);
     g.fillStyle(roof, 0.95);
-    g.fillRect(x - w / 2 - 24 * scale, y - h / 2 - 2 * scale, 42 * scale, 110 * scale);
-    g.fillRect(x + w / 2 - 18 * scale, y - h / 2 - 2 * scale, 42 * scale, 110 * scale);
+    g.fillRect(
+      x - w / 2 - 24 * scale,
+      y - h / 2 - 2 * scale,
+      42 * scale,
+      110 * scale,
+    );
+    g.fillRect(
+      x + w / 2 - 18 * scale,
+      y - h / 2 - 2 * scale,
+      42 * scale,
+      110 * scale,
+    );
     g.fillStyle(0x5a6470, 0.98);
     g.fillRect(x - 16 * scale, y - 10 * scale, 32 * scale, 50 * scale);
     g.fillStyle(0xeaf3ff, 0.16);
@@ -1576,20 +1720,44 @@ export class WorldScene extends Phaser.Scene {
     g.fillRect(x - 8 * scale, y - 8 * scale, 16 * scale, 24 * scale);
   }
 
-  private drawMarketHall(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawMarketHall(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090b0d, 0.2);
     g.fillEllipse(x, y + 62 * scale, 210 * scale, 26 * scale);
     g.fillStyle(0xc49a69, 0.95);
-    g.fillRoundedRect(x - 100 * scale, y - 30 * scale, 200 * scale, 82 * scale, 18 * scale);
+    g.fillRoundedRect(
+      x - 100 * scale,
+      y - 30 * scale,
+      200 * scale,
+      82 * scale,
+      18 * scale,
+    );
     g.fillStyle(0x7a382a, 0.98);
-    g.fillTriangle(x - 118 * scale, y - 14 * scale, x, y - 74 * scale, x + 118 * scale, y - 14 * scale);
+    g.fillTriangle(
+      x - 118 * scale,
+      y - 14 * scale,
+      x,
+      y - 74 * scale,
+      x + 118 * scale,
+      y - 14 * scale,
+    );
     g.fillStyle(0xefdbb2, 0.22);
     g.fillRect(x - 68 * scale, y - 4 * scale, 20 * scale, 24 * scale);
     g.fillRect(x - 10 * scale, y - 4 * scale, 20 * scale, 24 * scale);
     g.fillRect(x + 48 * scale, y - 4 * scale, 20 * scale, 24 * scale);
   }
 
-  private drawShrine(g: Phaser.GameObjects.Graphics, x: number, y: number, stone: number, glow: number) {
+  private drawShrine(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    stone: number,
+    glow: number,
+  ) {
     g.fillStyle(0x06080a, 0.2);
     g.fillEllipse(x, y + 36, 120, 24);
     g.fillStyle(stone, 0.94);
@@ -1602,7 +1770,12 @@ export class WorldScene extends Phaser.Scene {
     g.fillRect(x - 6, y - 12, 12, 32);
   }
 
-  private drawRuinedArch(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawRuinedArch(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x07090b, 0.22);
     g.fillEllipse(x, y + 52 * scale, 140 * scale, 28 * scale);
     g.fillStyle(0x666a67, 0.94);
@@ -1614,29 +1787,76 @@ export class WorldScene extends Phaser.Scene {
     g.strokePath();
   }
 
-  private drawLavaForge(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawLavaForge(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x080506, 0.22);
     g.fillEllipse(x, y + 40 * scale, 120 * scale, 24 * scale);
     g.fillStyle(0x524847, 0.96);
-    g.fillRoundedRect(x - 56 * scale, y - 12 * scale, 112 * scale, 42 * scale, 12 * scale);
+    g.fillRoundedRect(
+      x - 56 * scale,
+      y - 12 * scale,
+      112 * scale,
+      42 * scale,
+      12 * scale,
+    );
     g.fillStyle(0xff8a41, 0.4);
-    g.fillRoundedRect(x - 34 * scale, y - 2 * scale, 68 * scale, 18 * scale, 8 * scale);
+    g.fillRoundedRect(
+      x - 34 * scale,
+      y - 2 * scale,
+      68 * scale,
+      18 * scale,
+      8 * scale,
+    );
     g.fillStyle(0xffd89a, 0.14);
     g.fillEllipse(x, y + 6 * scale, 54 * scale, 12 * scale);
   }
 
-  private drawCrystalObelisk(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawCrystalObelisk(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x081016, 0.18);
     g.fillEllipse(x, y + 30 * scale, 72 * scale, 16 * scale);
     g.fillStyle(0x6fe2ff, 0.82);
-    g.fillTriangle(x, y - 42 * scale, x + 18 * scale, y + 6 * scale, x - 18 * scale, y + 6 * scale);
+    g.fillTriangle(
+      x,
+      y - 42 * scale,
+      x + 18 * scale,
+      y + 6 * scale,
+      x - 18 * scale,
+      y + 6 * scale,
+    );
     g.fillStyle(0xdfffff, 0.45);
-    g.fillTriangle(x, y - 28 * scale, x + 8 * scale, y - 2 * scale, x - 8 * scale, y - 2 * scale);
+    g.fillTriangle(
+      x,
+      y - 28 * scale,
+      x + 8 * scale,
+      y - 2 * scale,
+      x - 8 * scale,
+      y - 2 * scale,
+    );
     g.fillStyle(0x52585e, 0.96);
-    g.fillRoundedRect(x - 16 * scale, y + 6 * scale, 32 * scale, 18 * scale, 6 * scale);
+    g.fillRoundedRect(
+      x - 16 * scale,
+      y + 6 * scale,
+      32 * scale,
+      18 * scale,
+      6 * scale,
+    );
   }
 
-  private drawTotem(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawTotem(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090708, 0.2);
     g.fillEllipse(x, y + 38 * scale, 90 * scale, 20 * scale);
     g.fillStyle(0x6a4931, 0.96);
@@ -1647,19 +1867,36 @@ export class WorldScene extends Phaser.Scene {
     g.fillEllipse(x, y - 18 * scale, 12 * scale, 12 * scale);
   }
 
-  private drawCampfire(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawCampfire(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090607, 0.22);
     g.fillEllipse(x, y + 22 * scale, 76 * scale, 18 * scale);
     g.fillStyle(0x6f5140, 0.95);
     g.fillRect(x - 20 * scale, y + 2 * scale, 40 * scale, 6 * scale);
     g.fillRect(x - 6 * scale, y - 10 * scale, 12 * scale, 26 * scale);
     g.fillStyle(0xff8a4a, 0.52);
-    g.fillTriangle(x, y - 28 * scale, x + 12 * scale, y - 4 * scale, x - 12 * scale, y - 4 * scale);
+    g.fillTriangle(
+      x,
+      y - 28 * scale,
+      x + 12 * scale,
+      y - 4 * scale,
+      x - 12 * scale,
+      y - 4 * scale,
+    );
     g.fillStyle(0xffde8a, 0.24);
     g.fillEllipse(x, y - 10 * scale, 26 * scale, 18 * scale);
   }
 
-  private drawFarmstead(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawFarmstead(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     this.drawHouseCluster(g, x, y, 0xbe9a62, 0x835534, scale);
     g.fillStyle(0xb3a164, 0.24);
     g.fillRect(x + 68 * scale, y - 4 * scale, 72 * scale, 36 * scale);
@@ -1667,7 +1904,12 @@ export class WorldScene extends Phaser.Scene {
     g.fillRect(x + 74 * scale, y + 2 * scale, 60 * scale, 24 * scale);
   }
 
-  private drawStoneCircle(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawStoneCircle(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x07090b, 0.18);
     g.fillEllipse(x, y + 26 * scale, 120 * scale, 24 * scale);
     for (let index = 0; index < 6; index += 1) {
@@ -1675,28 +1917,61 @@ export class WorldScene extends Phaser.Scene {
       const sx = x + Math.cos(angle) * 36 * scale;
       const sy = y + Math.sin(angle) * 14 * scale;
       g.fillStyle(0x78796f, 0.95);
-      g.fillRoundedRect(sx - 6 * scale, sy - 18 * scale, 12 * scale, 28 * scale, 4 * scale);
+      g.fillRoundedRect(
+        sx - 6 * scale,
+        sy - 18 * scale,
+        12 * scale,
+        28 * scale,
+        4 * scale,
+      );
     }
     g.fillStyle(0xe2efc4, 0.08);
     g.fillEllipse(x, y, 28 * scale, 16 * scale);
   }
 
-  private drawBridge(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawBridge(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x0a0e11, 0.16);
     g.fillEllipse(x, y + 24 * scale, 140 * scale, 20 * scale);
     g.fillStyle(0x7d5c3a, 0.95);
-    g.fillRoundedRect(x - 58 * scale, y - 6 * scale, 116 * scale, 16 * scale, 8 * scale);
+    g.fillRoundedRect(
+      x - 58 * scale,
+      y - 6 * scale,
+      116 * scale,
+      16 * scale,
+      8 * scale,
+    );
     g.fillStyle(0xa47d54, 0.95);
     for (let index = 0; index < 6; index += 1) {
-      g.fillRect(x - 48 * scale + index * 18 * scale, y - 4 * scale, 10 * scale, 12 * scale);
+      g.fillRect(
+        x - 48 * scale + index * 18 * scale,
+        y - 4 * scale,
+        10 * scale,
+        12 * scale,
+      );
     }
   }
 
-  private drawDock(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawDock(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090d11, 0.18);
     g.fillEllipse(x, y + 26 * scale, 180 * scale, 24 * scale);
     g.fillStyle(0x805b39, 0.96);
-    g.fillRoundedRect(x - 72 * scale, y - 10 * scale, 144 * scale, 18 * scale, 8 * scale);
+    g.fillRoundedRect(
+      x - 72 * scale,
+      y - 10 * scale,
+      144 * scale,
+      18 * scale,
+      8 * scale,
+    );
     for (let index = 0; index < 4; index += 1) {
       const px = x - 54 * scale + index * 36 * scale;
       g.fillRect(px, y + 8 * scale, 8 * scale, 28 * scale);
@@ -1706,36 +1981,83 @@ export class WorldScene extends Phaser.Scene {
     g.fillRect(x + 20 * scale, y - 2 * scale, 22 * scale, 6 * scale);
   }
 
-  private drawLighthouse(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawLighthouse(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x070b0f, 0.18);
     g.fillEllipse(x, y + 64 * scale, 96 * scale, 18 * scale);
     g.fillStyle(0xd8ddd8, 0.96);
-    g.fillRoundedRect(x - 24 * scale, y - 46 * scale, 48 * scale, 112 * scale, 16 * scale);
+    g.fillRoundedRect(
+      x - 24 * scale,
+      y - 46 * scale,
+      48 * scale,
+      112 * scale,
+      16 * scale,
+    );
     g.fillStyle(0xc06743, 0.96);
     g.fillRect(x - 28 * scale, y - 56 * scale, 56 * scale, 18 * scale);
     g.fillStyle(0xffefba, 0.28);
     g.fillEllipse(x, y - 40 * scale, 32 * scale, 20 * scale);
     g.fillStyle(0xfef9da, 0.16);
-    g.fillTriangle(x + 4 * scale, y - 48 * scale, x + 68 * scale, y - 26 * scale, x + 12 * scale, y - 12 * scale);
+    g.fillTriangle(
+      x + 4 * scale,
+      y - 48 * scale,
+      x + 68 * scale,
+      y - 26 * scale,
+      x + 12 * scale,
+      y - 12 * scale,
+    );
   }
 
-  private drawMarketStalls(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawMarketStalls(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     for (let index = -1; index <= 1; index += 1) {
       const ox = x + index * 52 * scale;
       g.fillStyle(0x0a0c0e, 0.16);
       g.fillEllipse(ox, y + 18 * scale, 48 * scale, 10 * scale);
       g.fillStyle(0x8c623d, 0.95);
-      g.fillRoundedRect(ox - 18 * scale, y - 2 * scale, 36 * scale, 18 * scale, 6 * scale);
+      g.fillRoundedRect(
+        ox - 18 * scale,
+        y - 2 * scale,
+        36 * scale,
+        18 * scale,
+        6 * scale,
+      );
       g.fillStyle(index === 0 ? 0xb33d2f : 0xd0b25f, 0.96);
-      g.fillTriangle(ox - 24 * scale, y + 2 * scale, ox, y - 22 * scale, ox + 24 * scale, y + 2 * scale);
+      g.fillTriangle(
+        ox - 24 * scale,
+        y + 2 * scale,
+        ox,
+        y - 22 * scale,
+        ox + 24 * scale,
+        y + 2 * scale,
+      );
     }
   }
 
-  private drawGatehouse(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawGatehouse(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x070b0f, 0.18);
     g.fillEllipse(x, y + 50 * scale, 180 * scale, 22 * scale);
     g.fillStyle(0xaab4bf, 0.96);
-    g.fillRoundedRect(x - 84 * scale, y - 20 * scale, 168 * scale, 54 * scale, 14 * scale);
+    g.fillRoundedRect(
+      x - 84 * scale,
+      y - 20 * scale,
+      168 * scale,
+      54 * scale,
+      14 * scale,
+    );
     g.fillRect(x - 108 * scale, y - 8 * scale, 28 * scale, 72 * scale);
     g.fillRect(x + 80 * scale, y - 8 * scale, 28 * scale, 72 * scale);
     g.fillStyle(0x5d6875, 0.96);
@@ -1745,7 +2067,12 @@ export class WorldScene extends Phaser.Scene {
     g.fillRect(x + 38 * scale, y - 8 * scale, 16 * scale, 14 * scale);
   }
 
-  private drawFountain(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawFountain(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x0b1014, 0.18);
     g.fillEllipse(x, y + 26 * scale, 140 * scale, 22 * scale);
     g.fillStyle(0x98a7b6, 0.96);
@@ -1758,13 +2085,31 @@ export class WorldScene extends Phaser.Scene {
     g.fillEllipse(x, y - 22 * scale, 26 * scale, 18 * scale);
   }
 
-  private drawBarracks(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawBarracks(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x080b0f, 0.18);
     g.fillEllipse(x, y + 38 * scale, 132 * scale, 20 * scale);
     g.fillStyle(0xadb6bd, 0.95);
-    g.fillRoundedRect(x - 58 * scale, y - 22 * scale, 116 * scale, 54 * scale, 12 * scale);
+    g.fillRoundedRect(
+      x - 58 * scale,
+      y - 22 * scale,
+      116 * scale,
+      54 * scale,
+      12 * scale,
+    );
     g.fillStyle(0x6d7885, 0.98);
-    g.fillTriangle(x - 72 * scale, y - 6 * scale, x, y - 46 * scale, x + 72 * scale, y - 6 * scale);
+    g.fillTriangle(
+      x - 72 * scale,
+      y - 6 * scale,
+      x,
+      y - 46 * scale,
+      x + 72 * scale,
+      y - 6 * scale,
+    );
     g.fillStyle(0xe7f2ff, 0.16);
     g.fillRect(x - 34 * scale, y - 4 * scale, 18 * scale, 14 * scale);
     g.fillRect(x + 16 * scale, y - 4 * scale, 18 * scale, 14 * scale);
@@ -1772,7 +2117,12 @@ export class WorldScene extends Phaser.Scene {
     g.fillRect(x - 4 * scale, y - 18 * scale, 8 * scale, 16 * scale);
   }
 
-  private drawForestArch(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawForestArch(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x060909, 0.18);
     g.fillEllipse(x, y + 30 * scale, 110 * scale, 18 * scale);
     g.fillStyle(0x456445, 0.92);
@@ -1786,7 +2136,12 @@ export class WorldScene extends Phaser.Scene {
     g.fillEllipse(x, y - 6 * scale, 30 * scale, 16 * scale);
   }
 
-  private drawMoonwell(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawMoonwell(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x081113, 0.16);
     g.fillEllipse(x, y + 22 * scale, 128 * scale, 18 * scale);
     g.fillStyle(0x6b7c77, 0.96);
@@ -1797,36 +2152,85 @@ export class WorldScene extends Phaser.Scene {
     g.fillEllipse(x, y - 4 * scale, 28 * scale, 8 * scale);
   }
 
-  private drawWarTent(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawWarTent(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090607, 0.18);
     g.fillEllipse(x, y + 28 * scale, 116 * scale, 18 * scale);
     g.fillStyle(0x6f4c36, 0.95);
-    g.fillTriangle(x - 62 * scale, y + 16 * scale, x, y - 34 * scale, x + 62 * scale, y + 16 * scale);
+    g.fillTriangle(
+      x - 62 * scale,
+      y + 16 * scale,
+      x,
+      y - 34 * scale,
+      x + 62 * scale,
+      y + 16 * scale,
+    );
     g.fillStyle(0x3b2417, 0.96);
     g.fillRect(x - 12 * scale, y - 2 * scale, 24 * scale, 20 * scale);
     g.fillStyle(0xc6774a, 0.2);
-    g.fillTriangle(x - 30 * scale, y + 8 * scale, x, y - 16 * scale, x + 30 * scale, y + 8 * scale);
+    g.fillTriangle(
+      x - 30 * scale,
+      y + 8 * scale,
+      x,
+      y - 16 * scale,
+      x + 30 * scale,
+      y + 8 * scale,
+    );
   }
 
-  private drawPalisade(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawPalisade(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090707, 0.16);
     g.fillEllipse(x, y + 36 * scale, 220 * scale, 20 * scale);
     g.fillStyle(0x64432c, 0.95);
     for (let index = 0; index < 8; index += 1) {
       const px = x - 84 * scale + index * 24 * scale;
-      g.fillTriangle(px - 7 * scale, y + 12 * scale, px, y - 26 * scale, px + 7 * scale, y + 12 * scale);
+      g.fillTriangle(
+        px - 7 * scale,
+        y + 12 * scale,
+        px,
+        y - 26 * scale,
+        px + 7 * scale,
+        y + 12 * scale,
+      );
     }
     g.fillStyle(0x7d5638, 0.95);
     g.fillRect(x - 90 * scale, y + 8 * scale, 180 * scale, 8 * scale);
   }
 
-  private drawWindmill(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawWindmill(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090c0f, 0.16);
     g.fillEllipse(x, y + 48 * scale, 110 * scale, 18 * scale);
     g.fillStyle(0xc8bfac, 0.96);
-    g.fillRoundedRect(x - 28 * scale, y - 34 * scale, 56 * scale, 82 * scale, 16 * scale);
+    g.fillRoundedRect(
+      x - 28 * scale,
+      y - 34 * scale,
+      56 * scale,
+      82 * scale,
+      16 * scale,
+    );
     g.fillStyle(0x916848, 0.96);
-    g.fillTriangle(x - 40 * scale, y - 18 * scale, x, y - 60 * scale, x + 40 * scale, y - 18 * scale);
+    g.fillTriangle(
+      x - 40 * scale,
+      y - 18 * scale,
+      x,
+      y - 60 * scale,
+      x + 40 * scale,
+      y - 18 * scale,
+    );
     g.lineStyle(4 * scale, 0xead9b4, 0.9);
     g.lineBetween(x, y - 8 * scale, x + 36 * scale, y - 32 * scale);
     g.lineBetween(x, y - 8 * scale, x - 36 * scale, y - 32 * scale);
@@ -1834,11 +2238,22 @@ export class WorldScene extends Phaser.Scene {
     g.lineBetween(x, y - 8 * scale, x - 24 * scale, y + 24 * scale);
   }
 
-  private drawWagon(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawWagon(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x080a0c, 0.16);
     g.fillEllipse(x, y + 24 * scale, 100 * scale, 16 * scale);
     g.fillStyle(0x8a623c, 0.95);
-    g.fillRoundedRect(x - 36 * scale, y - 10 * scale, 72 * scale, 22 * scale, 8 * scale);
+    g.fillRoundedRect(
+      x - 36 * scale,
+      y - 10 * scale,
+      72 * scale,
+      22 * scale,
+      8 * scale,
+    );
     g.fillStyle(0x604527, 0.95);
     g.fillCircle(x - 22 * scale, y + 18 * scale, 11 * scale);
     g.fillCircle(x + 22 * scale, y + 18 * scale, 11 * scale);
@@ -1846,11 +2261,22 @@ export class WorldScene extends Phaser.Scene {
     g.fillRect(x - 18 * scale, y - 2 * scale, 36 * scale, 8 * scale);
   }
 
-  private drawBogPlatform(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawBogPlatform(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x071012, 0.18);
     g.fillEllipse(x, y + 24 * scale, 126 * scale, 18 * scale);
     g.fillStyle(0x6d5d47, 0.94);
-    g.fillRoundedRect(x - 54 * scale, y - 8 * scale, 108 * scale, 14 * scale, 6 * scale);
+    g.fillRoundedRect(
+      x - 54 * scale,
+      y - 8 * scale,
+      108 * scale,
+      14 * scale,
+      6 * scale,
+    );
     for (let index = 0; index < 4; index += 1) {
       const px = x - 40 * scale + index * 26 * scale;
       g.fillRect(px, y + 6 * scale, 8 * scale, 18 * scale);
@@ -1859,7 +2285,12 @@ export class WorldScene extends Phaser.Scene {
     g.fillEllipse(x, y - 2 * scale, 36 * scale, 10 * scale);
   }
 
-  private drawSunkenBarge(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawSunkenBarge(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x070b0d, 0.18);
     g.fillEllipse(x, y + 24 * scale, 132 * scale, 18 * scale);
     g.fillStyle(0x4c3a2e, 0.9);
@@ -1867,40 +2298,101 @@ export class WorldScene extends Phaser.Scene {
     g.fillStyle(0x2b1e18, 0.95);
     g.fillRect(x - 6 * scale, y - 34 * scale, 12 * scale, 34 * scale);
     g.fillStyle(0xb4fff2, 0.14);
-    g.fillTriangle(x + 4 * scale, y - 30 * scale, x + 38 * scale, y - 18 * scale, x + 8 * scale, y - 8 * scale);
+    g.fillTriangle(
+      x + 4 * scale,
+      y - 30 * scale,
+      x + 38 * scale,
+      y - 18 * scale,
+      x + 8 * scale,
+      y - 8 * scale,
+    );
   }
 
-  private drawReedCluster(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawReedCluster(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x243826, 0.92);
     for (let index = 0; index < 5; index += 1) {
       const px = x + (index - 2) * 8 * scale;
-      g.fillTriangle(px - 3 * scale, y + 12 * scale, px, y - 22 * scale, px + 3 * scale, y + 12 * scale);
+      g.fillTriangle(
+        px - 3 * scale,
+        y + 12 * scale,
+        px,
+        y - 22 * scale,
+        px + 3 * scale,
+        y + 12 * scale,
+      );
     }
     g.fillStyle(0xc7f6d8, 0.08);
     g.fillEllipse(x, y - 4 * scale, 26 * scale, 10 * scale);
   }
 
-  private drawCaravanCanopy(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawCaravanCanopy(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x0a0c0e, 0.16);
     g.fillEllipse(x, y + 18 * scale, 92 * scale, 14 * scale);
     g.fillStyle(0x9a6b42, 0.95);
-    g.fillRoundedRect(x - 34 * scale, y - 4 * scale, 68 * scale, 18 * scale, 6 * scale);
+    g.fillRoundedRect(
+      x - 34 * scale,
+      y - 4 * scale,
+      68 * scale,
+      18 * scale,
+      6 * scale,
+    );
     g.fillStyle(0xcfb462, 0.96);
-    g.fillTriangle(x - 44 * scale, y + 4 * scale, x, y - 28 * scale, x + 44 * scale, y + 4 * scale);
+    g.fillTriangle(
+      x - 44 * scale,
+      y + 4 * scale,
+      x,
+      y - 28 * scale,
+      x + 44 * scale,
+      y + 4 * scale,
+    );
     g.fillStyle(0xead9a1, 0.18);
     g.fillRect(x - 16 * scale, y - 2 * scale, 32 * scale, 7 * scale);
   }
 
-  private drawObsidianSpire(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawObsidianSpire(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x060506, 0.18);
     g.fillEllipse(x, y + 28 * scale, 96 * scale, 16 * scale);
     g.fillStyle(0x2a2024, 0.96);
-    g.fillTriangle(x, y - 54 * scale, x + 22 * scale, y + 10 * scale, x - 22 * scale, y + 10 * scale);
+    g.fillTriangle(
+      x,
+      y - 54 * scale,
+      x + 22 * scale,
+      y + 10 * scale,
+      x - 22 * scale,
+      y + 10 * scale,
+    );
     g.fillStyle(0xff9a56, 0.16);
-    g.fillTriangle(x, y - 20 * scale, x + 8 * scale, y + 2 * scale, x - 8 * scale, y + 2 * scale);
+    g.fillTriangle(
+      x,
+      y - 20 * scale,
+      x + 8 * scale,
+      y + 2 * scale,
+      x - 8 * scale,
+      y + 2 * scale,
+    );
   }
 
-  private drawLavaVent(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawLavaVent(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x090505, 0.18);
     g.fillEllipse(x, y + 18 * scale, 84 * scale, 14 * scale);
     g.fillStyle(0x5a433a, 0.94);
@@ -1911,20 +2403,43 @@ export class WorldScene extends Phaser.Scene {
     g.fillEllipse(x, y - 10 * scale, 18 * scale, 20 * scale);
   }
 
-  private drawCrystalRing(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawCrystalRing(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.lineStyle(6 * scale, 0x7fdfff, 0.6);
     g.strokeEllipse(x, y, 126 * scale, 54 * scale);
     g.fillStyle(0xe8ffff, 0.14);
     g.fillEllipse(x, y, 52 * scale, 16 * scale);
   }
 
-  private drawCrystalAltar(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number) {
+  private drawCrystalAltar(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
     g.fillStyle(0x081118, 0.18);
     g.fillEllipse(x, y + 22 * scale, 126 * scale, 18 * scale);
     g.fillStyle(0x57636e, 0.95);
-    g.fillRoundedRect(x - 48 * scale, y - 8 * scale, 96 * scale, 22 * scale, 8 * scale);
+    g.fillRoundedRect(
+      x - 48 * scale,
+      y - 8 * scale,
+      96 * scale,
+      22 * scale,
+      8 * scale,
+    );
     g.fillStyle(0x95eeff, 0.2);
-    g.fillTriangle(x, y - 34 * scale, x + 16 * scale, y - 2 * scale, x - 16 * scale, y - 2 * scale);
+    g.fillTriangle(
+      x,
+      y - 34 * scale,
+      x + 16 * scale,
+      y - 2 * scale,
+      x - 16 * scale,
+      y - 2 * scale,
+    );
     g.fillStyle(0xe8ffff, 0.16);
     g.fillEllipse(x, y - 6 * scale, 26 * scale, 8 * scale);
   }
@@ -2012,10 +2527,14 @@ export class WorldScene extends Phaser.Scene {
       cave1.fillStyle(0x000000, 1);
       cave1.fillEllipse(900, 162, 50, 32);
       this.propLayer?.add(cave1);
-      this.add.text(900, 130, "고대 동굴", {
-        fontSize: "10px", color: "#aa8855",
-        stroke: "#000000", strokeThickness: 3,
-      }).setOrigin(0.5);
+      this.add
+        .text(900, 130, "고대 동굴", {
+          fontSize: "10px",
+          color: "#aa8855",
+          stroke: "#000000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
 
       // 폐허 던전 입구 (동쪽 코볼드 구역)
       const cave2 = this.add.graphics();
@@ -2030,10 +2549,14 @@ export class WorldScene extends Phaser.Scene {
       cave2.fillRect(2658, 478, 14, 24);
       cave2.fillRect(2726, 478, 14, 24);
       this.propLayer?.add(cave2);
-      this.add.text(2700, 474, "코볼드 소굴", {
-        fontSize: "10px", color: "#aa8855",
-        stroke: "#000000", strokeThickness: 3,
-      }).setOrigin(0.5);
+      this.add
+        .text(2700, 474, "코볼드 소굴", {
+          fontSize: "10px",
+          color: "#aa8855",
+          stroke: "#000000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
     }
   }
 
@@ -2154,7 +2677,11 @@ export class WorldScene extends Phaser.Scene {
     this.overlayLayer?.add(haze);
   }
 
-  private drawWeatherEffects(mapId: string, mapWidth: number, mapHeight: number) {
+  private drawWeatherEffects(
+    mapId: string,
+    mapWidth: number,
+    mapHeight: number,
+  ) {
     const layer = this.weatherLayer;
     if (!layer) {
       return;
@@ -2238,8 +2765,26 @@ export class WorldScene extends Phaser.Scene {
     };
 
     if (mapId === "moonlitWetland") {
-      addDriftBand(mapWidth * 0.52, mapHeight * 0.46, mapWidth * 0.72, 84, 0xd8fff8, 0.06, 40, 5200);
-      addDriftBand(mapWidth * 0.66, mapHeight * 0.62, mapWidth * 0.46, 68, 0xbff9ee, 0.05, -34, 4600);
+      addDriftBand(
+        mapWidth * 0.52,
+        mapHeight * 0.46,
+        mapWidth * 0.72,
+        84,
+        0xd8fff8,
+        0.06,
+        40,
+        5200,
+      );
+      addDriftBand(
+        mapWidth * 0.66,
+        mapHeight * 0.62,
+        mapWidth * 0.46,
+        68,
+        0xbff9ee,
+        0.05,
+        -34,
+        4600,
+      );
       addVerticalGlow(780, 352, 110, 42, 0x9ffff1, 0.06, -10, 2200);
       addVerticalGlow(1090, 414, 140, 48, 0x8aeede, 0.05, -12, 2400);
       for (let index = 0; index < 26; index += 1) {
@@ -2259,7 +2804,16 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "gludioPlain") {
-      addDriftBand(mapWidth * 0.34, mapHeight * 0.26, 220, 44, 0xf6e6b4, 0.035, 16, 4200);
+      addDriftBand(
+        mapWidth * 0.34,
+        mapHeight * 0.26,
+        220,
+        44,
+        0xf6e6b4,
+        0.035,
+        16,
+        4200,
+      );
       for (let index = 0; index < 14; index += 1) {
         addFloatingParticle(
           Phaser.Math.Between(140, mapWidth - 140),
@@ -2277,8 +2831,26 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "windwoodForest") {
-      addDriftBand(mapWidth * 0.42, mapHeight * 0.28, mapWidth * 0.34, 56, 0xcdf7be, 0.04, 26, 4200);
-      addDriftBand(mapWidth * 0.58, mapHeight * 0.46, mapWidth * 0.28, 44, 0xe1ffd6, 0.035, -18, 3600);
+      addDriftBand(
+        mapWidth * 0.42,
+        mapHeight * 0.28,
+        mapWidth * 0.34,
+        56,
+        0xcdf7be,
+        0.04,
+        26,
+        4200,
+      );
+      addDriftBand(
+        mapWidth * 0.58,
+        mapHeight * 0.46,
+        mapWidth * 0.28,
+        44,
+        0xe1ffd6,
+        0.035,
+        -18,
+        3600,
+      );
       for (let index = 0; index < 22; index += 1) {
         addFloatingParticle(
           Phaser.Math.Between(120, mapWidth - 120),
@@ -2296,8 +2868,26 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "orcForest") {
-      addDriftBand(mapWidth * 0.54, mapHeight * 0.42, mapWidth * 0.38, 62, 0xffc17a, 0.035, 18, 3800);
-      addVerticalGlow(mapWidth * 0.54, mapHeight * 0.36, 180, 68, 0xff9b52, 0.05, -14, 2000);
+      addDriftBand(
+        mapWidth * 0.54,
+        mapHeight * 0.42,
+        mapWidth * 0.38,
+        62,
+        0xffc17a,
+        0.035,
+        18,
+        3800,
+      );
+      addVerticalGlow(
+        mapWidth * 0.54,
+        mapHeight * 0.36,
+        180,
+        68,
+        0xff9b52,
+        0.05,
+        -14,
+        2000,
+      );
       for (let index = 0; index < 18; index += 1) {
         addFloatingParticle(
           Phaser.Math.Between(140, mapWidth - 140),
@@ -2315,8 +2905,26 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "dragonValley") {
-      addVerticalGlow(mapWidth * 0.52, mapHeight * 0.36, 240, 90, 0xffb56e, 0.08, -24, 2200);
-      addVerticalGlow(mapWidth * 0.72, mapHeight * 0.44, 180, 72, 0xff8a57, 0.06, -18, 1800);
+      addVerticalGlow(
+        mapWidth * 0.52,
+        mapHeight * 0.36,
+        240,
+        90,
+        0xffb56e,
+        0.08,
+        -24,
+        2200,
+      );
+      addVerticalGlow(
+        mapWidth * 0.72,
+        mapHeight * 0.44,
+        180,
+        72,
+        0xff8a57,
+        0.06,
+        -18,
+        1800,
+      );
       addVerticalGlow(mapWidth * 0.58, 418, 120, 46, 0xff7b3f, 0.08, -16, 1600);
       for (let index = 0; index < 24; index += 1) {
         addFloatingParticle(
@@ -2335,7 +2943,16 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "ancientCave") {
-      addDriftBand(mapWidth * 0.5, mapHeight * 0.34, mapWidth * 0.52, 60, 0xa7cfff, 0.045, 22, 5400);
+      addDriftBand(
+        mapWidth * 0.5,
+        mapHeight * 0.34,
+        mapWidth * 0.52,
+        60,
+        0xa7cfff,
+        0.045,
+        22,
+        5400,
+      );
       addVerticalGlow(mapWidth * 0.5, 226, 160, 48, 0x86deff, 0.05, -10, 2600);
       for (let index = 0; index < 18; index += 1) {
         addFloatingParticle(
@@ -2354,8 +2971,26 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "speakingIsland") {
-      addDriftBand(mapWidth * 0.76, mapHeight * 0.22, 320, 52, 0xdff8ff, 0.05, 24, 4600);
-      addDriftBand(mapWidth * 0.84, mapHeight * 0.5, 240, 38, 0x9fe8ff, 0.05, -18, 3800);
+      addDriftBand(
+        mapWidth * 0.76,
+        mapHeight * 0.22,
+        320,
+        52,
+        0xdff8ff,
+        0.05,
+        24,
+        4600,
+      );
+      addDriftBand(
+        mapWidth * 0.84,
+        mapHeight * 0.5,
+        240,
+        38,
+        0x9fe8ff,
+        0.05,
+        -18,
+        3800,
+      );
     }
 
     for (let index = 0; index < 16; index += 1) {
@@ -2393,7 +3028,11 @@ export class WorldScene extends Phaser.Scene {
         portals.push({ x: 150, y: 400, label: "← 이야기의 섬" });
         portals.push({ x: mapW * 0.5, y: 150, label: "↑ 바람숲" });
         portals.push({ x: mapW - 150, y: 400, label: "오크 부락 →" });
-        portals.push({ x: mapW * 0.5, y: mapH - 150, label: "↓ 글루디오 평원" });
+        portals.push({
+          x: mapW * 0.5,
+          y: mapH - 150,
+          label: "↓ 글루디오 평원",
+        });
         break;
       case "windwoodForest":
         portals.push({ x: 600, y: mapH - 150, label: "↓ 은기사의 마을" });
@@ -2502,12 +3141,14 @@ export class WorldScene extends Phaser.Scene {
     }
 
     // 포탈 레이블
-    const text = this.add.text(x, y + 52, label, {
-      fontSize: "11px",
-      color: "#d4ebff",
-      stroke: "#001833",
-      strokeThickness: 3,
-    }).setOrigin(0.5);
+    const text = this.add
+      .text(x, y + 52, label, {
+        fontSize: "11px",
+        color: "#d4ebff",
+        stroke: "#001833",
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5);
     this.overlayLayer?.add(text);
 
     // 깜빡임 효과
@@ -2747,16 +3388,16 @@ export class WorldScene extends Phaser.Scene {
       .setScale(isSelf ? 0.9 : 0.82)
       .setOrigin(0.5, 0.94);
     const label = this.add
-      .text(0, -68, payload.name, {
-        fontSize: "14px",
+      .text(0, -82, payload.name, {
+        fontSize: "12px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
-        strokeThickness: 4,
+        strokeThickness: 3,
       })
       .setOrigin(0.5);
     const classBadge = this.createBadgeMarker(
       0,
-      -90,
+      -98,
       this.getPlayerClassBadgeText(),
       classTone.burstTint,
     );
@@ -2893,7 +3534,14 @@ export class WorldScene extends Phaser.Scene {
       isBoss ? 1.08 : 0.94,
     );
     const ring = this.add
-      .ellipse(0, 16, isBoss ? 84 : 70, isBoss ? 30 : 24, isBoss ? 0xffc976 : 0xf57f69, isBoss ? 0.16 : 0.12)
+      .ellipse(
+        0,
+        16,
+        isBoss ? 84 : 70,
+        isBoss ? 30 : 24,
+        isBoss ? 0xffc976 : 0xf57f69,
+        isBoss ? 0.16 : 0.12,
+      )
       .setStrokeStyle(2, isBoss ? 0xffe1a8 : 0xff9c88, isBoss ? 0.84 : 0.75);
     const glow = this.createUnitBacklight(
       this.getFrameKey(textureBase, "idle", "s", 0),
@@ -3022,7 +3670,10 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     // 마을 안전구역 안에서는 공격 불가
-    if (this.mapId === "speakingIsland" && STARTER_TOWN_RECT.contains(this.localPlayer.x, this.localPlayer.y)) {
+    if (
+      this.mapId === "speakingIsland" &&
+      STARTER_TOWN_RECT.contains(this.localPlayer.x, this.localPlayer.y)
+    ) {
       return;
     }
 
@@ -3070,7 +3721,8 @@ export class WorldScene extends Phaser.Scene {
     );
     const meleeStyle = this.getMeleeWeaponStyle();
     this.localPlayer.attackUntil =
-      now + (meleeStyle === "dagger" ? 220 : meleeStyle === "greatsword" ? 340 : 280);
+      now +
+      (meleeStyle === "dagger" ? 220 : meleeStyle === "greatsword" ? 340 : 280);
     const classTone = this.getPlayerClassTone();
 
     if (this.isRangedClass()) {
@@ -3139,7 +3791,14 @@ export class WorldScene extends Phaser.Scene {
           )
           .setBlendMode(Phaser.BlendModes.SCREEN);
         const pierce = this.add
-          .ellipse(monster.x, monster.y - 12, 18, 30, classTone.impactTint, 0.36)
+          .ellipse(
+            monster.x,
+            monster.y - 12,
+            18,
+            30,
+            classTone.impactTint,
+            0.36,
+          )
           .setBlendMode(Phaser.BlendModes.SCREEN);
         this.effectLayer?.add(stab);
         this.effectLayer?.add(pierce);
@@ -3245,10 +3904,19 @@ export class WorldScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.localPlayer,
         scaleX:
-          meleeStyle === "dagger" ? 1.03 : meleeStyle === "greatsword" ? 1.08 : 1.06,
+          meleeStyle === "dagger"
+            ? 1.03
+            : meleeStyle === "greatsword"
+              ? 1.08
+              : 1.06,
         scaleY:
-          meleeStyle === "dagger" ? 1.03 : meleeStyle === "greatsword" ? 1.08 : 1.06,
-        duration: meleeStyle === "dagger" ? 55 : meleeStyle === "greatsword" ? 90 : 70,
+          meleeStyle === "dagger"
+            ? 1.03
+            : meleeStyle === "greatsword"
+              ? 1.08
+              : 1.06,
+        duration:
+          meleeStyle === "dagger" ? 55 : meleeStyle === "greatsword" ? 90 : 70,
         yoyo: true,
       });
       this.spawnWeaponTrail(
@@ -3274,14 +3942,21 @@ export class WorldScene extends Phaser.Scene {
       const state = useGameStore.getState();
       const attackProfile = state.getAttackProfile();
       const baseDamage =
-        1 + Math.floor(attackProfile.str * 0.5) + Math.floor(attackProfile.dex * 0.4) + Math.floor(attackProfile.int * 0.3);
+        1 +
+        Math.floor(attackProfile.str * 0.5) +
+        Math.floor(attackProfile.dex * 0.4) +
+        Math.floor(attackProfile.int * 0.3);
       const variance = Math.floor(Math.random() * 3); // 0 ~ +2
       const damage = Math.max(1, baseDamage + variance);
-      const isCrit = Math.random() < 0.10;
+      const isCrit = Math.random() < 0.1;
       const finalDamage = isCrit ? Math.floor(damage * 1.6) : damage;
 
       const newHp = Math.max(0, monsterData.hp - finalDamage);
-      this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: newHp });
+      this.offlineMonsterHp.set(monsterId, {
+        ...monsterData,
+        hp: newHp,
+        lastPlayerAttack: this.time.now,
+      });
 
       // 데미지 숫자 표시
       if (monsterSprite) {
@@ -3333,8 +4008,18 @@ export class WorldScene extends Phaser.Scene {
               droppedItems.push(drop.itemId);
               // 레어 이상 드랍 시 채팅 공지
               const itemData = ITEMS[drop.itemId];
-              if (itemData && ["rare","epic","legendary","mythic"].includes(itemData.rarity)) {
-                const rarityLabel: Record<string, string> = { rare: "레어", epic: "에픽", legendary: "전설", mythic: "신화" };
+              if (
+                itemData &&
+                ["rare", "epic", "legendary", "mythic"].includes(
+                  itemData.rarity,
+                )
+              ) {
+                const rarityLabel: Record<string, string> = {
+                  rare: "레어",
+                  epic: "에픽",
+                  legendary: "전설",
+                  mythic: "신화",
+                };
                 useGameStore.getState().addChat({
                   id: crypto.randomUUID(),
                   channel: "system",
@@ -3347,9 +4032,11 @@ export class WorldScene extends Phaser.Scene {
           }
         }
 
-        useGameStore
-          .getState()
-          .applyOfflineReward({ gold: goldReward, exp: expReward, items: droppedItems });
+        useGameStore.getState().applyOfflineReward({
+          gold: goldReward,
+          exp: expReward,
+          items: droppedItems,
+        });
 
         // 킬 트래킹 (업적)
         const isBoss2 = mDef2?.isBoss ?? false;
@@ -3382,7 +4069,10 @@ export class WorldScene extends Phaser.Scene {
           const rx = ai?.spawnX ?? sprite.x;
           const ry = ai?.spawnY ?? sprite.y;
           this.offlineMonsterHp.set(monsterId, { ...monsterData, hp: fullHp });
-          if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
+          if (ai) {
+            ai.state = "idle";
+            ai.lastChaseAt = 0;
+          }
           sprite.setPosition(rx, ry);
           sprite.hpFill.width = 50;
           sprite.prevHp = fullHp;
@@ -3638,51 +4328,59 @@ export class WorldScene extends Phaser.Scene {
           : 0;
     const walkSway =
       sprite.animState === "walk"
-        ? ({
-            n: [0, 0.5, -0.5],
-            ne: [1.4, 2.8, 1],
-            e: [1.8, 3.2, 1.2],
-            se: [1.4, 2.6, 1],
-            s: [0, 0.7, -0.7],
-            sw: [-1.4, -2.8, -1],
-            w: [-1.8, -3.2, -1.2],
-            nw: [-1.4, -2.6, -1],
-          } as const)[sprite.facing][sprite.animFrame % 3]
+        ? (
+            {
+              n: [0, 0.5, -0.5],
+              ne: [1.4, 2.8, 1],
+              e: [1.8, 3.2, 1.2],
+              se: [1.4, 2.6, 1],
+              s: [0, 0.7, -0.7],
+              sw: [-1.4, -2.8, -1],
+              w: [-1.8, -3.2, -1.2],
+              nw: [-1.4, -2.6, -1],
+            } as const
+          )[sprite.facing][sprite.animFrame % 3]
         : sprite.animState === "attack"
-          ? ({
-              n: 0,
-              ne: 1.4,
-              e: 1.8,
-              se: 1.4,
-              s: 0,
-              sw: -1.4,
-              w: -1.8,
-              nw: -1.4,
-            } as const)[sprite.facing]
+          ? (
+              {
+                n: 0,
+                ne: 1.4,
+                e: 1.8,
+                se: 1.4,
+                s: 0,
+                sw: -1.4,
+                w: -1.8,
+                nw: -1.4,
+              } as const
+            )[sprite.facing]
           : 0;
     const walkLean =
       sprite.animState === "walk"
-        ? ({
-            n: 0,
-            ne: 0.04,
-            e: 0.06,
-            se: 0.035,
-            s: 0,
-            sw: -0.035,
-            w: -0.06,
-            nw: -0.04,
-          } as const)[sprite.facing]
-        : sprite.animState === "attack"
-          ? ({
+        ? (
+            {
               n: 0,
-              ne: 0.07,
-              e: 0.09,
-              se: 0.05,
+              ne: 0.04,
+              e: 0.06,
+              se: 0.035,
               s: 0,
-              sw: -0.05,
-              w: -0.09,
-              nw: -0.07,
-            } as const)[sprite.facing]
+              sw: -0.035,
+              w: -0.06,
+              nw: -0.04,
+            } as const
+          )[sprite.facing]
+        : sprite.animState === "attack"
+          ? (
+              {
+                n: 0,
+                ne: 0.07,
+                e: 0.09,
+                se: 0.05,
+                s: 0,
+                sw: -0.05,
+                w: -0.09,
+                nw: -0.07,
+              } as const
+            )[sprite.facing]
           : 0;
     const bodyScaleX =
       sprite.animState === "walk"
@@ -3749,7 +4447,11 @@ export class WorldScene extends Phaser.Scene {
     sprite.label.x = walkSway * 0.36;
     sprite.label.y =
       ("playerId" in sprite ? -68 : -82) + bob * 0.16 + labelFloat;
-    if ("monsterId" in sprite && sprite.isBoss && sprite.list[3] instanceof Phaser.GameObjects.Ellipse) {
+    if (
+      "monsterId" in sprite &&
+      sprite.isBoss &&
+      sprite.list[3] instanceof Phaser.GameObjects.Ellipse
+    ) {
       const halo = sprite.list[3] as Phaser.GameObjects.Ellipse;
       halo.alpha = 0.06 + Math.sin(now / 220) * 0.02;
       halo.scaleX = 1.02 + Math.sin(now / 260) * 0.04;
@@ -4022,13 +4724,14 @@ export class WorldScene extends Phaser.Scene {
         : weaponSubtype === WeaponSubType.TWO_HAND_SWORD
           ? "greatsword"
           : weaponSubtype === WeaponSubType.ONE_HAND_SWORD
-          ? "sword"
-          : null;
+            ? "sword"
+            : null;
 
     if (className.includes("guardian")) {
       if (weaponVariant === "dagger") return "anim_player_guardian_dagger";
       if (weaponVariant === "sword") return "anim_player_guardian_sword";
-      if (weaponVariant === "greatsword") return "anim_player_guardian_greatsword";
+      if (weaponVariant === "greatsword")
+        return "anim_player_guardian_greatsword";
       return "anim_player_guardian";
     }
     if (className.includes("ranger")) return "anim_player_ranger";
@@ -4036,16 +4739,17 @@ export class WorldScene extends Phaser.Scene {
     if (className.includes("sovereign")) {
       if (weaponVariant === "dagger") return "anim_player_sovereign_dagger";
       if (weaponVariant === "sword") return "anim_player_sovereign_sword";
-      if (weaponVariant === "greatsword") return "anim_player_sovereign_greatsword";
+      if (weaponVariant === "greatsword")
+        return "anim_player_sovereign_greatsword";
       return "anim_player_sovereign";
     }
     return weaponVariant === "dagger"
       ? "anim_player_guardian_dagger"
       : weaponVariant === "greatsword"
         ? "anim_player_guardian_greatsword"
-      : weaponVariant === "sword"
-        ? "anim_player_guardian_sword"
-        : "anim_player_guardian";
+        : weaponVariant === "sword"
+          ? "anim_player_guardian_sword"
+          : "anim_player_guardian";
   }
 
   private getNpcTexture(role: string) {
@@ -4129,7 +4833,8 @@ export class WorldScene extends Phaser.Scene {
     if (weaponId === "hunter_bow") return 900;
     if (weaponId === "arcana_staff") return 1050;
     if (this.getEquippedWeaponSubtype() === WeaponSubType.DAGGER) return 620;
-    if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD) return 920;
+    if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD)
+      return 920;
     return 760;
   }
 
@@ -4171,7 +4876,7 @@ export class WorldScene extends Phaser.Scene {
           mapId === "silverKnightTown" || mapId === "giranTown"
             ? "tile_cobble"
             : "tile_path",
-        alpha: 0.86,
+        alpha: 0.94,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -4182,106 +4887,133 @@ export class WorldScene extends Phaser.Scene {
     if (mapId === "moonlitWetland" && moisture > 0.7) {
       return {
         texture: moisture > 0.82 ? "tile_water" : "tile_wet_stone",
-        alpha: 0.48,
-        tint: 0xc9fbff,
-        rotation: seed * 0.06,
-        scaleX: 0.04,
-        scaleY: 0.02,
+        alpha: 0.85,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     if (mapId === "dragonValley") {
       return {
         texture:
-          ridge > 0.8 ? "tile_lava" : seed > 0.56 ? "tile_volcanic" : "tile_dirt",
-        alpha: ridge > 0.8 ? 0.8 : 0.68,
-        tint: ridge > 0.8 ? 0xffd078 : seed > 0.56 ? 0x7c5f56 : 0x8e6548,
-        rotation: (seed - 0.5) * 0.1,
-        scaleX: 0.03,
-        scaleY: 0.03,
+          ridge > 0.8
+            ? "tile_lava"
+            : seed > 0.56
+              ? "tile_volcanic"
+              : "tile_dirt",
+        alpha: ridge > 0.8 ? 0.95 : 0.9,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     if (mapId === "silverKnightTown") {
       return {
-        texture: seed > 0.72 ? "tile_cobble" : seed > 0.34 ? "tile_marble" : "tile_meadow",
-        alpha: 0.58 + ridge * 0.12,
-        tint: seed > 0.34 ? 0xd6d1c3 : 0x89a37d,
-        rotation: (seed - 0.5) * 0.04,
-        scaleX: moisture * 0.02,
-        scaleY: ridge * 0.02,
+        texture:
+          seed > 0.72
+            ? "tile_cobble"
+            : seed > 0.34
+              ? "tile_marble"
+              : "tile_meadow",
+        alpha: 0.92,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     if (mapId === "giranTown") {
       return {
-        texture: seed > 0.66 ? "tile_cobble" : seed > 0.32 ? "tile_marble" : "tile_path",
-        alpha: 0.6 + moisture * 0.1,
-        tint: seed > 0.32 ? 0xd8c6b2 : 0xbd9870,
-        rotation: (seed - 0.5) * 0.04,
-        scaleX: ridge * 0.02,
-        scaleY: moisture * 0.02,
+        texture:
+          seed > 0.66
+            ? "tile_cobble"
+            : seed > 0.32
+              ? "tile_marble"
+              : "tile_path",
+        alpha: 0.9,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     if (mapId === "windwoodForest") {
       return {
-        texture: moisture > 0.62 ? "tile_moss" : seed > 0.48 ? "tile_forest" : "tile_dirt",
-        alpha: 0.58 + moisture * 0.12,
-        tint: moisture > 0.62 ? 0xa9c78a : 0x7a8f65,
-        rotation: (seed - 0.5) * 0.08,
-        scaleX: moisture * 0.03,
-        scaleY: ridge * 0.03,
+        texture:
+          moisture > 0.62
+            ? "tile_moss"
+            : seed > 0.48
+              ? "tile_forest"
+              : "tile_dirt",
+        alpha: 0.88,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     if (mapId === "orcForest") {
       return {
-        texture: seed > 0.62 ? "tile_dirt" : ridge > 0.64 ? "tile_volcanic" : "tile_moss",
-        alpha: 0.56 + ridge * 0.12,
-        tint: seed > 0.62 ? 0x8d6f56 : 0x62715d,
-        rotation: (seed - 0.5) * 0.08,
-        scaleX: 0.02,
-        scaleY: ridge * 0.03,
+        texture:
+          seed > 0.62
+            ? "tile_dirt"
+            : ridge > 0.64
+              ? "tile_volcanic"
+              : "tile_moss",
+        alpha: 0.88,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     if (mapId === "gludioPlain") {
       return {
-        texture: moisture > 0.58 ? "tile_meadow" : seed > 0.48 ? "tile_grass_a" : "tile_dirt",
-        alpha: 0.6 + moisture * 0.1,
-        tint: moisture > 0.58 ? 0xaaca74 : 0x90ab68,
-        rotation: (seed - 0.5) * 0.06,
-        scaleX: moisture * 0.03,
-        scaleY: ridge * 0.02,
+        texture:
+          moisture > 0.58
+            ? "tile_meadow"
+            : seed > 0.48
+              ? "tile_grass_a"
+              : "tile_dirt",
+        alpha: 0.9,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     if (mapId === "ancientCave") {
       return {
         texture: ridge > 0.58 ? "tile_volcanic" : "tile_wet_stone",
-        alpha: 0.78 + ridge * 0.12,
-        tint: ridge > 0.58 ? 0x8a8280 : 0xa8c0cc,
-        rotation: (seed - 0.5) * 0.05,
-        scaleX: 0.02,
-        scaleY: 0.02,
+        alpha: 0.92,
+        tint: 0xffffff,
+        rotation: 0,
+        scaleX: 0,
+        scaleY: 0,
       };
     }
 
     return {
-      texture: moisture > 0.6 ? "tile_meadow" : seed > 0.54 ? "tile_grass_a" : "tile_grass_b",
-      alpha: 0.54 + moisture * 0.16,
-      tint:
-        mapId === "silverKnightTown"
-          ? 0x84a17f
-          : mapId === "windwoodForest"
-            ? 0x5f8152
-            : mapId === "gludioPlain"
-              ? 0x73985f
-              : 0xffffff,
-      rotation: (seed - 0.5) * 0.08,
-      scaleX: moisture * 0.03,
-      scaleY: seed * 0.02,
+      texture:
+        moisture > 0.6
+          ? "tile_meadow"
+          : seed > 0.54
+            ? "tile_grass_a"
+            : "tile_grass_b",
+      alpha: 0.92,
+      tint: 0xffffff,
+      rotation: 0,
+      scaleX: 0,
+      scaleY: 0,
     };
   }
 
@@ -4430,7 +5162,8 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private checkPortalTransitions() {
-    if (!this.isOfflineMode || !this.localPlayer || this.isTransitioning) return;
+    if (!this.isOfflineMode || !this.localPlayer || this.isTransitioning)
+      return;
     const px = this.localPlayer.x;
     const py = this.localPlayer.y;
     const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
@@ -4493,7 +5226,11 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  private handleMapTransition(newMapId: string, spawnX: number, spawnY: number) {
+  private handleMapTransition(
+    newMapId: string,
+    spawnX: number,
+    spawnY: number,
+  ) {
     this.isTransitioning = true;
     this.stopAutoAttack();
 
@@ -4531,13 +5268,24 @@ export class WorldScene extends Phaser.Scene {
       const mBase = monsterId.split("-offline-")[0];
       const isAggressive = MONSTERS[mBase]?.aggressive ?? true;
       // Aggressive monsters spot player from further away
-      const AGGRO_RANGE = isAggressive ? 300 : 140;
+      const AGGRO_RANGE = isAggressive ? 250 : 200;
       const ATTACK_RANGE = 45;
       // Leash: monster gives up if too far from spawn
       const LEASH_DIST = 700;
-      const distToSpawn = Phaser.Math.Distance.Between(sprite.x, sprite.y, ai.spawnX, ai.spawnY);
 
-      if (distToPlayer < AGGRO_RANGE) {
+      // Check if monster was recently attacked by player (fight back mechanic)
+      const monsterData = this.offlineMonsterHp.get(monsterId);
+      const wasRecentlyAttacked =
+        monsterData?.lastPlayerAttack &&
+        now - monsterData.lastPlayerAttack < 10000;
+      const distToSpawn = Phaser.Math.Distance.Between(
+        sprite.x,
+        sprite.y,
+        ai.spawnX,
+        ai.spawnY,
+      );
+
+      if (distToPlayer < AGGRO_RANGE || wasRecentlyAttacked) {
         ai.state = "chase";
         ai.lastChaseAt = now;
       } else if (ai.state === "chase" && now - ai.lastChaseAt > 8000) {
@@ -4558,7 +5306,7 @@ export class WorldScene extends Phaser.Scene {
           ai.state = "idle";
           ai.lastChaseAt = 0;
         } else if (distToPlayer > ATTACK_RANGE) {
-          const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 62;
+          const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 124; // Doubled speed
           const angle = Phaser.Math.Angle.Between(
             sprite.x,
             sprite.y,
@@ -4584,10 +5332,22 @@ export class WorldScene extends Phaser.Scene {
             const monsterData = this.offlineMonsterHp.get(monsterId);
             if (!monsterData) return;
 
-            const dmg = Math.max(1, monsterData.atk + Phaser.Math.Between(-1, 2));
+            const dmg = Math.max(
+              1,
+              monsterData.atk + Phaser.Math.Between(-1, 2),
+            );
             const newHp = Math.max(0, store.player.hp - dmg);
             store.setPlayer({ hp: newHp });
             ai.lastAttackAt = now;
+
+            // Add system message for damage taken
+            store.addChat({
+              id: `monster_damage_${Date.now()}`,
+              channel: "system",
+              author: "시스템",
+              message: `몬스터가 당신에게 ${dmg} 데미지를 입혔습니다!`,
+              timestamp: Date.now(),
+            });
 
             // Mark player in combat and reset the 6-second exit timer
             store.setInCombat(true);
@@ -4597,7 +5357,12 @@ export class WorldScene extends Phaser.Scene {
             });
 
             if (this.localPlayer) {
-              this.showDamageNumber(this.localPlayer.x, this.localPlayer.y, dmg, false);
+              this.showDamageNumber(
+                this.localPlayer.x,
+                this.localPlayer.y,
+                dmg,
+                false,
+              );
               this.tweens.add({
                 targets: this.localPlayer.spriteBody,
                 alpha: 0.15,
@@ -4654,7 +5419,14 @@ export class WorldScene extends Phaser.Scene {
     isCrit: boolean,
   ) {
     const glow = this.add
-      .ellipse(x, y - 30, isCrit ? 72 : 52, isCrit ? 34 : 24, isCrit ? 0xffdc73 : 0xffffff, isCrit ? 0.22 : 0.12)
+      .ellipse(
+        x,
+        y - 30,
+        isCrit ? 72 : 52,
+        isCrit ? 34 : 24,
+        isCrit ? 0xffdc73 : 0xffffff,
+        isCrit ? 0.22 : 0.12,
+      )
       .setBlendMode(Phaser.BlendModes.SCREEN)
       .setDepth(9998);
     const text = this.add
@@ -4903,10 +5675,16 @@ export class WorldScene extends Phaser.Scene {
     const midY = (startY + endY) / 2;
     const distance = Phaser.Math.Distance.Between(startX, startY, endX, endY);
     const trailWidth =
-      style === "dagger" ? distance * 0.72 : style === "greatsword" ? distance * 1.08 : distance;
-    const trailHeight = style === "dagger" ? 6 : style === "greatsword" ? 14 : 10;
+      style === "dagger"
+        ? distance * 0.72
+        : style === "greatsword"
+          ? distance * 1.08
+          : distance;
+    const trailHeight =
+      style === "dagger" ? 6 : style === "greatsword" ? 14 : 10;
     const coreWidth =
-      trailWidth * (style === "dagger" ? 0.72 : style === "greatsword" ? 0.92 : 0.88);
+      trailWidth *
+      (style === "dagger" ? 0.72 : style === "greatsword" ? 0.92 : 0.88);
     const coreHeight = style === "dagger" ? 3 : style === "greatsword" ? 5 : 4;
     const trail = this.add
       .rectangle(
@@ -4962,7 +5740,10 @@ export class WorldScene extends Phaser.Scene {
         this.localPlayer.spriteBody.texture.key,
       )
       .setOrigin(0.5, 0.94)
-      .setScale(this.localPlayer.spriteBody.scaleX, this.localPlayer.spriteBody.scaleY)
+      .setScale(
+        this.localPlayer.spriteBody.scaleX,
+        this.localPlayer.spriteBody.scaleY,
+      )
       .setTint(tint)
       .setAlpha(0.22)
       .setBlendMode(Phaser.BlendModes.SCREEN);
@@ -5129,9 +5910,19 @@ export class WorldScene extends Phaser.Scene {
     if (!this.localPlayer) return;
 
     const SUMMON_CONFIG = {
-      summon_stone_lesser:  { hp: 35,  atk: 10, name: "하급 정령",  tier: "lesser"  },
-      summon_stone_mid:     { hp: 70,  atk: 20, name: "중급 정령",  tier: "mid"     },
-      summon_stone_greater: { hp: 120, atk: 35, name: "상급 전사",  tier: "greater" },
+      summon_stone_lesser: {
+        hp: 35,
+        atk: 10,
+        name: "하급 정령",
+        tier: "lesser",
+      },
+      summon_stone_mid: { hp: 70, atk: 20, name: "중급 정령", tier: "mid" },
+      summon_stone_greater: {
+        hp: 120,
+        atk: 35,
+        name: "상급 전사",
+        tier: "greater",
+      },
     };
 
     const cfg = SUMMON_CONFIG[stoneId as keyof typeof SUMMON_CONFIG];
@@ -5146,7 +5937,12 @@ export class WorldScene extends Phaser.Scene {
       const angle = (i / count) * Math.PI * 2;
       const spawnX = this.localPlayer.x + Math.cos(angle) * 90;
       const spawnY = this.localPlayer.y + Math.sin(angle) * 60;
-      const sprite = this.createSummonSprite(spawnX, spawnY, cfg.name, cfg.tier);
+      const sprite = this.createSummonSprite(
+        spawnX,
+        spawnY,
+        cfg.name,
+        cfg.tier,
+      );
       this.summonedAllies.push({
         sprite,
         hp: cfg.hp,
@@ -5171,26 +5967,38 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createSummonSprite(x: number, y: number, name: string, tier: string) {
-    const tintColor = tier === "greater" ? 0xffd700 : tier === "mid" ? 0x88aaff : 0x44ee88;
-    const container = this.add.container(x, y) as Phaser.GameObjects.Container & {
+    const tintColor =
+      tier === "greater" ? 0xffd700 : tier === "mid" ? 0x88aaff : 0x44ee88;
+    const container = this.add.container(
+      x,
+      y,
+    ) as Phaser.GameObjects.Container & {
       hpFill: Phaser.GameObjects.Rectangle;
       lastX: number;
       lastY: number;
     };
 
     const shadow = this.add.ellipse(0, 18, 40, 22, 0x000000, 0.28);
-    const aura = this.add.ellipse(0, 10, 56, 34, tintColor, 0.10).setStrokeStyle(1.5, tintColor, 0.55);
-    const body = this.add.ellipse(0, -8, 34, 42, tintColor, 0.82).setStrokeStyle(2, 0xffffff, 0.25);
-    const glow = this.add.ellipse(0, -14, 16, 20, 0xffffff, 0.20);
-    const label = this.add.text(0, -46, name, {
-      fontSize: "9px",
-      color: `#${tintColor.toString(16).padStart(6, "0")}`,
-      stroke: "#000000",
-      strokeThickness: 3,
-      resolution: 2,
-    }).setOrigin(0.5, 1);
+    const aura = this.add
+      .ellipse(0, 10, 56, 34, tintColor, 0.1)
+      .setStrokeStyle(1.5, tintColor, 0.55);
+    const body = this.add
+      .ellipse(0, -8, 34, 42, tintColor, 0.82)
+      .setStrokeStyle(2, 0xffffff, 0.25);
+    const glow = this.add.ellipse(0, -14, 16, 20, 0xffffff, 0.2);
+    const label = this.add
+      .text(0, -46, name, {
+        fontSize: "9px",
+        color: `#${tintColor.toString(16).padStart(6, "0")}`,
+        stroke: "#000000",
+        strokeThickness: 3,
+        resolution: 2,
+      })
+      .setOrigin(0.5, 1);
     const hpBack = this.add.rectangle(0, 28, 42, 5, 0x1a0000, 0.85);
-    const hpFill = this.add.rectangle(-21, 28, 42, 5, 0x44ff88, 0.9).setOrigin(0, 0.5);
+    const hpFill = this.add
+      .rectangle(-21, 28, 42, 5, 0x44ff88, 0.9)
+      .setOrigin(0, 0.5);
 
     container.add([shadow, aura, body, glow, label, hpBack, hpFill]);
     container.hpFill = hpFill;
@@ -5200,17 +6008,29 @@ export class WorldScene extends Phaser.Scene {
     this.actorLayer?.add(container);
 
     container.setAlpha(0).setScale(0.3);
-    this.tweens.add({ targets: container, alpha: 1, scaleX: 1, scaleY: 1, duration: 400, ease: "Back.Out" });
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      scaleX: 1,
+      scaleY: 1,
+      duration: 400,
+      ease: "Back.Out",
+    });
 
     return container;
   }
 
   private updateSummonedAllies() {
-    if (!this.isOfflineMode || !this.localPlayer || this.summonedAllies.length === 0) return;
+    if (
+      !this.isOfflineMode ||
+      !this.localPlayer ||
+      this.summonedAllies.length === 0
+    )
+      return;
     const now = this.time.now;
 
     // Remove expired or dead allies
-    this.summonedAllies = this.summonedAllies.filter(ally => {
+    this.summonedAllies = this.summonedAllies.filter((ally) => {
       if (now >= ally.expireAt || ally.hp <= 0) {
         this.tweens.add({
           targets: ally.sprite,
@@ -5219,7 +6039,9 @@ export class WorldScene extends Phaser.Scene {
           scaleY: 0.3,
           duration: 320,
           ease: "Power2.In",
-          onComplete: () => { if (ally.sprite.active) ally.sprite.destroy(); },
+          onComplete: () => {
+            if (ally.sprite.active) ally.sprite.destroy();
+          },
         });
         return false;
       }
@@ -5234,7 +6056,7 @@ export class WorldScene extends Phaser.Scene {
     const SUMMON_MOVE_SPEED = 130;
     const SUMMON_ATTACK_INTERVAL = 900;
 
-    this.summonedAllies.forEach(ally => {
+    this.summonedAllies.forEach((ally) => {
       if (!ally.sprite.active) return;
 
       // Find nearest live monster
@@ -5245,7 +6067,12 @@ export class WorldScene extends Phaser.Scene {
         if (!ms.visible) return;
         const monData = this.offlineMonsterHp.get(mid);
         if (!monData || monData.hp <= 0) return;
-        const dist = Phaser.Math.Distance.Between(ally.sprite.x, ally.sprite.y, ms.x, ms.y);
+        const dist = Phaser.Math.Distance.Between(
+          ally.sprite.x,
+          ally.sprite.y,
+          ms.x,
+          ms.y,
+        );
         if (dist < SUMMON_CHASE_RANGE && dist < nearestDist) {
           nearestDist = dist;
           nearestId = mid;
@@ -5261,7 +6088,12 @@ export class WorldScene extends Phaser.Scene {
 
         if (nearestDist > SUMMON_ATTACK_RANGE) {
           // Chase
-          const angle = Phaser.Math.Angle.Between(ally.sprite.x, ally.sprite.y, target.x, target.y);
+          const angle = Phaser.Math.Angle.Between(
+            ally.sprite.x,
+            ally.sprite.y,
+            target.x,
+            target.y,
+          );
           ally.sprite.lastX = ally.sprite.x;
           ally.sprite.lastY = ally.sprite.y;
           ally.sprite.x += Math.cos(angle) * SUMMON_MOVE_SPEED * (1 / 60);
@@ -5279,7 +6111,12 @@ export class WorldScene extends Phaser.Scene {
               this.showDamageNumber(target.x, target.y - 10, dmg, false);
 
               if (target.spriteBody) {
-                this.tweens.add({ targets: target.spriteBody, alpha: 0.18, duration: 50, yoyo: true });
+                this.tweens.add({
+                  targets: target.spriteBody,
+                  alpha: 0.18,
+                  duration: 50,
+                  yoyo: true,
+                });
               }
 
               // Update monster HP bar
@@ -5292,11 +6129,16 @@ export class WorldScene extends Phaser.Scene {
                 const mDef = MONSTERS[mBase];
                 const goldMin = mDef?.goldRange?.[0] ?? 5;
                 const goldMax = mDef?.goldRange?.[1] ?? 15;
-                const gold = goldMin + Math.floor(Math.random() * (goldMax - goldMin + 1));
+                const gold =
+                  goldMin + Math.floor(Math.random() * (goldMax - goldMin + 1));
                 const exp = Math.floor((mDef?.exp ?? 10) * 0.5);
 
-                useGameStore.getState().applyOfflineReward({ gold, exp, items: [] });
-                useGameStore.getState().registerKill(mBase, mDef?.isBoss ?? false);
+                useGameStore
+                  .getState()
+                  .applyOfflineReward({ gold, exp, items: [] });
+                useGameStore
+                  .getState()
+                  .registerKill(mBase, mDef?.isBoss ?? false);
 
                 const ai = this.monsterAI.get(lockedId);
                 const respawnMs = (mDef?.respawnTime ?? 30) * 1000;
@@ -5305,9 +6147,18 @@ export class WorldScene extends Phaser.Scene {
 
                 this.time.delayedCall(respawnMs, () => {
                   if (!target.active) return;
-                  this.offlineMonsterHp.set(lockedId, { ...monData, hp: monData.maxHp });
-                  if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
-                  target.setPosition(ai?.spawnX ?? target.x, ai?.spawnY ?? target.y);
+                  this.offlineMonsterHp.set(lockedId, {
+                    ...monData,
+                    hp: monData.maxHp,
+                  });
+                  if (ai) {
+                    ai.state = "idle";
+                    ai.lastChaseAt = 0;
+                  }
+                  target.setPosition(
+                    ai?.spawnX ?? target.x,
+                    ai?.spawnY ?? target.y,
+                  );
                   target.hpFill.width = 50;
                   target.setVisible(true);
                   target.setAlpha(0);
@@ -5320,18 +6171,24 @@ export class WorldScene extends Phaser.Scene {
       } else {
         // No target: loosely follow player
         const distToPlayer = Phaser.Math.Distance.Between(
-          ally.sprite.x, ally.sprite.y,
-          this.localPlayer!.x, this.localPlayer!.y,
+          ally.sprite.x,
+          ally.sprite.y,
+          this.localPlayer!.x,
+          this.localPlayer!.y,
         );
         if (distToPlayer > 110) {
           const angle = Phaser.Math.Angle.Between(
-            ally.sprite.x, ally.sprite.y,
-            this.localPlayer!.x, this.localPlayer!.y,
+            ally.sprite.x,
+            ally.sprite.y,
+            this.localPlayer!.x,
+            this.localPlayer!.y,
           );
           ally.sprite.lastX = ally.sprite.x;
           ally.sprite.lastY = ally.sprite.y;
-          ally.sprite.x += Math.cos(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
-          ally.sprite.y += Math.sin(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
+          ally.sprite.x +=
+            Math.cos(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
+          ally.sprite.y +=
+            Math.sin(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
         }
       }
     });
@@ -5345,19 +6202,23 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const now = this.time.now;
-    const minExpire = Math.min(...this.summonedAllies.map(a => a.expireAt));
+    const minExpire = Math.min(...this.summonedAllies.map((a) => a.expireAt));
     const secsLeft = Math.max(0, Math.ceil((minExpire - now) / 1000));
 
     if (!this.summonHudText) {
       const w = this.scale.width;
       this.summonHudBg = this.add.graphics().setScrollFactor(0).setDepth(1500);
-      this.summonHudText = this.add.text(w / 2, 145, "", {
-        fontSize: "11px",
-        color: "#88ffbb",
-        stroke: "#001a08",
-        strokeThickness: 4,
-        resolution: 2,
-      }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(1501);
+      this.summonHudText = this.add
+        .text(w / 2, 145, "", {
+          fontSize: "11px",
+          color: "#88ffbb",
+          stroke: "#001a08",
+          strokeThickness: 4,
+          resolution: 2,
+        })
+        .setOrigin(0.5, 0.5)
+        .setScrollFactor(0)
+        .setDepth(1501);
     }
 
     const w = this.scale.width;
@@ -5367,13 +6228,15 @@ export class WorldScene extends Phaser.Scene {
     this.summonHudBg!.lineStyle(1, 0x44ff88, 0.45);
     this.summonHudBg!.strokeRoundedRect(w / 2 - 90, 133, 180, 24, 8);
 
-    this.summonHudText!.setText(`✦ 소환수 ${this.summonedAllies.length}마리 활성 · ${secsLeft}s`);
+    this.summonHudText!.setText(
+      `✦ 소환수 ${this.summonedAllies.length}마리 활성 · ${secsLeft}s`,
+    );
     this.summonHudText!.setVisible(true);
     this.summonHudBg!.setVisible(true);
   }
 
   private clearSummons() {
-    this.summonedAllies.forEach(ally => {
+    this.summonedAllies.forEach((ally) => {
       if (ally.sprite.active) ally.sprite.destroy();
     });
     this.summonedAllies = [];
@@ -5386,12 +6249,15 @@ export class WorldScene extends Phaser.Scene {
   private getWisWeightedSummonCount(): number {
     const { player } = useGameStore.getState();
     // WIS score 0~10: level/5 + arcanist bonus
-    const wisScore = Math.min(10, Math.floor(player.level / 5) + (player.className === "Arcanist" ? 3 : 1));
+    const wisScore = Math.min(
+      10,
+      Math.floor(player.level / 5) + (player.className === "Arcanist" ? 3 : 1),
+    );
     // 가중치 배열: [w1, w2, w3, w4, w5]
     // wisScore 낮으면 1마리, 높으면 5마리 가중치 상승
     const w1 = Math.max(1, 10 - wisScore * 2);
-    const w2 = Math.max(1, 8  - wisScore);
-    const w3 = Math.max(1, 4  + wisScore / 2);
+    const w2 = Math.max(1, 8 - wisScore);
+    const w3 = Math.max(1, 4 + wisScore / 2);
     const w4 = Math.max(1, wisScore - 1);
     const w5 = Math.max(1, wisScore - 3);
     const weights = [w1, w2, w3, w4, w5];
@@ -5410,17 +6276,35 @@ export class WorldScene extends Phaser.Scene {
 
   private attemptTaming() {
     if (!this.isOfflineMode || !this.localPlayer) {
-      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "오프라인 모드에서만 테이밍이 가능합니다.", timestamp: Date.now() });
+      useGameStore.getState().addChat({
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "테이밍",
+        message: "오프라인 모드에서만 테이밍이 가능합니다.",
+        timestamp: Date.now(),
+      });
       return;
     }
 
     if (!this.selectedMonsterId) {
-      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "먼저 몬스터를 선택(우클릭)하세요.", timestamp: Date.now() });
+      useGameStore.getState().addChat({
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "테이밍",
+        message: "먼저 몬스터를 선택(우클릭)하세요.",
+        timestamp: Date.now(),
+      });
       return;
     }
 
     if (this.tamedMonsters.length >= 2) {
-      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "테이밍 몬스터는 최대 2마리까지 보유 가능합니다.", timestamp: Date.now() });
+      useGameStore.getState().addChat({
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "테이밍",
+        message: "테이밍 몬스터는 최대 2마리까지 보유 가능합니다.",
+        timestamp: Date.now(),
+      });
       return;
     }
 
@@ -5428,7 +6312,13 @@ export class WorldScene extends Phaser.Scene {
     const monData = this.offlineMonsterHp.get(monsterId);
     const monSprite = this.monsterSprites.get(monsterId);
     if (!monData || monData.hp <= 0 || !monSprite) {
-      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "살아있는 몬스터를 선택하세요.", timestamp: Date.now() });
+      useGameStore.getState().addChat({
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "테이밍",
+        message: "살아있는 몬스터를 선택하세요.",
+        timestamp: Date.now(),
+      });
       return;
     }
 
@@ -5438,14 +6328,18 @@ export class WorldScene extends Phaser.Scene {
 
     // 성공 확률: 약할수록 높음. 보스는 5%로 고정
     const isBoss = mDef?.isBoss ?? false;
-    const baseChance = isBoss ? 0.05 : Math.max(0.05, 0.75 - monsterLevel * 0.04);
+    const baseChance = isBoss
+      ? 0.05
+      : Math.max(0.05, 0.75 - monsterLevel * 0.04);
     const roll = Math.random();
     const success = roll < baseChance;
 
     if (!success) {
       const pct = Math.round(baseChance * 100);
       useGameStore.getState().addChat({
-        id: crypto.randomUUID(), channel: "system", author: "테이밍",
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "테이밍",
         message: `♦ 테이밍 실패... (성공률 ${pct}%, 주문서 소모)`,
         timestamp: Date.now(),
       });
@@ -5479,8 +6373,14 @@ export class WorldScene extends Phaser.Scene {
       if (!monSprite.active) return;
       this.offlineMonsterHp.set(monsterId, { ...monData, hp: monData.maxHp });
       const ai = this.monsterAI.get(monsterId);
-      if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
-      monSprite.setPosition(ai?.spawnX ?? monSprite.x, ai?.spawnY ?? monSprite.y);
+      if (ai) {
+        ai.state = "idle";
+        ai.lastChaseAt = 0;
+      }
+      monSprite.setPosition(
+        ai?.spawnX ?? monSprite.x,
+        ai?.spawnY ?? monSprite.y,
+      );
       monSprite.hpFill.width = 50;
       monSprite.setVisible(true);
       monSprite.setAlpha(0);
@@ -5491,10 +6391,16 @@ export class WorldScene extends Phaser.Scene {
     this.updateTamingHud();
 
     // 소환 이펙트 (붉은/황금색)
-    this.spawnSummonEffect(this.localPlayer.x, this.localPlayer.y - 20, "greater");
+    this.spawnSummonEffect(
+      this.localPlayer.x,
+      this.localPlayer.y - 20,
+      "greater",
+    );
 
     useGameStore.getState().addChat({
-      id: crypto.randomUUID(), channel: "system", author: "테이밍",
+      id: crypto.randomUUID(),
+      channel: "system",
+      author: "테이밍",
       message: `♦ 테이밍 성공! [${mDef?.name ?? "몬스터"}] 이(가) 30분간 함께합니다.`,
       timestamp: Date.now(),
     });
@@ -5502,25 +6408,36 @@ export class WorldScene extends Phaser.Scene {
 
   private createTamedSprite(x: number, y: number, name: string) {
     const tintColor = 0xff8c42; // 따뜻한 오렌지 — 소환(초록)과 구분
-    const container = this.add.container(x, y) as Phaser.GameObjects.Container & {
+    const container = this.add.container(
+      x,
+      y,
+    ) as Phaser.GameObjects.Container & {
       hpFill: Phaser.GameObjects.Rectangle;
       lastX: number;
       lastY: number;
     };
 
     const shadow = this.add.ellipse(0, 18, 40, 22, 0x000000, 0.28);
-    const aura = this.add.ellipse(0, 10, 56, 34, tintColor, 0.10).setStrokeStyle(1.5, tintColor, 0.55);
-    const body = this.add.ellipse(0, -8, 34, 42, tintColor, 0.82).setStrokeStyle(2, 0xffffff, 0.25);
-    const glow = this.add.ellipse(0, -14, 16, 20, 0xffffff, 0.20);
-    const label = this.add.text(0, -46, name, {
-      fontSize: "8px",
-      color: `#${tintColor.toString(16).padStart(6, "0")}`,
-      stroke: "#000000",
-      strokeThickness: 3,
-      resolution: 2,
-    }).setOrigin(0.5, 1);
+    const aura = this.add
+      .ellipse(0, 10, 56, 34, tintColor, 0.1)
+      .setStrokeStyle(1.5, tintColor, 0.55);
+    const body = this.add
+      .ellipse(0, -8, 34, 42, tintColor, 0.82)
+      .setStrokeStyle(2, 0xffffff, 0.25);
+    const glow = this.add.ellipse(0, -14, 16, 20, 0xffffff, 0.2);
+    const label = this.add
+      .text(0, -46, name, {
+        fontSize: "8px",
+        color: `#${tintColor.toString(16).padStart(6, "0")}`,
+        stroke: "#000000",
+        strokeThickness: 3,
+        resolution: 2,
+      })
+      .setOrigin(0.5, 1);
     const hpBack = this.add.rectangle(0, 28, 42, 5, 0x1a0000, 0.85);
-    const hpFill = this.add.rectangle(-21, 28, 42, 5, 0xff8c42, 0.9).setOrigin(0, 0.5);
+    const hpFill = this.add
+      .rectangle(-21, 28, 42, 5, 0xff8c42, 0.9)
+      .setOrigin(0, 0.5);
 
     container.add([shadow, aura, body, glow, label, hpBack, hpFill]);
     container.hpFill = hpFill;
@@ -5529,24 +6446,49 @@ export class WorldScene extends Phaser.Scene {
 
     this.actorLayer?.add(container);
     container.setAlpha(0).setScale(0.3);
-    this.tweens.add({ targets: container, alpha: 1, scaleX: 1, scaleY: 1, duration: 500, ease: "Back.Out" });
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      scaleX: 1,
+      scaleY: 1,
+      duration: 500,
+      ease: "Back.Out",
+    });
 
     return container;
   }
 
   private updateTamedMonsters() {
-    if (!this.isOfflineMode || !this.localPlayer || this.tamedMonsters.length === 0) return;
+    if (
+      !this.isOfflineMode ||
+      !this.localPlayer ||
+      this.tamedMonsters.length === 0
+    )
+      return;
     const now = this.time.now;
 
     // Remove expired
-    this.tamedMonsters = this.tamedMonsters.filter(tm => {
+    this.tamedMonsters = this.tamedMonsters.filter((tm) => {
       if (now >= tm.expireAt || tm.hp <= 0) {
         this.tweens.add({
-          targets: tm.sprite, alpha: 0, scaleX: 0.3, scaleY: 0.3, duration: 380, ease: "Power2.In",
-          onComplete: () => { if (tm.sprite.active) tm.sprite.destroy(); },
+          targets: tm.sprite,
+          alpha: 0,
+          scaleX: 0.3,
+          scaleY: 0.3,
+          duration: 380,
+          ease: "Power2.In",
+          onComplete: () => {
+            if (tm.sprite.active) tm.sprite.destroy();
+          },
         });
         if (now >= tm.expireAt) {
-          useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: `♦ [${tm.name}] 테이밍 시간이 종료되었습니다.`, timestamp: Date.now() });
+          useGameStore.getState().addChat({
+            id: crypto.randomUUID(),
+            channel: "system",
+            author: "테이밍",
+            message: `♦ [${tm.name}] 테이밍 시간이 종료되었습니다.`,
+            timestamp: Date.now(),
+          });
         }
         return false;
       }
@@ -5561,7 +6503,7 @@ export class WorldScene extends Phaser.Scene {
     const TAME_MOVE_SPEED = 120;
     const TAME_ATTACK_INTERVAL = 1000;
 
-    this.tamedMonsters.forEach(tm => {
+    this.tamedMonsters.forEach((tm) => {
       if (!tm.sprite.active) return;
 
       let nearestId: string | null = null;
@@ -5571,7 +6513,12 @@ export class WorldScene extends Phaser.Scene {
         if (!ms.visible) return;
         const monData = this.offlineMonsterHp.get(mid);
         if (!monData || monData.hp <= 0) return;
-        const dist = Phaser.Math.Distance.Between(tm.sprite.x, tm.sprite.y, ms.x, ms.y);
+        const dist = Phaser.Math.Distance.Between(
+          tm.sprite.x,
+          tm.sprite.y,
+          ms.x,
+          ms.y,
+        );
         if (dist < TAME_CHASE_RANGE && dist < nearestDist) {
           nearestDist = dist;
           nearestId = mid;
@@ -5586,7 +6533,12 @@ export class WorldScene extends Phaser.Scene {
         if (!target) return;
 
         if (nearestDist > TAME_ATTACK_RANGE) {
-          const angle = Phaser.Math.Angle.Between(tm.sprite.x, tm.sprite.y, target.x, target.y);
+          const angle = Phaser.Math.Angle.Between(
+            tm.sprite.x,
+            tm.sprite.y,
+            target.x,
+            target.y,
+          );
           tm.sprite.lastX = tm.sprite.x;
           tm.sprite.lastY = tm.sprite.y;
           tm.sprite.x += Math.cos(angle) * TAME_MOVE_SPEED * (1 / 60);
@@ -5601,18 +6553,35 @@ export class WorldScene extends Phaser.Scene {
               this.offlineMonsterHp.set(lockedId, { ...monData, hp: newHp });
 
               this.showDamageNumber(target.x, target.y - 10, dmg, false);
-              if (target.spriteBody) this.tweens.add({ targets: target.spriteBody, alpha: 0.18, duration: 50, yoyo: true });
+              if (target.spriteBody)
+                this.tweens.add({
+                  targets: target.spriteBody,
+                  alpha: 0.18,
+                  duration: 50,
+                  yoyo: true,
+                });
 
               target.hpFill.width = 50 * (newHp / monData.maxHp);
 
               if (newHp <= 0) {
                 const mBase = lockedId.split("-offline-")[0];
                 const mDef = MONSTERS[mBase];
-                const gold = (mDef?.goldRange?.[0] ?? 5) + Math.floor(Math.random() * ((mDef?.goldRange?.[1] ?? 15) - (mDef?.goldRange?.[0] ?? 5) + 1));
+                const gold =
+                  (mDef?.goldRange?.[0] ?? 5) +
+                  Math.floor(
+                    Math.random() *
+                      ((mDef?.goldRange?.[1] ?? 15) -
+                        (mDef?.goldRange?.[0] ?? 5) +
+                        1),
+                  );
                 const exp = Math.floor((mDef?.exp ?? 10) * 0.6);
 
-                useGameStore.getState().applyOfflineReward({ gold, exp, items: [] });
-                useGameStore.getState().registerKill(mBase, mDef?.isBoss ?? false);
+                useGameStore
+                  .getState()
+                  .applyOfflineReward({ gold, exp, items: [] });
+                useGameStore
+                  .getState()
+                  .registerKill(mBase, mDef?.isBoss ?? false);
 
                 const ai = this.monsterAI.get(lockedId);
                 target.setVisible(false);
@@ -5620,9 +6589,18 @@ export class WorldScene extends Phaser.Scene {
 
                 this.time.delayedCall((mDef?.respawnTime ?? 30) * 1000, () => {
                   if (!target.active) return;
-                  this.offlineMonsterHp.set(lockedId, { ...monData, hp: monData.maxHp });
-                  if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
-                  target.setPosition(ai?.spawnX ?? target.x, ai?.spawnY ?? target.y);
+                  this.offlineMonsterHp.set(lockedId, {
+                    ...monData,
+                    hp: monData.maxHp,
+                  });
+                  if (ai) {
+                    ai.state = "idle";
+                    ai.lastChaseAt = 0;
+                  }
+                  target.setPosition(
+                    ai?.spawnX ?? target.x,
+                    ai?.spawnY ?? target.y,
+                  );
                   target.hpFill.width = 50;
                   target.setVisible(true);
                   target.setAlpha(0);
@@ -5633,9 +6611,19 @@ export class WorldScene extends Phaser.Scene {
           }
         }
       } else {
-        const distToPlayer = Phaser.Math.Distance.Between(tm.sprite.x, tm.sprite.y, this.localPlayer!.x, this.localPlayer!.y);
+        const distToPlayer = Phaser.Math.Distance.Between(
+          tm.sprite.x,
+          tm.sprite.y,
+          this.localPlayer!.x,
+          this.localPlayer!.y,
+        );
         if (distToPlayer > 120) {
-          const angle = Phaser.Math.Angle.Between(tm.sprite.x, tm.sprite.y, this.localPlayer!.x, this.localPlayer!.y);
+          const angle = Phaser.Math.Angle.Between(
+            tm.sprite.x,
+            tm.sprite.y,
+            this.localPlayer!.x,
+            this.localPlayer!.y,
+          );
           tm.sprite.lastX = tm.sprite.x;
           tm.sprite.lastY = tm.sprite.y;
           tm.sprite.x += Math.cos(angle) * TAME_MOVE_SPEED * 0.7 * (1 / 60);
@@ -5653,20 +6641,24 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const now = this.time.now;
-    const minExpire = Math.min(...this.tamedMonsters.map(t => t.expireAt));
+    const minExpire = Math.min(...this.tamedMonsters.map((t) => t.expireAt));
     const minsLeft = Math.max(0, Math.ceil((minExpire - now) / 60000));
     const secsLeft = Math.max(0, Math.ceil(((minExpire - now) % 60000) / 1000));
 
     if (!this.tamingHudText) {
       const w = this.scale.width;
       this.tamingHudBg = this.add.graphics().setScrollFactor(0).setDepth(1500);
-      this.tamingHudText = this.add.text(w / 2, 173, "", {
-        fontSize: "11px",
-        color: "#ffb86c",
-        stroke: "#1a0800",
-        strokeThickness: 4,
-        resolution: 2,
-      }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(1501);
+      this.tamingHudText = this.add
+        .text(w / 2, 173, "", {
+          fontSize: "11px",
+          color: "#ffb86c",
+          stroke: "#1a0800",
+          strokeThickness: 4,
+          resolution: 2,
+        })
+        .setOrigin(0.5, 0.5)
+        .setScrollFactor(0)
+        .setDepth(1501);
     }
 
     const w = this.scale.width;
@@ -5676,24 +6668,36 @@ export class WorldScene extends Phaser.Scene {
     this.tamingHudBg!.lineStyle(1, 0xff8c42, 0.45);
     this.tamingHudBg!.strokeRoundedRect(w / 2 - 90, 161, 180, 24, 8);
 
-    this.tamingHudText!.setText(`♦ 테이밍 ${this.tamedMonsters.length}마리 · ${minsLeft}m ${secsLeft}s`);
+    this.tamingHudText!.setText(
+      `♦ 테이밍 ${this.tamedMonsters.length}마리 · ${minsLeft}m ${secsLeft}s`,
+    );
     this.tamingHudText!.setVisible(true);
     this.tamingHudBg!.setVisible(true);
   }
 
   private clearTamed() {
-    this.tamedMonsters.forEach(tm => { if (tm.sprite.active) tm.sprite.destroy(); });
+    this.tamedMonsters.forEach((tm) => {
+      if (tm.sprite.active) tm.sprite.destroy();
+    });
     this.tamedMonsters = [];
     this.tamingHudText?.setVisible(false);
     this.tamingHudBg?.setVisible(false);
   }
 
   private spawnSummonEffect(x: number, y: number, tier: string) {
-    const color = tier === "greater" ? 0xffd700 : tier === "mid" ? 0x88aaff : 0x44ee88;
+    const color =
+      tier === "greater" ? 0xffd700 : tier === "mid" ? 0x88aaff : 0x44ee88;
     for (let i = 0; i < 14; i++) {
       const angle = (i / 14) * Math.PI * 2;
       const r = 45 + Math.random() * 35;
-      const p = this.add.ellipse(x + Math.cos(angle) * 22, y + Math.sin(angle) * 14, 6, 6, color, 0.9);
+      const p = this.add.ellipse(
+        x + Math.cos(angle) * 22,
+        y + Math.sin(angle) * 14,
+        6,
+        6,
+        color,
+        0.9,
+      );
       this.effectLayer?.add(p);
       this.tweens.add({
         targets: p,
@@ -5706,7 +6710,9 @@ export class WorldScene extends Phaser.Scene {
         onComplete: () => p.destroy(),
       });
     }
-    const ring = this.add.ellipse(x, y, 90, 54, color, 0.12).setStrokeStyle(2, color, 0.72);
+    const ring = this.add
+      .ellipse(x, y, 90, 54, color, 0.12)
+      .setStrokeStyle(2, color, 0.72);
     this.effectLayer?.add(ring);
     this.tweens.add({
       targets: ring,
@@ -5797,6 +6803,81 @@ export class WorldScene extends Phaser.Scene {
       duration: 460,
       ease: "Cubic.Out",
       onComplete: () => crown.destroy(),
+    });
+  }
+
+  private handleTeleportRandom() {
+    if (!this.localPlayer) return;
+
+    // Move player to a random nearby position (±300px)
+    const randomX = this.localPlayer.x + (Math.random() - 0.5) * 600;
+    const randomY = this.localPlayer.y + (Math.random() - 0.5) * 600;
+
+    // Clamp to map boundaries (assuming similar to existing movement logic)
+    const clampedX = Math.max(200, Math.min(randomX, this.scale.width - 200));
+    const clampedY = Math.max(200, Math.min(randomY, this.scale.height - 200));
+
+    // Teleport with visual effect
+    this.showTeleportEffect(this.localPlayer.x, this.localPlayer.y);
+    this.localPlayer.setPosition(clampedX, clampedY);
+    this.showTeleportEffect(clampedX, clampedY);
+
+    // Update game store with new position
+    useGameStore.getState().upsertWorldPlayer({
+      id: "localPlayer",
+      name: "Player",
+      mapId: useGameStore.getState().currentMapId,
+      x: clampedX,
+      y: clampedY,
+    });
+
+    // Center camera on new position
+    this.cameras.main.centerOn(clampedX, clampedY);
+
+    // Add system message
+    useGameStore.getState().addChat({
+      id: `teleport_${Date.now()}`,
+      channel: "system",
+      author: "시스템",
+      message: "순간이동 스크롤을 사용했습니다!",
+      timestamp: Date.now(),
+    });
+  }
+
+  private handleReturnToTown() {
+    // Transition to speakingIsland map (spawn at town center)
+    const spawnX = 400;
+    const spawnY = 350;
+
+    useGameStore.getState().setCurrentMapId("speakingIsland");
+    this.scene.restart({ mapId: "speakingIsland", spawnX, spawnY });
+
+    // Add system message
+    useGameStore.getState().addChat({
+      id: `return_town_${Date.now()}`,
+      channel: "system",
+      author: "시스템",
+      message: "귀환 스크롤을 사용하여 마을로 돌아왔습니다!",
+      timestamp: Date.now(),
+    });
+  }
+
+  private showTeleportEffect(x: number, y: number) {
+    // Create a magical teleport effect
+    const particles = this.add.particles(x, y, "particle_sparkle", {
+      scale: { start: 0.3, end: 0 },
+      speed: { min: 50, max: 150 },
+      lifespan: 600,
+      quantity: 12,
+      alpha: { start: 0.8, end: 0 },
+      tint: [0x66ccff, 0xffffff, 0xaaaaff],
+    });
+
+    this.effectLayer?.add(particles);
+
+    // Remove particles after animation
+    this.time.delayedCall(600, () => {
+      particles.destroy();
     });
   }
 }
