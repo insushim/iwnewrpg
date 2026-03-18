@@ -81,6 +81,7 @@ type EventPayloadMap = {
   use_summon_stone: {
     stoneId: string;
   };
+  attempt_tame: Record<string, never>;
 };
 
 type EventKey = keyof EventPayloadMap;

@@ -214,6 +214,25 @@ export class WorldScene extends Phaser.Scene {
   private summonHudText?: Phaser.GameObjects.Text;
   private summonHudBg?: Phaser.GameObjects.Graphics;
 
+  // 테이밍 시스템
+  private tamedMonsters: Array<{
+    sprite: Phaser.GameObjects.Container & {
+      hpFill: Phaser.GameObjects.Rectangle;
+      lastX: number;
+      lastY: number;
+    };
+    originalMonsterId: string;
+    name: string;
+    hp: number;
+    maxHp: number;
+    atk: number;
+    expireAt: number;
+    targetId: string | null;
+    lastAttackAt: number;
+  }> = [];
+  private tamingHudText?: Phaser.GameObjects.Text;
+  private tamingHudBg?: Phaser.GameObjects.Graphics;
+
   constructor() {
     super("WorldScene");
   }
@@ -271,6 +290,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateNpcProximity();
     this.updateMonsterAI();
     this.updateSummonedAllies();
+    this.updateTamedMonsters();
     this.checkPortalTransitions();
 
     if (this.targetMarker.visible) {
@@ -376,6 +396,7 @@ export class WorldScene extends Phaser.Scene {
   shutdown() {
     this.stopAutoAttack();
     this.clearSummons();
+    this.clearTamed();
     this.quizResultUnsubscribe?.();
     this.unsubscribe.forEach((off) => off());
     this.unsubscribe = [];
@@ -877,6 +898,7 @@ export class WorldScene extends Phaser.Scene {
       EventBus.on("loot_spawn", (payload) => this.spawnLoot(payload)),
       EventBus.on("loot_picked", (payload) => this.removeLoot(payload.lootId)),
       EventBus.on("use_summon_stone", (payload: { stoneId: string }) => this.activateSummonStone(payload.stoneId)),
+      EventBus.on("attempt_tame", () => this.attemptTaming()),
     );
   }
 
@@ -3564,6 +3586,8 @@ export class WorldScene extends Phaser.Scene {
         : nextState === "walk"
           ? WALK_FRAME_COUNT
           : IDLE_FRAME_COUNT;
+    let frameAdvanced = false;
+    const previousFrame = sprite.animFrame;
 
     if (sprite.animState !== nextState) {
       sprite.animState = nextState;
@@ -3572,6 +3596,22 @@ export class WorldScene extends Phaser.Scene {
     } else if (now - sprite.frameTimer >= frameInterval) {
       sprite.animFrame = (sprite.animFrame + 1) % frameCount;
       sprite.frameTimer = now;
+      frameAdvanced = sprite.animFrame !== previousFrame;
+    }
+
+    if (nextState === "walk" && frameAdvanced && sprite.animFrame !== 0) {
+      this.spawnWalkStepEffect(
+        sprite.x,
+        sprite.y + 10,
+        sprite.facing,
+        "playerId" in sprite
+          ? sprite.playerId === this.selfId
+            ? 0xffefb2
+            : 0x9fdcff
+          : sprite.isBoss
+            ? 0xffc976
+            : 0xff9c88,
+      );
     }
 
     sprite.spriteBody.setTexture(
@@ -3644,6 +3684,30 @@ export class WorldScene extends Phaser.Scene {
               nw: -0.07,
             } as const)[sprite.facing]
           : 0;
+    const bodyScaleX =
+      sprite.animState === "walk"
+        ? [0.985, 1.035, 1.005][sprite.animFrame % 3]
+        : sprite.animState === "attack"
+          ? [1, 1.05, 1.08, 1.02][sprite.animFrame % 4]
+          : 1;
+    const bodyScaleY =
+      sprite.animState === "walk"
+        ? [1.02, 0.96, 1.01][sprite.animFrame % 3]
+        : sprite.animState === "attack"
+          ? [1, 0.95, 0.92, 0.98][sprite.animFrame % 4]
+          : 1;
+    const labelFloat =
+      sprite.animState === "walk"
+        ? [0, -1.2, -0.4][sprite.animFrame % 3]
+        : sprite.animState === "attack"
+          ? [-0.4, -1.6, 0.2, 0][sprite.animFrame % 4]
+          : 0;
+    const ringScaleBoost =
+      sprite.animState === "walk"
+        ? [0, 0.035, 0.012][sprite.animFrame % 3]
+        : sprite.animState === "attack"
+          ? [0.02, 0.05, 0.07, 0.03][sprite.animFrame % 4]
+          : 0;
     const pulseBase =
       "playerId" in sprite && sprite.playerId === this.selfId
         ? 0.2
@@ -3663,10 +3727,18 @@ export class WorldScene extends Phaser.Scene {
     sprite.spriteBody.x = walkSway;
     sprite.spriteBody.y = bob;
     sprite.spriteBody.rotation = walkLean;
+    sprite.spriteBody.scaleX = bodyScaleX;
+    sprite.spriteBody.scaleY = bodyScaleY;
     sprite.glowBody.x = walkSway * 0.72;
     sprite.glowBody.y = bob - 1;
     sprite.glowBody.rotation = walkLean * 0.8;
+    sprite.glowBody.scaleX = bodyScaleX * 1.02;
+    sprite.glowBody.scaleY = bodyScaleY * 1.02;
     sprite.glowBody.alpha = pulseBase + Math.sin(now / 180) * 0.04;
+    sprite.ring.x = walkSway * 0.28;
+    sprite.ring.y = 14 + bob * 0.12;
+    sprite.ring.scaleX = 1 + ringScaleBoost;
+    sprite.ring.scaleY = 1 - ringScaleBoost * 0.38;
     sprite.auraRing.x = walkSway * 0.2;
     sprite.auraRing.y = 10 + bob * 0.2;
     sprite.auraRing.scaleX = auraPulse + Math.sin(now / 220) * 0.04;
@@ -3674,6 +3746,9 @@ export class WorldScene extends Phaser.Scene {
     sprite.auraRing.alpha =
       ("monsterId" in sprite && sprite.isBoss ? 0.18 : 0.1) +
       Math.sin(now / 200) * 0.025;
+    sprite.label.x = walkSway * 0.36;
+    sprite.label.y =
+      ("playerId" in sprite ? -68 : -82) + bob * 0.16 + labelFloat;
     if ("monsterId" in sprite && sprite.isBoss && sprite.list[3] instanceof Phaser.GameObjects.Ellipse) {
       const halo = sprite.list[3] as Phaser.GameObjects.Ellipse;
       halo.alpha = 0.06 + Math.sin(now / 220) * 0.02;
@@ -3682,6 +3757,65 @@ export class WorldScene extends Phaser.Scene {
     }
     sprite.lastX = sprite.x;
     sprite.lastY = sprite.y;
+  }
+
+  private spawnWalkStepEffect(
+    x: number,
+    y: number,
+    facing: DirectionKey,
+    tint: number,
+  ) {
+    const directionOffset = {
+      n: { x: 0, y: 5 },
+      ne: { x: -8, y: 4 },
+      e: { x: -10, y: 2 },
+      se: { x: -8, y: 0 },
+      s: { x: 0, y: -1 },
+      sw: { x: 8, y: 0 },
+      w: { x: 10, y: 2 },
+      nw: { x: 8, y: 4 },
+    } as const;
+    const drift = {
+      n: { x: 0, y: -10 },
+      ne: { x: 8, y: -8 },
+      e: { x: 12, y: -3 },
+      se: { x: 8, y: 4 },
+      s: { x: 0, y: 8 },
+      sw: { x: -8, y: 4 },
+      w: { x: -12, y: -3 },
+      nw: { x: -8, y: -8 },
+    } as const;
+    const origin = directionOffset[facing];
+    const velocity = drift[facing];
+    const dust = this.add
+      .ellipse(x + origin.x, y + origin.y, 16, 8, tint, 0.16)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    const spark = this.add
+      .ellipse(x + origin.x * 0.7, y + origin.y - 3, 8, 3, 0xffffff, 0.18)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    this.effectLayer?.add(dust);
+    this.effectLayer?.add(spark);
+    this.tweens.add({
+      targets: dust,
+      x: dust.x + velocity.x,
+      y: dust.y + velocity.y,
+      alpha: 0,
+      scaleX: 1.8,
+      scaleY: 1.2,
+      duration: 260,
+      ease: "Quad.Out",
+      onComplete: () => dust.destroy(),
+    });
+    this.tweens.add({
+      targets: spark,
+      x: spark.x + velocity.x * 0.7,
+      y: spark.y + velocity.y * 0.6,
+      alpha: 0,
+      scaleX: 1.5,
+      duration: 220,
+      ease: "Quad.Out",
+      onComplete: () => spark.destroy(),
+    });
   }
 
   private updateAnimatedNpc(sprite: NpcSprite, now: number) {
@@ -4995,9 +5129,9 @@ export class WorldScene extends Phaser.Scene {
     if (!this.localPlayer) return;
 
     const SUMMON_CONFIG = {
-      summon_stone_lesser:  { count: [1, 2] as [number,number], duration: 60000,  hp: 35,  atk: 10, name: "하급 정령",  tier: "lesser"  },
-      summon_stone_mid:     { count: [2, 3] as [number,number], duration: 90000,  hp: 70,  atk: 20, name: "중급 정령",  tier: "mid"     },
-      summon_stone_greater: { count: [3, 5] as [number,number], duration: 120000, hp: 120, atk: 35, name: "상급 전사",  tier: "greater" },
+      summon_stone_lesser:  { hp: 35,  atk: 10, name: "하급 정령",  tier: "lesser"  },
+      summon_stone_mid:     { hp: 70,  atk: 20, name: "중급 정령",  tier: "mid"     },
+      summon_stone_greater: { hp: 120, atk: 35, name: "상급 전사",  tier: "greater" },
     };
 
     const cfg = SUMMON_CONFIG[stoneId as keyof typeof SUMMON_CONFIG];
@@ -5005,8 +5139,8 @@ export class WorldScene extends Phaser.Scene {
 
     this.clearSummons();
 
-    const count = cfg.count[0] + Math.floor(Math.random() * (cfg.count[1] - cfg.count[0] + 1));
-    const expireAt = this.time.now + cfg.duration;
+    const count = this.getWisWeightedSummonCount();
+    const expireAt = this.time.now + 600000; // 10분
 
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
@@ -5031,7 +5165,7 @@ export class WorldScene extends Phaser.Scene {
       id: crypto.randomUUID(),
       channel: "system",
       author: "소환",
-      message: `✦ ${cfg.name} ${count}마리 소환! ${cfg.duration / 1000}초간 함께 싸웁니다.`,
+      message: `✦ ${cfg.name} ${count}마리 소환! 10분간 함께 싸웁니다.`,
       timestamp: Date.now(),
     });
   }
@@ -5245,6 +5379,313 @@ export class WorldScene extends Phaser.Scene {
     this.summonedAllies = [];
     this.summonHudText?.setVisible(false);
     this.summonHudBg?.setVisible(false);
+  }
+
+  // ─── WIS 가중치 소환 수 ─────────────────────────────────────────────────
+  // 레벨이 높을수록 WIS 스코어 상승 → 5마리 소환 확률 증가
+  private getWisWeightedSummonCount(): number {
+    const { player } = useGameStore.getState();
+    // WIS score 0~10: level/5 + arcanist bonus
+    const wisScore = Math.min(10, Math.floor(player.level / 5) + (player.className === "Arcanist" ? 3 : 1));
+    // 가중치 배열: [w1, w2, w3, w4, w5]
+    // wisScore 낮으면 1마리, 높으면 5마리 가중치 상승
+    const w1 = Math.max(1, 10 - wisScore * 2);
+    const w2 = Math.max(1, 8  - wisScore);
+    const w3 = Math.max(1, 4  + wisScore / 2);
+    const w4 = Math.max(1, wisScore - 1);
+    const w5 = Math.max(1, wisScore - 3);
+    const weights = [w1, w2, w3, w4, w5];
+    const total = weights.reduce((a, b) => a + b, 0);
+    let roll = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+      roll -= weights[i];
+      if (roll <= 0) return i + 1;
+    }
+    return 1;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // 테이밍 시스템
+  // ═══════════════════════════════════════════════════════════════════════
+
+  private attemptTaming() {
+    if (!this.isOfflineMode || !this.localPlayer) {
+      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "오프라인 모드에서만 테이밍이 가능합니다.", timestamp: Date.now() });
+      return;
+    }
+
+    if (!this.selectedMonsterId) {
+      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "먼저 몬스터를 선택(우클릭)하세요.", timestamp: Date.now() });
+      return;
+    }
+
+    if (this.tamedMonsters.length >= 2) {
+      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "테이밍 몬스터는 최대 2마리까지 보유 가능합니다.", timestamp: Date.now() });
+      return;
+    }
+
+    const monsterId = this.selectedMonsterId;
+    const monData = this.offlineMonsterHp.get(monsterId);
+    const monSprite = this.monsterSprites.get(monsterId);
+    if (!monData || monData.hp <= 0 || !monSprite) {
+      useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: "살아있는 몬스터를 선택하세요.", timestamp: Date.now() });
+      return;
+    }
+
+    const mBase = monsterId.split("-offline-")[0];
+    const mDef = MONSTERS[mBase];
+    const monsterLevel = mDef?.level ?? 1;
+
+    // 성공 확률: 약할수록 높음. 보스는 5%로 고정
+    const isBoss = mDef?.isBoss ?? false;
+    const baseChance = isBoss ? 0.05 : Math.max(0.05, 0.75 - monsterLevel * 0.04);
+    const roll = Math.random();
+    const success = roll < baseChance;
+
+    if (!success) {
+      const pct = Math.round(baseChance * 100);
+      useGameStore.getState().addChat({
+        id: crypto.randomUUID(), channel: "system", author: "테이밍",
+        message: `♦ 테이밍 실패... (성공률 ${pct}%, 주문서 소모)`,
+        timestamp: Date.now(),
+      });
+      // Anger effect
+      this.cameras.main.shake(120, 0.006);
+      return;
+    }
+
+    // ─ 성공 ─
+    const tamedName = `[길들인] ${mDef?.name ?? "몬스터"}`;
+    const tamedHp = (mDef?.hp ?? 40) + 20;
+    const tamedAtk = Math.floor((mDef?.atk ?? 10) * 0.75); // 75% 전투력
+
+    const sprite = this.createTamedSprite(monSprite.x, monSprite.y, tamedName);
+    this.tamedMonsters.push({
+      sprite,
+      originalMonsterId: mBase,
+      name: tamedName,
+      hp: tamedHp,
+      maxHp: tamedHp,
+      atk: tamedAtk,
+      expireAt: this.time.now + 1800000, // 30분
+      targetId: null,
+      lastAttackAt: 0,
+    });
+
+    // 원래 몬스터 잠시 숨기고 리스폰
+    monSprite.setVisible(false);
+    this.showDeathEffect(monSprite.x, monSprite.y);
+    this.time.delayedCall((mDef?.respawnTime ?? 30) * 1000, () => {
+      if (!monSprite.active) return;
+      this.offlineMonsterHp.set(monsterId, { ...monData, hp: monData.maxHp });
+      const ai = this.monsterAI.get(monsterId);
+      if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
+      monSprite.setPosition(ai?.spawnX ?? monSprite.x, ai?.spawnY ?? monSprite.y);
+      monSprite.hpFill.width = 50;
+      monSprite.setVisible(true);
+      monSprite.setAlpha(0);
+      this.tweens.add({ targets: monSprite, alpha: 1, duration: 600 });
+    });
+
+    this.selectMonster(null);
+    this.updateTamingHud();
+
+    // 소환 이펙트 (붉은/황금색)
+    this.spawnSummonEffect(this.localPlayer.x, this.localPlayer.y - 20, "greater");
+
+    useGameStore.getState().addChat({
+      id: crypto.randomUUID(), channel: "system", author: "테이밍",
+      message: `♦ 테이밍 성공! [${mDef?.name ?? "몬스터"}] 이(가) 30분간 함께합니다.`,
+      timestamp: Date.now(),
+    });
+  }
+
+  private createTamedSprite(x: number, y: number, name: string) {
+    const tintColor = 0xff8c42; // 따뜻한 오렌지 — 소환(초록)과 구분
+    const container = this.add.container(x, y) as Phaser.GameObjects.Container & {
+      hpFill: Phaser.GameObjects.Rectangle;
+      lastX: number;
+      lastY: number;
+    };
+
+    const shadow = this.add.ellipse(0, 18, 40, 22, 0x000000, 0.28);
+    const aura = this.add.ellipse(0, 10, 56, 34, tintColor, 0.10).setStrokeStyle(1.5, tintColor, 0.55);
+    const body = this.add.ellipse(0, -8, 34, 42, tintColor, 0.82).setStrokeStyle(2, 0xffffff, 0.25);
+    const glow = this.add.ellipse(0, -14, 16, 20, 0xffffff, 0.20);
+    const label = this.add.text(0, -46, name, {
+      fontSize: "8px",
+      color: `#${tintColor.toString(16).padStart(6, "0")}`,
+      stroke: "#000000",
+      strokeThickness: 3,
+      resolution: 2,
+    }).setOrigin(0.5, 1);
+    const hpBack = this.add.rectangle(0, 28, 42, 5, 0x1a0000, 0.85);
+    const hpFill = this.add.rectangle(-21, 28, 42, 5, 0xff8c42, 0.9).setOrigin(0, 0.5);
+
+    container.add([shadow, aura, body, glow, label, hpBack, hpFill]);
+    container.hpFill = hpFill;
+    container.lastX = x;
+    container.lastY = y;
+
+    this.actorLayer?.add(container);
+    container.setAlpha(0).setScale(0.3);
+    this.tweens.add({ targets: container, alpha: 1, scaleX: 1, scaleY: 1, duration: 500, ease: "Back.Out" });
+
+    return container;
+  }
+
+  private updateTamedMonsters() {
+    if (!this.isOfflineMode || !this.localPlayer || this.tamedMonsters.length === 0) return;
+    const now = this.time.now;
+
+    // Remove expired
+    this.tamedMonsters = this.tamedMonsters.filter(tm => {
+      if (now >= tm.expireAt || tm.hp <= 0) {
+        this.tweens.add({
+          targets: tm.sprite, alpha: 0, scaleX: 0.3, scaleY: 0.3, duration: 380, ease: "Power2.In",
+          onComplete: () => { if (tm.sprite.active) tm.sprite.destroy(); },
+        });
+        if (now >= tm.expireAt) {
+          useGameStore.getState().addChat({ id: crypto.randomUUID(), channel: "system", author: "테이밍", message: `♦ [${tm.name}] 테이밍 시간이 종료되었습니다.`, timestamp: Date.now() });
+        }
+        return false;
+      }
+      return true;
+    });
+
+    this.updateTamingHud();
+    if (this.tamedMonsters.length === 0) return;
+
+    const TAME_ATTACK_RANGE = 58;
+    const TAME_CHASE_RANGE = 340;
+    const TAME_MOVE_SPEED = 120;
+    const TAME_ATTACK_INTERVAL = 1000;
+
+    this.tamedMonsters.forEach(tm => {
+      if (!tm.sprite.active) return;
+
+      let nearestId: string | null = null;
+      let nearestDist = Infinity;
+
+      this.monsterSprites.forEach((ms, mid) => {
+        if (!ms.visible) return;
+        const monData = this.offlineMonsterHp.get(mid);
+        if (!monData || monData.hp <= 0) return;
+        const dist = Phaser.Math.Distance.Between(tm.sprite.x, tm.sprite.y, ms.x, ms.y);
+        if (dist < TAME_CHASE_RANGE && dist < nearestDist) {
+          nearestDist = dist;
+          nearestId = mid;
+        }
+      });
+
+      tm.targetId = nearestId;
+
+      if (nearestId) {
+        const lockedId = nearestId as string;
+        const target = this.monsterSprites.get(lockedId);
+        if (!target) return;
+
+        if (nearestDist > TAME_ATTACK_RANGE) {
+          const angle = Phaser.Math.Angle.Between(tm.sprite.x, tm.sprite.y, target.x, target.y);
+          tm.sprite.lastX = tm.sprite.x;
+          tm.sprite.lastY = tm.sprite.y;
+          tm.sprite.x += Math.cos(angle) * TAME_MOVE_SPEED * (1 / 60);
+          tm.sprite.y += Math.sin(angle) * TAME_MOVE_SPEED * (1 / 60);
+        } else {
+          if (now - tm.lastAttackAt >= TAME_ATTACK_INTERVAL) {
+            tm.lastAttackAt = now;
+            const monData = this.offlineMonsterHp.get(lockedId);
+            if (monData && monData.hp > 0) {
+              const dmg = tm.atk + Math.floor(Math.random() * 6);
+              const newHp = Math.max(0, monData.hp - dmg);
+              this.offlineMonsterHp.set(lockedId, { ...monData, hp: newHp });
+
+              this.showDamageNumber(target.x, target.y - 10, dmg, false);
+              if (target.spriteBody) this.tweens.add({ targets: target.spriteBody, alpha: 0.18, duration: 50, yoyo: true });
+
+              target.hpFill.width = 50 * (newHp / monData.maxHp);
+
+              if (newHp <= 0) {
+                const mBase = lockedId.split("-offline-")[0];
+                const mDef = MONSTERS[mBase];
+                const gold = (mDef?.goldRange?.[0] ?? 5) + Math.floor(Math.random() * ((mDef?.goldRange?.[1] ?? 15) - (mDef?.goldRange?.[0] ?? 5) + 1));
+                const exp = Math.floor((mDef?.exp ?? 10) * 0.6);
+
+                useGameStore.getState().applyOfflineReward({ gold, exp, items: [] });
+                useGameStore.getState().registerKill(mBase, mDef?.isBoss ?? false);
+
+                const ai = this.monsterAI.get(lockedId);
+                target.setVisible(false);
+                this.showDeathEffect(target.x, target.y);
+
+                this.time.delayedCall((mDef?.respawnTime ?? 30) * 1000, () => {
+                  if (!target.active) return;
+                  this.offlineMonsterHp.set(lockedId, { ...monData, hp: monData.maxHp });
+                  if (ai) { ai.state = "idle"; ai.lastChaseAt = 0; }
+                  target.setPosition(ai?.spawnX ?? target.x, ai?.spawnY ?? target.y);
+                  target.hpFill.width = 50;
+                  target.setVisible(true);
+                  target.setAlpha(0);
+                  this.tweens.add({ targets: target, alpha: 1, duration: 600 });
+                });
+              }
+            }
+          }
+        }
+      } else {
+        const distToPlayer = Phaser.Math.Distance.Between(tm.sprite.x, tm.sprite.y, this.localPlayer!.x, this.localPlayer!.y);
+        if (distToPlayer > 120) {
+          const angle = Phaser.Math.Angle.Between(tm.sprite.x, tm.sprite.y, this.localPlayer!.x, this.localPlayer!.y);
+          tm.sprite.lastX = tm.sprite.x;
+          tm.sprite.lastY = tm.sprite.y;
+          tm.sprite.x += Math.cos(angle) * TAME_MOVE_SPEED * 0.7 * (1 / 60);
+          tm.sprite.y += Math.sin(angle) * TAME_MOVE_SPEED * 0.7 * (1 / 60);
+        }
+      }
+    });
+  }
+
+  private updateTamingHud() {
+    if (this.tamedMonsters.length === 0) {
+      this.tamingHudText?.setVisible(false);
+      this.tamingHudBg?.setVisible(false);
+      return;
+    }
+
+    const now = this.time.now;
+    const minExpire = Math.min(...this.tamedMonsters.map(t => t.expireAt));
+    const minsLeft = Math.max(0, Math.ceil((minExpire - now) / 60000));
+    const secsLeft = Math.max(0, Math.ceil(((minExpire - now) % 60000) / 1000));
+
+    if (!this.tamingHudText) {
+      const w = this.scale.width;
+      this.tamingHudBg = this.add.graphics().setScrollFactor(0).setDepth(1500);
+      this.tamingHudText = this.add.text(w / 2, 173, "", {
+        fontSize: "11px",
+        color: "#ffb86c",
+        stroke: "#1a0800",
+        strokeThickness: 4,
+        resolution: 2,
+      }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(1501);
+    }
+
+    const w = this.scale.width;
+    this.tamingHudBg!.clear();
+    this.tamingHudBg!.fillStyle(0x1a0800, 0.88);
+    this.tamingHudBg!.fillRoundedRect(w / 2 - 90, 161, 180, 24, 8);
+    this.tamingHudBg!.lineStyle(1, 0xff8c42, 0.45);
+    this.tamingHudBg!.strokeRoundedRect(w / 2 - 90, 161, 180, 24, 8);
+
+    this.tamingHudText!.setText(`♦ 테이밍 ${this.tamedMonsters.length}마리 · ${minsLeft}m ${secsLeft}s`);
+    this.tamingHudText!.setVisible(true);
+    this.tamingHudBg!.setVisible(true);
+  }
+
+  private clearTamed() {
+    this.tamedMonsters.forEach(tm => { if (tm.sprite.active) tm.sprite.destroy(); });
+    this.tamedMonsters = [];
+    this.tamingHudText?.setVisible(false);
+    this.tamingHudBg?.setVisible(false);
   }
 
   private spawnSummonEffect(x: number, y: number, tier: string) {

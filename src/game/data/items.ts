@@ -643,6 +643,21 @@ export const ITEMS: Record<string, Item> = {
     price: 15,
     maxStack: 999,
   },
+  // ═══ TAMING ═══
+  taming_stone: {
+    id: "taming_stone",
+    name: "마수 포획 주문서",
+    type: ItemType.CONSUMABLE,
+    rarity: ItemRarity.RARE,
+    stats: {},
+    weight: 1,
+    stackable: true,
+    description: "선택한 몬스터를 길들이려 시도합니다. 약할수록 성공률이 높으며 최대 2마리 보유 가능. 테이밍 성공 시 30분 동반.",
+    icon: "taming_stone",
+    price: 1200,
+    maxStack: 10,
+    tags: ["taming_stone"],
+  },
   // ═══ SUMMON STONES ═══
   summon_stone_lesser: {
     id: "summon_stone_lesser",

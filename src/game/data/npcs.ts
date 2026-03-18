@@ -125,6 +125,7 @@ export const NPCS: Record<string, NpcData> = {
       "상급 소환석일수록 더 강력한 전사들이 나타나지.",
     ],
     shopInventory: [
+      { itemId: "taming_stone" },
       { itemId: "summon_stone_lesser" },
       { itemId: "summon_stone_mid" },
       { itemId: "summon_stone_greater" },

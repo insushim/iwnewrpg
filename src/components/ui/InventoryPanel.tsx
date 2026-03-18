@@ -31,8 +31,10 @@ export function InventoryPanel() {
   const selectedItemData = selectedItem ? ITEMS[selectedItem.id] : null;
   const equippable = selectedItemData?.type === "weapon" || selectedItemData?.type === "armor";
   const isSummonStone = selectedItemData?.tags?.includes("summon_stone") ?? false;
+  const isTamingStone = selectedItemData?.tags?.includes("taming_stone") ?? false;
   const usable =
     !isSummonStone &&
+    !isTamingStone &&
     (selectedItemData?.type === "consumable" ||
     selectedItemData?.id === "return_scroll" ||
     selectedItemData?.id === "teleport_scroll");
@@ -102,8 +104,9 @@ export function InventoryPanel() {
           const itemData = item ? ITEMS[item.id] : null;
           const active = item?.id === selectedInventoryItemId;
           const isSummon = itemData?.tags?.includes("summon_stone") ?? false;
+          const isTaming = itemData?.tags?.includes("taming_stone") ?? false;
           const canUse =
-            !isSummon &&
+            !isSummon && !isTaming &&
             (itemData?.type === "consumable" ||
             itemData?.id === "return_scroll" ||
             itemData?.id === "teleport_scroll");
@@ -122,6 +125,11 @@ export function InventoryPanel() {
                 }
                 if (isSummon) {
                   EventBus.emit("use_summon_stone", { stoneId: item.id });
+                  consumeItem(item.id);
+                  return;
+                }
+                if (isTaming) {
+                  EventBus.emit("attempt_tame", {});
                   consumeItem(item.id);
                   return;
                 }
@@ -184,6 +192,17 @@ export function InventoryPanel() {
                 className="rounded-[12px] border border-emerald-400/40 bg-[linear-gradient(180deg,#2a6e44,#0f3820)] px-3 py-1.5 text-[11px] font-semibold text-emerald-200 transition hover:brightness-110"
               >
                 ✦ 소환
+              </button>
+            ) : isTamingStone ? (
+              <button
+                type="button"
+                onClick={() => {
+                  EventBus.emit("attempt_tame", {});
+                  consumeItem(selectedItem.id);
+                }}
+                className="rounded-[12px] border border-amber-400/40 bg-[linear-gradient(180deg,#7a4f10,#3d2008)] px-3 py-1.5 text-[11px] font-semibold text-amber-200 transition hover:brightness-110"
+              >
+                ♦ 테이밍
               </button>
             ) : usable ? (
               <button
