@@ -2528,14 +2528,14 @@ export class WorldScene extends Phaser.Scene {
       // 동굴 입구 (북쪽 해골 구역)
       const cave1 = this.add.graphics();
       cave1.fillStyle(0x1a0d00, 0.9);
-      cave1.fillEllipse(900, 155, 80, 50);
+      cave1.fillEllipse(2800, 155, 80, 50);
       cave1.lineStyle(3, 0x5a3a10, 0.8);
-      cave1.strokeEllipse(900, 155, 80, 50);
+      cave1.strokeEllipse(2800, 155, 80, 50);
       cave1.fillStyle(0x000000, 1);
-      cave1.fillEllipse(900, 162, 50, 32);
+      cave1.fillEllipse(2800, 162, 50, 32);
       this.propLayer?.add(cave1);
       this.add
-        .text(900, 130, "고대 동굴", {
+        .text(2800, 130, "고대 동굴", {
           fontSize: "10px",
           color: "#aa8855",
           stroke: "#000000",
@@ -3026,7 +3026,7 @@ export class WorldScene extends Phaser.Scene {
     switch (this.mapId) {
       case "speakingIsland":
         portals.push({ x: mapW - 150, y: 400, label: "은기사의 마을 →" });
-        portals.push({ x: 900, y: 162, label: "↑ 고대 동굴" });
+        portals.push({ x: 2800, y: 162, label: "↑ 고대 동굴" });
         break;
       case "ancientCave":
         portals.push({ x: mapW * 0.5, y: mapH - 120, label: "↓ 동굴 출구" });
@@ -3395,7 +3395,7 @@ export class WorldScene extends Phaser.Scene {
       .setScale(isSelf ? 0.9 : 0.82)
       .setOrigin(0.5, 0.94);
     const label = this.add
-      .text(0, -96, payload.name, {
+      .text(0, -110, payload.name, {
         fontSize: "12px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
@@ -3404,7 +3404,7 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0.5);
     const classBadge = this.createBadgeMarker(
       0,
-      -112,
+      -126,
       this.getPlayerClassBadgeText(),
       classTone.burstTint,
     );
@@ -3703,6 +3703,11 @@ export class WorldScene extends Phaser.Scene {
       monster.y,
     );
     if (distance > range) {
+      // Only issue a new move if not already tweening toward this monster
+      const existingTweens = this.tweens.getTweensOf(this.localPlayer);
+      if (existingTweens.length > 0 && existingTweens[0].isPlaying()) {
+        return;
+      }
       const angle = Phaser.Math.Angle.Between(
         monster.x,
         monster.y,
@@ -5313,14 +5318,14 @@ export class WorldScene extends Phaser.Scene {
       case "speakingIsland":
         if (px > mapW - 180 && py > 320 && py < 480)
           this.handleMapTransition("silverKnightTown", 240, 400);
-        // 고대 동굴 입구 (픽셀 900, 162)
-        if (Math.abs(px - 900) < 55 && Math.abs(py - 162) < 55)
+        // 고대 동굴 입구 (픽셀 2800, 162)
+        if (Math.abs(px - 2800) < 55 && Math.abs(py - 162) < 55)
           this.handleMapTransition("ancientCave", 600, 2400);
         break;
       case "ancientCave":
         // 동굴 출구 (맵 하단 중앙)
         if (py > mapH - 150 && px > mapW * 0.35 && px < mapW * 0.65)
-          this.handleMapTransition("speakingIsland", 900, 200);
+          this.handleMapTransition("speakingIsland", 2800, 200);
         break;
       case "silverKnightTown":
         if (px < 180 && py > 320 && py < 480)
@@ -5561,7 +5566,7 @@ export class WorldScene extends Phaser.Scene {
     // Background plate
     const bubbleBg = this.add.graphics();
     const textObj = this.add
-      .text(0, -120, displayMsg, {
+      .text(0, -135, displayMsg, {
         fontSize: "11px",
         color: "#f2e4c2",
         fontFamily: "sans-serif",

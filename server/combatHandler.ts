@@ -27,10 +27,10 @@ export class CombatHandler {
         : 0;
 
     const physical =
-      Math.floor((stats.str ?? 0) * 0.8 + (stats.dex ?? 0) * 0.4) +
+      Math.floor((stats.str ?? 0) * 0.5 + (stats.dex ?? 0) * 0.25) +
       weaponDamage;
     const magical = Math.floor(
-      (stats.int ?? 0) * 1.1 + (stats.spellPower ?? 0) * 1.5,
+      (stats.int ?? 0) * 0.7 + (stats.spellPower ?? 0) * 1.0,
     );
 
     const baseDamage = Math.max(physical, magical);
@@ -48,7 +48,7 @@ export class CombatHandler {
       (stats.critRate ?? 0) / 100 + (stats.dex ?? 0) * 0.003,
     );
     const isCrit = Math.random() < critChance;
-    const critMul = isCrit ? 1.5 + Math.random() * 0.5 : 1;
+    const critMul = isCrit ? 1.3 + Math.random() * 0.3 : 1;
 
     // Variance (Lineage has ±15% variance)
     const variance = 0.85 + Math.random() * 0.3;

@@ -71,7 +71,7 @@ export function ChatWindow() {
 
   return (
     <section
-      className="relative flex h-[240px] flex-col overflow-hidden rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#0a0e18,#060a14)] p-3"
+      className="relative flex h-[240px] max-w-[240px] flex-col overflow-hidden rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#0a0e18,#060a14)] p-3"
       style={{
         boxShadow:
           "inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(142,117,64,0.3)",

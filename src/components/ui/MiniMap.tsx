@@ -747,7 +747,7 @@ export function MiniMap() {
       {/* Travel Dropdown */}
       {showTravel && map.connections.length > 0 && (
         <div
-          className="absolute left-0 top-full z-50 mt-2 w-full rounded-lg border-4 border-[#8e7540] bg-[#f2e4c2] p-3 shadow-xl"
+          className="absolute left-0 top-full z-50 mt-2 w-full max-h-[50vh] overflow-y-auto rounded-lg border-4 border-[#8e7540] bg-[#f2e4c2] p-3 shadow-xl"
           style={{
             backgroundImage: `
               linear-gradient(45deg,

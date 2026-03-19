@@ -9,6 +9,7 @@ import { CombatHandler } from "./combatHandler";
 import { MonsterManager, type MonsterState } from "./monsterManager";
 import { QuizHandler } from "./quizHandler";
 import { RoomManager } from "./roomManager";
+import { loadPlayer, savePlayer } from "./firestore";
 
 type ConnectPayload = {
   id: string;
@@ -208,7 +209,8 @@ export function createGameServer(server: HttpServer) {
         activeTarget.session.exp = Math.max(0, activeTarget.session.exp - expLost);
         activeTarget.session.hp = getDerivedMaxHp(activeTarget.session);
         activeTarget.session.mp = getDerivedMaxMp(activeTarget.session);
-        io.to(activeTarget.presence.id).emit("player:death", { expLost });
+        activeTarget.session.mapId = "speakingIsland";
+        io.to(activeTarget.presence.id).emit("player:death", { expLost, respawnMapId: "speakingIsland" });
         const returned = monsters.returnHome(monster.id);
         if (returned) {
           io.to(monster.mapId).emit("monster:updated", returned);
@@ -224,13 +226,39 @@ export function createGameServer(server: HttpServer) {
     let playerId = socket.id;
     let playerName = "Guest";
 
-    socket.on("player:connect", (payload: ConnectPayload) => {
+    socket.on("player:connect", async (payload: ConnectPayload) => {
       playerId = payload.id;
       playerName = payload.name;
       currentMapId = payload.mapId ?? "speakingIsland";
       socket.join(currentMapId);
 
-      const session = sessions.get(playerId) ?? createStarterState(payload);
+      let session = sessions.get(playerId);
+      if (!session) {
+        const saved = await loadPlayer(playerId);
+        if (saved) {
+          session = {
+            id: playerId,
+            name: saved.name,
+            className: saved.className,
+            mapId: saved.mapId,
+            gold: saved.gold,
+            exp: saved.exp,
+            level: saved.level,
+            hp: saved.hp,
+            maxHp: saved.maxHp,
+            mp: saved.mp,
+            maxMp: saved.maxMp,
+            inventory: saved.inventory as SessionInventoryItem[],
+            equipment: saved.equipment as SessionEquipment,
+            quests: saved.quests as SessionQuestProgress[],
+            quizCorrectStreak: saved.quizCorrectStreak,
+            lastAttackAt: 0,
+          };
+          currentMapId = saved.mapId;
+        } else {
+          session = createStarterState(payload);
+        }
+      }
       sessions.set(playerId, session);
 
       const occupants = rooms.join(currentMapId, {
@@ -577,7 +605,29 @@ export function createGameServer(server: HttpServer) {
       });
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
+      const session = sessions.get(playerId);
+      if (session) {
+        await savePlayer(playerId, {
+          name: session.name,
+          className: session.className,
+          mapId: session.mapId,
+          gold: session.gold,
+          exp: session.exp,
+          level: session.level,
+          hp: session.hp,
+          maxHp: session.maxHp,
+          mp: session.mp,
+          maxMp: session.maxMp,
+          inventory: session.inventory,
+          equipment: session.equipment as Record<string, unknown>,
+          quests: session.quests,
+          quizCorrectStreak: session.quizCorrectStreak,
+          updatedAt: Date.now(),
+        });
+        sessions.delete(playerId);
+      }
+
       rooms.leave(currentMapId, playerId);
 
       Array.from(groundLoot.entries()).forEach(([lootId, loot]) => {
@@ -589,6 +639,29 @@ export function createGameServer(server: HttpServer) {
       socket.to(currentMapId).emit("player:left", { id: playerId });
     });
   });
+
+  // Auto-save all sessions every 60 seconds
+  setInterval(() => {
+    sessions.forEach((session, id) => {
+      savePlayer(id, {
+        name: session.name,
+        className: session.className,
+        mapId: session.mapId,
+        gold: session.gold,
+        exp: session.exp,
+        level: session.level,
+        hp: session.hp,
+        maxHp: session.maxHp,
+        mp: session.mp,
+        maxMp: session.maxMp,
+        inventory: session.inventory,
+        equipment: session.equipment as Record<string, unknown>,
+        quests: session.quests,
+        quizCorrectStreak: session.quizCorrectStreak,
+        updatedAt: Date.now(),
+      });
+    });
+  }, 60_000);
 
   return io;
 }
@@ -665,14 +738,14 @@ function getAttackCooldown(session: SessionPlayer) {
   const weapon = session.equipment.weapon ? ITEMS[session.equipment.weapon.id] : null;
 
   if (weapon?.subtype === WeaponSubType.BOW) {
-    return 900;
+    return 1600;
   }
 
   if (weapon?.subtype === WeaponSubType.STAFF) {
-    return 1050;
+    return 1800;
   }
 
-  return 760;
+  return 1400;
 }
 
 function getEquipSlot(itemId: string, equipment: SessionEquipment): EquipmentSlot | null {

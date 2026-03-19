@@ -736,6 +736,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   closeDeath: () =>
     set((state) => {
       const derived = getDerivedStatsFromState(state.player, state.equipment);
+      // Teleport player to village on respawn
+      const socket = getSocket();
+      if (socket?.connected) {
+        socket.emit("map:travel", { to: "speakingIsland" });
+      }
       return {
         player: {
           ...state.player,
