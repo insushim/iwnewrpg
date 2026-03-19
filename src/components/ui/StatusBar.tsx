@@ -45,7 +45,7 @@ export function StatusBar() {
               setActiveShop("radar");
               toggleShop();
             }}
-            className="mt-3 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-amber-400"
+            className="btn-lineage mt-3 rounded-lg px-4 py-1.5 text-xs font-semibold tracking-wider transition"
           >
             상점 열기
           </button>
@@ -103,19 +103,22 @@ function Gauge({
   // Enhanced color mappings for Lineage style
   const gaugeStyles = {
     "bg-game-hp": {
-      background: "linear-gradient(90deg, #c2263e, #ff4455)",
-      glow: "0 0 12px rgba(255, 68, 85, 0.6)",
-      icon: "❤️",
+      background: "linear-gradient(180deg, #e83a52 0%, #c2263e 40%, #8b1a2d 100%)",
+      glow: "0 0 10px rgba(232,58,82,0.5), inset 0 1px 0 rgba(255,120,140,0.35)",
+      topShine: "linear-gradient(180deg, rgba(255,200,200,0.25) 0%, transparent 50%)",
+      icon: "HP",
     },
     "bg-game-mp": {
-      background: "linear-gradient(90deg, #2b58d8, #4488ff)",
-      glow: "0 0 12px rgba(68, 136, 255, 0.6)",
-      icon: "💙",
+      background: "linear-gradient(180deg, #4a78f0 0%, #2b58d8 40%, #1a3a9a 100%)",
+      glow: "0 0 10px rgba(74,120,240,0.5), inset 0 1px 0 rgba(120,160,255,0.35)",
+      topShine: "linear-gradient(180deg, rgba(200,220,255,0.25) 0%, transparent 50%)",
+      icon: "MP",
     },
     "bg-game-exp": {
-      background: "linear-gradient(90deg, #c9a13d, #f0d060)",
-      glow: "0 0 12px rgba(240, 208, 96, 0.6)",
-      icon: "⭐",
+      background: "linear-gradient(180deg, #e8c048 0%, #c9a13d 40%, #9a7a28 100%)",
+      glow: "0 0 10px rgba(232,192,72,0.4), inset 0 1px 0 rgba(255,220,120,0.35)",
+      topShine: "linear-gradient(180deg, rgba(255,240,200,0.2) 0%, transparent 50%)",
+      icon: "EXP",
     },
   };
 
@@ -126,42 +129,65 @@ function Gauge({
   return (
     <div>
       <div
-        className="mb-2 flex items-center justify-between text-sm font-bold text-[#f2e4c2]"
+        className="mb-1.5 flex items-center justify-between text-xs font-bold text-[#f2e4c2]"
         style={{ textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
       >
-        <span className="flex items-center gap-2">
-          <span className="text-base">{style.icon}</span>
-          {label}
+        <span
+          className="inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[9px] font-black tracking-wider"
+          style={{
+            background: "linear-gradient(180deg, rgba(40,34,20,0.8), rgba(20,16,10,0.9))",
+            border: "1px solid rgba(180,138,70,0.3)",
+            minWidth: 28,
+          }}
+        >
+          {style.icon}
         </span>
-        <span className="text-[#d8c3a1]">
-          {current.toLocaleString()}/{max.toLocaleString()}
+        <span className="text-[11px] text-[#d8c3a1]">
+          {current.toLocaleString()}<span className="text-[#8a7a60]">/</span>{max.toLocaleString()}
         </span>
       </div>
       <div
-        className="relative h-4 overflow-hidden rounded border-2 border-[#6b5530]"
+        className="relative h-[18px] overflow-hidden rounded-sm"
         style={{
-          background: "linear-gradient(145deg, #060a14, #0a0e18)",
-          boxShadow: "inset 0 2px 4px rgba(0,0,0,0.8)",
+          background: "linear-gradient(180deg, #040610 0%, #0a0e18 50%, #060a14 100%)",
+          border: "1px solid rgba(107,85,48,0.6)",
+          boxShadow: "inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 0 rgba(255,240,200,0.04)",
         }}
       >
-        {/* Gauge fill */}
+        {/* Gauge fill with multi-layer gradient */}
         <div
-          className="h-full transition-all duration-300 ease-out"
+          className="absolute inset-0 transition-all duration-300 ease-out"
           style={{
-            width: `${Math.max(2, Math.min(100, width))}%`,
+            width: `${Math.max(1, Math.min(100, width))}%`,
             background: style.background,
             boxShadow: style.glow,
           }}
         />
 
-        {/* Ornate beveled edge */}
-        <div className="absolute inset-1 rounded border border-[#8e7540] opacity-30 pointer-events-none"></div>
+        {/* Top shine — glass-like reflection */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            width: `${Math.max(1, Math.min(100, width))}%`,
+            background: (style as Record<string, string>).topShine,
+          }}
+        />
 
-        {/* Percentage text overlay */}
+        {/* Inner frame — ornate */}
+        <div
+          className="absolute inset-0 pointer-events-none rounded-sm"
+          style={{
+            border: "1px solid rgba(142,117,64,0.15)",
+            boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.4)",
+          }}
+        />
+
+        {/* Percentage text with drop shadow */}
         <div
           className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[#f2e4c2] pointer-events-none"
           style={{
-            textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.8)",
+            textShadow: "0 1px 1px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.8)",
+            letterSpacing: "0.5px",
           }}
         >
           {Math.round(width)}%
@@ -173,11 +199,23 @@ function Gauge({
 
 function StatPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-amber-200/10 bg-black/25 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-[0.22em] text-amber-200/55">
+    <div
+      className="rounded-lg px-3 py-2"
+      style={{
+        background: "linear-gradient(180deg, rgba(20,24,34,0.8), rgba(8,10,16,0.9))",
+        border: "1px solid rgba(180,138,70,0.18)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,240,200,0.03)",
+      }}
+    >
+      <p className="text-[9px] uppercase tracking-[0.25em] text-[#b4a070]">
         {label}
       </p>
-      <p className="mt-1 truncate text-sm text-amber-50">{value}</p>
+      <p
+        className="mt-0.5 truncate text-sm font-semibold text-[#f2e4c2]"
+        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
+      >
+        {value}
+      </p>
     </div>
   );
 }

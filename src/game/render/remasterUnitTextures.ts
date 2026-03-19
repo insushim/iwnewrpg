@@ -1161,168 +1161,883 @@ function drawBeast(
       circle(ctx, x + 21 + dir.x * 3, y + 1, 0.8, color(0xffffff, 0.8));
 
       break;
-    case "orc":
-      ellipse(ctx, x, y + 31, 48, 12, color(0x05080d, 0.24));
-      roundRect(ctx, x - 18, y - 2, 36, 28, 10, color(spec.primary));
-      ellipse(ctx, x, y + 19, 40, 22, color(spec.secondary));
-      circle(ctx, x - 8 + dir.x * 2, y + 4, 3, color(spec.secondary));
-      circle(ctx, x + 8 + dir.x * 2, y + 4, 3, color(spec.secondary));
-      roundRect(ctx, x - 10 + swing / 2, y + 18, 6, 5, 2, color(0xe8e4cd));
-      roundRect(ctx, x + 4 + swing / 2, y + 18, 6, 5, 2, color(0xe8e4cd));
-      roundRect(ctx, x - 12, y + 4, 24, 4, 2, color(0xffffff, 0.1));
-      triangle(
-        ctx,
-        x - 14,
-        y + 9,
-        x - 24,
-        y + 2,
-        x - 18,
-        y + 16,
-        color(darken(spec.secondary, 12)),
-      );
-      triangle(
-        ctx,
-        x + 14,
-        y + 9,
-        x + 24,
-        y + 2,
-        x + 18,
-        y + 16,
-        color(darken(spec.secondary, 12)),
-      );
+    case "orc": {
+      // === Lineage Remaster Orc — muscular brute with crude armor ===
+      // Enhanced ground shadow
+      ellipse(ctx, x, y + 36, 60, 18, color(0x05080d, 0.32));
+      ellipse(ctx, x, y + 37, 54, 14, color(0x05080d, 0.16));
+
+      // Muscular legs with leather boots
+      const orcLegG = ctx.createLinearGradient(0, y + 18, 0, y + 40);
+      orcLegG.addColorStop(0, color(spec.primary));
+      orcLegG.addColorStop(0.6, color(darken(spec.primary, 10)));
+      orcLegG.addColorStop(1, color(darken(spec.primary, 22)));
+      roundRect(ctx, x - 14 + stride, y + 18, 11, 22, 5, orcLegG);
+      roundRect(ctx, x + 3 - stride, y + 18, 11, 22, 5, orcLegG);
+      // Leather boots with straps
+      roundRect(ctx, x - 16 + stride, y + 34, 14, 8, 4, color(darken(spec.accent, 22)));
+      roundRect(ctx, x + 2 - stride, y + 34, 14, 8, 4, color(darken(spec.accent, 22)));
+      roundRect(ctx, x - 14 + stride, y + 32, 10, 2, 1, color(spec.accent, 0.6));
+      roundRect(ctx, x + 4 - stride, y + 32, 10, 2, 1, color(spec.accent, 0.6));
+
+      // Muscular torso with layered armor
+      const orcTorsoG = ctx.createRadialGradient(x - 4, y - 6, 8, x + 2, y + 10, 30);
+      orcTorsoG.addColorStop(0, color(lighten(spec.primary, 18)));
+      orcTorsoG.addColorStop(0.4, color(spec.primary));
+      orcTorsoG.addColorStop(0.8, color(darken(spec.primary, 10)));
+      orcTorsoG.addColorStop(1, color(darken(spec.primary, 22)));
+      roundRect(ctx, x - 24, y - 10, 48, 32, 14, orcTorsoG);
+
+      // Crude chest plate
+      const chestG = ctx.createLinearGradient(x - 16, y - 4, x + 16, y + 18);
+      chestG.addColorStop(0, color(lighten(spec.accent, 10), 0.7));
+      chestG.addColorStop(0.5, color(spec.accent, 0.6));
+      chestG.addColorStop(1, color(darken(spec.accent, 14), 0.7));
+      roundRect(ctx, x - 16, y - 4, 32, 22, 8, chestG);
+      // Chest plate rivets
+      for (let i = 0; i < 4; i++) {
+        circle(ctx, x - 10 + i * 7, y + 1, 1.2, color(lighten(spec.accent, 20)));
+      }
+
+      // Belt with metal studs
+      roundRect(ctx, x - 20, y + 14, 40, 7, 2, color(darken(spec.accent, 18)));
+      for (let i = 0; i < 6; i++) {
+        circle(ctx, x - 14 + i * 6, y + 17, 1.5, color(lighten(spec.accent, 16)));
+      }
+      roundRect(ctx, x - 5, y + 14, 10, 7, 1, color(lighten(spec.accent, 24)));
+
+      // Shoulder pauldrons with spikes
+      const spG = ctx.createRadialGradient(x - 26, y - 8, 3, x - 22, y - 2, 14);
+      spG.addColorStop(0, color(lighten(spec.accent, 18)));
+      spG.addColorStop(1, color(darken(spec.accent, 10)));
+      ellipse(ctx, x - 24, y - 6, 20, 16, spG);
+      ellipse(ctx, x + 24, y - 6, 20, 16, spG);
+      // Pauldron spikes
+      triangle(ctx, x - 30, y - 6, x - 26, y - 20, x - 22, y - 6, color(lighten(spec.accent, 14)));
+      triangle(ctx, x + 30, y - 6, x + 26, y - 20, x + 22, y - 6, color(lighten(spec.accent, 14)));
+      // Spike highlights
+      strokeLine(ctx, x - 27, y - 16, x - 26, y - 8, color(0xffffff, 0.3), 1);
+      strokeLine(ctx, x + 25, y - 16, x + 26, y - 8, color(0xffffff, 0.3), 1);
+
+      // Muscular arms
+      const orcArmG = ctx.createLinearGradient(0, y - 4, 0, y + 18);
+      orcArmG.addColorStop(0, color(lighten(spec.primary, 10)));
+      orcArmG.addColorStop(0.5, color(spec.primary));
+      orcArmG.addColorStop(1, color(darken(spec.primary, 14)));
+      roundRect(ctx, x - 34, y - 2, 14, 24, 6, orcArmG);
+      roundRect(ctx, x + 20, y - 2, 14, 24, 6, orcArmG);
+      // Metal bracers
+      roundRect(ctx, x - 35, y + 12, 16, 8, 3, color(darken(spec.accent, 14)));
+      roundRect(ctx, x + 19, y + 12, 16, 8, 3, color(darken(spec.accent, 14)));
+      circle(ctx, x - 27, y + 16, 1.2, color(lighten(spec.accent, 18)));
+      circle(ctx, x + 27, y + 16, 1.2, color(lighten(spec.accent, 18)));
+      // Fists
+      circle(ctx, x - 27 + swing * 0.3, y + 22, 6, color(spec.primary));
+      circle(ctx, x + 27 + swing * 0.3, y + 22, 6, color(spec.primary));
+      // Knuckle details
+      circle(ctx, x - 29 + swing * 0.3, y + 21, 1, color(darken(spec.primary, 16)));
+      circle(ctx, x - 25 + swing * 0.3, y + 21, 1, color(darken(spec.primary, 16)));
+      circle(ctx, x + 25 + swing * 0.3, y + 21, 1, color(darken(spec.primary, 16)));
+      circle(ctx, x + 29 + swing * 0.3, y + 21, 1, color(darken(spec.primary, 16)));
+
+      // Head — large brutish skull
+      const orcHeadG = ctx.createRadialGradient(x - 4, y - 20, 6, x + 2, y - 10, 18);
+      orcHeadG.addColorStop(0, color(lighten(spec.primary, 16)));
+      orcHeadG.addColorStop(0.5, color(spec.primary));
+      orcHeadG.addColorStop(1, color(darken(spec.primary, 14)));
+      circle(ctx, x, y - 18, 17, orcHeadG);
+      // Brow ridge
+      ellipse(ctx, x, y - 24, 30, 10, color(darken(spec.primary, 8)));
+      // Face highlight
+      ellipse(ctx, x - 4, y - 22, 14, 8, color(0xffffff, 0.1));
+
+      // Eyes — angry, with glow
+      circle(ctx, x - 8 + dir.x * 2, y - 18, 3.5, color(spec.tertiary));
+      circle(ctx, x + 8 + dir.x * 2, y - 18, 3.5, color(spec.tertiary));
+      circle(ctx, x - 8 + dir.x * 2, y - 18, 1.8, color(0x111111, 0.8));
+      circle(ctx, x + 8 + dir.x * 2, y - 18, 1.8, color(0x111111, 0.8));
+      circle(ctx, x - 9 + dir.x * 2, y - 19, 0.8, color(0xffffff, 0.7));
+      circle(ctx, x + 7 + dir.x * 2, y - 19, 0.8, color(0xffffff, 0.7));
+
+      // Broad nose
+      triangle(ctx, x - 4, y - 14, x + 4, y - 14, x, y - 9, color(darken(spec.primary, 18)));
+      circle(ctx, x - 2, y - 10, 1.2, color(darken(spec.primary, 28)));
+      circle(ctx, x + 2, y - 10, 1.2, color(darken(spec.primary, 28)));
+
+      // Prominent tusks
+      triangle(ctx, x - 9, y - 6, x - 5, y - 14, x - 3, y - 6, color(0xf0e8d0));
+      triangle(ctx, x + 9, y - 6, x + 5, y - 14, x + 3, y - 6, color(0xf0e8d0));
+      strokeLine(ctx, x - 7, y - 12, x - 5, y - 7, color(0xffffff, 0.4), 1);
+      strokeLine(ctx, x + 7, y - 12, x + 5, y - 7, color(0xffffff, 0.4), 1);
+
+      // Pointed ears
+      triangle(ctx, x - 16, y - 22, x - 26, y - 18, x - 14, y - 14, color(darken(spec.primary, 6)));
+      triangle(ctx, x + 16, y - 22, x + 26, y - 18, x + 14, y - 14, color(darken(spec.primary, 6)));
+      // Inner ear
+      triangle(ctx, x - 18, y - 20, x - 24, y - 17, x - 15, y - 15, color(lighten(spec.primary, 10)));
+      triangle(ctx, x + 18, y - 20, x + 24, y - 17, x + 15, y - 15, color(lighten(spec.primary, 10)));
+
+      // War paint scarification
+      strokeLine(ctx, x - 14, y - 12, x - 4, y, color(spec.secondary, 0.5), 2);
+      strokeLine(ctx, x + 14, y - 12, x + 4, y, color(spec.secondary, 0.5), 2);
+      strokeLine(ctx, x - 12, y - 10, x - 2, y + 2, color(spec.secondary, 0.3), 1);
+
+      // Crude axe in attack state
+      if (spec.state === "attack") {
+        const axX = x + 32 + swing * 0.5;
+        const axY = y - 14 - swing * 0.3;
+        roundRect(ctx, axX - 2, axY, 4, 32, 2, color(0x6b4423));
+        // Wood grain
+        strokeLine(ctx, axX, axY + 4, axX, axY + 28, color(0x5a3a1c, 0.5), 1);
+        // Axe head
+        triangle(ctx, axX + 2, axY - 4, axX + 18, axY + 6, axX + 2, axY + 16, color(0x888888));
+        // Axe edge gleam
+        strokeLine(ctx, axX + 16, axY + 1, axX + 16, axY + 11, color(0xdddddd, 0.8), 1.5);
+        // Blood stains
+        circle(ctx, axX + 10, axY + 8, 1.5, color(0x8b0000, 0.6));
+      }
+
+      // Body muscle highlight
+      ellipse(ctx, x - 8, y - 2, 18, 12, color(0xffffff, 0.08));
       break;
-    case "boar":
-      ellipse(ctx, x, y + 31, 50, 12, color(0x07090c, 0.24));
-      ellipse(ctx, x - 4, y + 17, 48, 24, color(spec.primary));
-      ellipse(ctx, x + 22 + dir.x * 3, y + 16, 25, 16, color(spec.secondary));
-      roundRect(ctx, x + 26 + dir.x * 3, y + 14, 8, 3, 2, color(0xf3dfc5));
-      roundRect(ctx, x + 26 + dir.x * 3, y + 18, 8, 3, 2, color(0xf3dfc5));
-      ellipse(ctx, x + 4, y + 11, 16, 6, color(0xffffff, 0.14));
-      triangle(
-        ctx,
-        x - 18,
-        y + 5,
-        x - 24,
-        y - 8,
-        x - 10,
-        y - 2,
-        color(darken(spec.primary, 18)),
-      );
-      triangle(
-        ctx,
-        x - 6,
-        y + 2,
-        x - 16,
-        y - 10,
-        x + 2,
-        y - 4,
-        color(darken(spec.primary, 10)),
-      );
+    }
+    case "boar": {
+      // === Lineage Remaster Boar — bristly wild beast ===
+      // Ground shadow
+      ellipse(ctx, x - dir.x * 3, y + 36, 58, 16, color(0x07090c, 0.3));
+      ellipse(ctx, x - dir.x * 3, y + 37, 52, 12, color(0x07090c, 0.15));
+
+      // Four muscular legs with hooves
+      const boarLegG = ctx.createLinearGradient(0, y + 16, 0, y + 36);
+      boarLegG.addColorStop(0, color(spec.primary));
+      boarLegG.addColorStop(0.7, color(darken(spec.primary, 10)));
+      boarLegG.addColorStop(1, color(darken(spec.primary, 22)));
+      // Back legs
+      roundRect(ctx, x - 20 + stride, y + 18, 9, 20, 4, boarLegG);
+      roundRect(ctx, x - 10 - stride, y + 18, 9, 20, 4, boarLegG);
+      // Front legs
+      roundRect(ctx, x + 8 + stride, y + 16, 9, 22, 4, boarLegG);
+      roundRect(ctx, x + 18 - stride, y + 16, 9, 22, 4, boarLegG);
+      // Hooves
+      ellipse(ctx, x - 16 + stride, y + 37, 10, 6, color(darken(spec.primary, 28)));
+      ellipse(ctx, x - 6 - stride, y + 37, 10, 6, color(darken(spec.primary, 28)));
+      ellipse(ctx, x + 12 + stride, y + 37, 10, 6, color(darken(spec.primary, 28)));
+      ellipse(ctx, x + 22 - stride, y + 37, 10, 6, color(darken(spec.primary, 28)));
+
+      // Main body with bristle texture
+      const boarBodyG = ctx.createRadialGradient(x - 6, y + 6, 10, x + 4, y + 18, 32);
+      boarBodyG.addColorStop(0, color(lighten(spec.primary, 18)));
+      boarBodyG.addColorStop(0.3, color(lighten(spec.primary, 8)));
+      boarBodyG.addColorStop(0.7, color(spec.primary));
+      boarBodyG.addColorStop(1, color(darken(spec.primary, 16)));
+      ellipse(ctx, x - 2, y + 14, 54, 28, boarBodyG);
+
+      // Belly — lighter underside
+      ellipse(ctx, x - 2, y + 20, 42, 14, color(lighten(spec.primary, 12), 0.4));
+
+      // Bristle mane ridge along the back
+      for (let i = 0; i < 10; i++) {
+        const bx = x - 20 + i * 5;
+        const by = y + 2 + Math.sin(i * 0.8) * 2;
+        const bh = 6 + Math.sin(i * 1.2) * 3;
+        strokeLine(ctx, bx, by, bx + 1, by - bh, color(darken(spec.primary, 20), 0.7), 2);
+        strokeLine(ctx, bx + 2, by, bx + 3, by - bh + 1, color(darken(spec.primary, 14), 0.5), 1.5);
+      }
+
+      // Bristle fur texture on body
+      for (let i = 0; i < 18; i++) {
+        const fx = x - 20 + (i % 6) * 8 + (Math.sin(i) * 4);
+        const fy = y + 6 + Math.floor(i / 6) * 8;
+        const fl = 3 + Math.sin(i * 0.7) * 2;
+        strokeLine(ctx, fx, fy, fx + fl * dir.x * 0.5, fy + fl, color(darken(spec.primary, 14), 0.3), 1);
+      }
+
+      // Head with snout
+      const boarHeadG = ctx.createRadialGradient(x + 22 + dir.x * 4, y + 6, 6, x + 28 + dir.x * 4, y + 12, 16);
+      boarHeadG.addColorStop(0, color(lighten(spec.secondary, 14)));
+      boarHeadG.addColorStop(0.5, color(spec.secondary));
+      boarHeadG.addColorStop(1, color(darken(spec.secondary, 12)));
+      ellipse(ctx, x + 22 + dir.x * 3, y + 12, 28, 20, boarHeadG);
+
+      // Snout — protruding
+      const snoutG = ctx.createRadialGradient(x + 32 + dir.x * 4, y + 14, 3, x + 34 + dir.x * 4, y + 16, 10);
+      snoutG.addColorStop(0, color(lighten(spec.secondary, 8)));
+      snoutG.addColorStop(1, color(darken(spec.secondary, 8)));
+      ellipse(ctx, x + 32 + dir.x * 4, y + 14, 16, 12, snoutG);
+      // Nostrils
+      circle(ctx, x + 36 + dir.x * 4, y + 12, 2, color(darken(spec.secondary, 30)));
+      circle(ctx, x + 36 + dir.x * 4, y + 16, 2, color(darken(spec.secondary, 30)));
+      // Snout ridge highlight
+      ellipse(ctx, x + 30 + dir.x * 4, y + 10, 8, 3, color(0xffffff, 0.12));
+
+      // Prominent tusks curving upward
+      // Left tusk
+      ctx.beginPath();
+      ctx.moveTo(x + 30 + dir.x * 3, y + 18);
+      ctx.quadraticCurveTo(x + 36 + dir.x * 3, y + 8, x + 32 + dir.x * 3, y + 2);
+      ctx.strokeStyle = color(0xf3e8d0);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      // Right tusk
+      ctx.beginPath();
+      ctx.moveTo(x + 34 + dir.x * 3, y + 18);
+      ctx.quadraticCurveTo(x + 40 + dir.x * 3, y + 8, x + 38 + dir.x * 3, y + 2);
+      ctx.strokeStyle = color(0xf3e8d0);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      // Tusk tips
+      circle(ctx, x + 32 + dir.x * 3, y + 2, 1.5, color(0xffffff, 0.8));
+      circle(ctx, x + 38 + dir.x * 3, y + 2, 1.5, color(0xffffff, 0.8));
+
+      // Small angry eye
+      circle(ctx, x + 20 + dir.x * 3, y + 8, 3.5, color(spec.tertiary));
+      circle(ctx, x + 20 + dir.x * 3, y + 8, 1.8, color(0x111111, 0.8));
+      circle(ctx, x + 19 + dir.x * 3, y + 7, 0.8, color(0xffffff, 0.7));
+
+      // Ears — small and pointed
+      triangle(ctx, x + 14 + dir.x * 2, y + 2, x + 10 + dir.x * 2, y - 8, x + 8 + dir.x * 2, y + 4, color(darken(spec.secondary, 10)));
+      triangle(ctx, x + 18 + dir.x * 2, y + 2, x + 16 + dir.x * 2, y - 6, x + 14 + dir.x * 2, y + 4, color(darken(spec.secondary, 4)));
+      // Inner ear
+      triangle(ctx, x + 12 + dir.x * 2, y + 1, x + 11 + dir.x * 2, y - 4, x + 10 + dir.x * 2, y + 2, color(lighten(spec.secondary, 14)));
+
+      // Short curly tail
+      const tailX = x - 24 - dir.x * 4;
+      const tailY = y + 10;
+      ctx.beginPath();
+      ctx.moveTo(tailX, tailY);
+      ctx.quadraticCurveTo(tailX - 6, tailY - 8, tailX - 2, tailY - 12);
+      ctx.quadraticCurveTo(tailX + 4, tailY - 14, tailX + 2, tailY - 8);
+      ctx.strokeStyle = color(darken(spec.primary, 12));
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Body highlight
+      ellipse(ctx, x - 4, y + 10, 22, 10, color(0xffffff, 0.1));
+
+      // Attack: charge dust cloud
+      if (spec.state === "attack" && swing > 4) {
+        for (let i = 0; i < 4; i++) {
+          const dx = x - 28 + Math.sin(i * 2.1) * 12;
+          const dy = y + 30 + Math.cos(i * 1.7) * 6;
+          circle(ctx, dx, dy, 3 + Math.sin(i) * 2, color(0x8b7355, 0.3 - i * 0.05));
+        }
+      }
       break;
-    case "wisp":
-      circle(ctx, x, y + 4, 34 + swing * 0.5, color(spec.secondary, 0.12));
-      circle(ctx, x, y, 20 + swing * 0.25, color(spec.primary, 0.9));
-      circle(ctx, x, y, 31 + swing * 0.35, color(spec.secondary, 0.45));
-      triangle(
-        ctx,
-        x - 9,
-        y + 16,
-        x + 9,
-        y + 16,
-        x,
-        y + 40,
-        color(spec.primary, 0.58),
-      );
-      circle(ctx, x - 5, y - 7, 6, color(0xffffff, 0.32));
-      circle(ctx, x + 7, y - 2, 3, color(0xffffff, 0.2));
+    }
+    case "wisp": {
+      // === Lineage Remaster Wisp — ethereal spirit orb with aurora trails ===
+      const wPulse = spec.state === "attack" ? swing * 0.6 : Math.sin(spec.frame * 1.5) * 3;
+      const wFloat = spec.state === "walk" ? Math.sin(spec.frame * 1.2) * 4 : 0;
+
+      // Outer ambient glow — large soft aura
+      const outerGlow = ctx.createRadialGradient(x, y + wFloat, 0, x, y + wFloat, 42 + wPulse);
+      outerGlow.addColorStop(0, color(spec.primary, 0.15));
+      outerGlow.addColorStop(0.4, color(spec.secondary, 0.1));
+      outerGlow.addColorStop(0.7, color(spec.primary, 0.05));
+      outerGlow.addColorStop(1, color(spec.primary, 0));
+      circle(ctx, x, y + wFloat, 42 + wPulse, outerGlow);
+
+      // Aurora trailing wisps — 3 ethereal trails
+      const trails = [
+        { angle: -0.6, length: 32, width: 8, alpha: 0.25 },
+        { angle: 0, length: 38, width: 10, alpha: 0.3 },
+        { angle: 0.5, length: 28, width: 6, alpha: 0.2 },
+      ];
+      trails.forEach((t, i) => {
+        const tx = x + Math.sin(spec.frame * 0.5 + i * 2) * 6;
+        const ty = y + 12 + wFloat;
+        const endX = tx + Math.sin(t.angle + spec.frame * 0.3) * t.width;
+        const endY = ty + t.length + wPulse * 0.3;
+        const trailG = ctx.createLinearGradient(tx, ty, endX, endY);
+        trailG.addColorStop(0, color(spec.primary, t.alpha));
+        trailG.addColorStop(0.5, color(spec.secondary, t.alpha * 0.6));
+        trailG.addColorStop(1, color(spec.primary, 0));
+        triangle(ctx, tx - t.width / 2, ty, tx + t.width / 2, ty, endX, endY, trailG);
+      });
+
+      // Mid glow ring
+      const midGlow = ctx.createRadialGradient(x, y + wFloat, 8, x, y + wFloat, 28 + wPulse * 0.5);
+      midGlow.addColorStop(0, color(lighten(spec.secondary, 30), 0.5));
+      midGlow.addColorStop(0.4, color(spec.secondary, 0.35));
+      midGlow.addColorStop(0.7, color(spec.primary, 0.2));
+      midGlow.addColorStop(1, color(spec.primary, 0.05));
+      circle(ctx, x, y + wFloat, 28 + wPulse * 0.5, midGlow);
+
+      // Core body — bright inner orb
+      const coreG = ctx.createRadialGradient(x - 3, y - 4 + wFloat, 4, x, y + wFloat, 16);
+      coreG.addColorStop(0, color(0xffffff, 0.95));
+      coreG.addColorStop(0.2, color(lighten(spec.primary, 40), 0.9));
+      coreG.addColorStop(0.5, color(lighten(spec.primary, 20), 0.8));
+      coreG.addColorStop(0.8, color(spec.primary, 0.7));
+      coreG.addColorStop(1, color(spec.secondary, 0.5));
+      circle(ctx, x, y + wFloat, 16 + wPulse * 0.2, coreG);
+
+      // Inner bright nucleus
+      const nucleusG = ctx.createRadialGradient(x - 2, y - 3 + wFloat, 1, x, y + wFloat, 8);
+      nucleusG.addColorStop(0, color(0xffffff, 0.9));
+      nucleusG.addColorStop(0.5, color(lighten(spec.primary, 50), 0.7));
+      nucleusG.addColorStop(1, color(spec.primary, 0.4));
+      circle(ctx, x, y + wFloat, 8, nucleusG);
+
+      // Sparkle particles orbiting
+      for (let i = 0; i < 8; i++) {
+        const pAngle = (i / 8) * Math.PI * 2 + spec.frame * 0.4;
+        const pDist = 20 + Math.sin(spec.frame * 0.3 + i * 1.5) * 8;
+        const px = x + Math.cos(pAngle) * pDist;
+        const py = y + wFloat + Math.sin(pAngle) * pDist * 0.4;
+        const pSize = 1 + Math.sin(spec.frame * 0.5 + i) * 0.8;
+        circle(ctx, px, py, pSize, color(0xffffff, 0.4 + Math.sin(i + spec.frame * 0.2) * 0.2));
+      }
+
+      // Top highlight — crescent reflection
+      ellipse(ctx, x - 5, y - 8 + wFloat, 14, 6, color(0xffffff, 0.35));
+
+      // Attack: energy burst rays
+      if (spec.state === "attack" && swing > 4) {
+        for (let i = 0; i < 6; i++) {
+          const rAngle = (i / 6) * Math.PI * 2 + swing * 0.1;
+          const rLen = 18 + swing * 0.8;
+          const rx = x + Math.cos(rAngle) * rLen;
+          const ry = y + wFloat + Math.sin(rAngle) * rLen * 0.5;
+          strokeLine(ctx, x, y + wFloat, rx, ry, color(lighten(spec.primary, 30), 0.3), 1.5);
+        }
+      }
       break;
-    case "dragon":
-      ellipse(ctx, x, y + 31, 58, 13, color(0x08090e, 0.28));
-      ellipse(ctx, x - 2, y + 14, 52, 28, color(spec.primary));
-      triangle(
-        ctx,
-        x - 12,
-        y + 0,
-        x - 28,
-        y - 18,
-        x - 2,
-        y + 6,
-        color(spec.secondary),
-      );
-      triangle(
-        ctx,
-        x + 14,
-        y + 0,
-        x + 30,
-        y - 18,
-        x + 2,
-        y + 6,
-        color(spec.secondary),
-      );
-      triangle(
-        ctx,
-        x + 22 + dir.x * 4,
-        y + 8,
-        x + 36 + dir.x * 6,
-        y + 16,
-        x + 22 + dir.x * 4,
-        y + 24,
-        color(0xffb08e),
-      );
-      ellipse(ctx, x - 8, y + 7, 18, 6, color(0xffffff, 0.1));
-      triangle(
-        ctx,
-        x - 30,
-        y + 10,
-        x - 48,
-        y + 2,
-        x - 30,
-        y + 22,
-        color(darken(spec.primary, 18)),
-      );
+    }
+    case "dragon": {
+      // === Lineage Remaster Dragon — fearsome wyrm with membrane wings ===
+      const dFlap = spec.state === "idle" ? Math.sin(spec.frame * 1.0) * 4 : spec.state === "walk" ? Math.sin(spec.frame * 1.5) * 8 : swing * 0.3;
+
+      // Ground shadow — large
+      ellipse(ctx, x, y + 36, 68, 20, color(0x08090e, 0.32));
+      ellipse(ctx, x, y + 37, 62, 16, color(0x08090e, 0.16));
+
+      // Tail with spines — curving behind
+      const tailG = ctx.createLinearGradient(x - 28, y + 14, x - 52, y + 4);
+      tailG.addColorStop(0, color(spec.primary));
+      tailG.addColorStop(0.5, color(darken(spec.primary, 10)));
+      tailG.addColorStop(1, color(darken(spec.primary, 22)));
+      // Tail body — thick to thin curve
+      ctx.beginPath();
+      ctx.moveTo(x - 20, y + 16);
+      ctx.quadraticCurveTo(x - 36, y + 10, x - 48 - dir.x * 6, y + 4);
+      ctx.quadraticCurveTo(x - 54 - dir.x * 8, y, x - 56 - dir.x * 10, y - 4);
+      ctx.strokeStyle = tailG;
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      // Tail tip — thinner
+      ctx.beginPath();
+      ctx.moveTo(x - 56 - dir.x * 10, y - 4);
+      ctx.lineTo(x - 62 - dir.x * 12, y - 10);
+      ctx.strokeStyle = color(darken(spec.primary, 16));
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      // Tail spines
+      for (let i = 0; i < 5; i++) {
+        const tsx = x - 26 - i * 7 - dir.x * i * 1.2;
+        const tsy = y + 12 - i * 3;
+        triangle(ctx, tsx, tsy, tsx - 2, tsy - 8 - i, tsx + 3, tsy - 1, color(darken(spec.primary, 20)));
+      }
+
+      // Wings — membrane structure
+      // Left wing
+      const lwBaseX = x - 10;
+      const lwBaseY = y + 2;
+      const lwTipX = x - 38;
+      const lwTipY = y - 22 - dFlap;
+      const lwMidX = x - 30;
+      const lwMidY = y - 8 - dFlap * 0.5;
+      // Wing membrane gradient
+      const wingG = ctx.createLinearGradient(lwBaseX, lwBaseY, lwTipX, lwTipY);
+      wingG.addColorStop(0, color(spec.secondary, 0.8));
+      wingG.addColorStop(0.3, color(lighten(spec.secondary, 10), 0.6));
+      wingG.addColorStop(0.7, color(spec.secondary, 0.5));
+      wingG.addColorStop(1, color(darken(spec.secondary, 10), 0.4));
+      // Wing shape
+      ctx.beginPath();
+      ctx.moveTo(lwBaseX, lwBaseY);
+      ctx.lineTo(lwTipX, lwTipY);
+      ctx.lineTo(lwMidX - 8, lwMidY - 12 - dFlap * 0.3);
+      ctx.lineTo(lwBaseX - 18, lwBaseY - 4 - dFlap * 0.2);
+      ctx.lineTo(lwBaseX, lwBaseY + 10);
+      ctx.closePath();
+      ctx.fillStyle = wingG;
+      ctx.fill();
+      // Wing bone structure
+      strokeLine(ctx, lwBaseX, lwBaseY, lwTipX, lwTipY, color(darken(spec.secondary, 16)), 2.5);
+      strokeLine(ctx, lwBaseX, lwBaseY, lwMidX - 8, lwMidY - 12 - dFlap * 0.3, color(darken(spec.secondary, 12)), 2);
+      strokeLine(ctx, lwBaseX, lwBaseY, lwBaseX - 18, lwBaseY - 4 - dFlap * 0.2, color(darken(spec.secondary, 12)), 1.5);
+      // Wing membrane veins
+      strokeLine(ctx, lwBaseX - 4, lwBaseY, lwTipX + 8, lwTipY + 6, color(darken(spec.secondary, 18), 0.4), 1);
+      strokeLine(ctx, lwBaseX - 2, lwBaseY + 4, lwMidX - 4, lwMidY - 6 - dFlap * 0.3, color(darken(spec.secondary, 18), 0.4), 1);
+
+      // Right wing
+      const rwBaseX = x + 10;
+      const rwTipX = x + 38;
+      const rwTipY = y - 22 - dFlap;
+      const rwMidX = x + 30;
+      const rwMidY = y - 8 - dFlap * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(rwBaseX, lwBaseY);
+      ctx.lineTo(rwTipX, rwTipY);
+      ctx.lineTo(rwMidX + 8, rwMidY - 12 - dFlap * 0.3);
+      ctx.lineTo(rwBaseX + 18, lwBaseY - 4 - dFlap * 0.2);
+      ctx.lineTo(rwBaseX, lwBaseY + 10);
+      ctx.closePath();
+      ctx.fillStyle = wingG;
+      ctx.fill();
+      strokeLine(ctx, rwBaseX, lwBaseY, rwTipX, rwTipY, color(darken(spec.secondary, 16)), 2.5);
+      strokeLine(ctx, rwBaseX, lwBaseY, rwMidX + 8, rwMidY - 12 - dFlap * 0.3, color(darken(spec.secondary, 12)), 2);
+      strokeLine(ctx, rwBaseX, lwBaseY, rwBaseX + 18, lwBaseY - 4 - dFlap * 0.2, color(darken(spec.secondary, 12)), 1.5);
+
+      // Hind legs — powerful with claws
+      roundRect(ctx, x - 16 + stride, y + 20, 10, 18, 4, color(darken(spec.primary, 8)));
+      roundRect(ctx, x + 6 - stride, y + 20, 10, 18, 4, color(darken(spec.primary, 8)));
+      // Clawed feet
+      for (let ci = 0; ci < 3; ci++) {
+        strokeLine(ctx, x - 14 + stride + ci * 3, y + 36, x - 16 + stride + ci * 3, y + 40, color(0xf0e8d0), 1.5);
+        strokeLine(ctx, x + 8 - stride + ci * 3, y + 36, x + 6 - stride + ci * 3, y + 40, color(0xf0e8d0), 1.5);
+      }
+
+      // Main body — muscular, scaled
+      const dBodyG = ctx.createRadialGradient(x - 4, y + 4, 10, x + 4, y + 16, 32);
+      dBodyG.addColorStop(0, color(lighten(spec.primary, 20)));
+      dBodyG.addColorStop(0.3, color(lighten(spec.primary, 8)));
+      dBodyG.addColorStop(0.7, color(spec.primary));
+      dBodyG.addColorStop(1, color(darken(spec.primary, 18)));
+      ellipse(ctx, x, y + 14, 56, 30, dBodyG);
+
+      // Scale pattern on body
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 6; col++) {
+          const scX = x - 18 + col * 7 + (row % 2) * 3.5;
+          const scY = y + 6 + row * 7;
+          ellipse(ctx, scX, scY, 6, 4, color(darken(spec.primary, 8 + row * 4), 0.3));
+          ellipse(ctx, scX, scY - 1, 5, 2, color(lighten(spec.primary, 6), 0.15));
+        }
+      }
+
+      // Belly — lighter scaled
+      ellipse(ctx, x, y + 20, 36, 14, color(lighten(spec.primary, 16), 0.4));
+      // Belly scale ridges
+      for (let i = 0; i < 4; i++) {
+        const bsY = y + 16 + i * 3;
+        ellipse(ctx, x, bsY, 28 - i * 4, 2, color(lighten(spec.primary, 20), 0.15));
+      }
+
+      // Neck — thick, muscular
+      const neckG = ctx.createLinearGradient(x + 12, y, x + 26 + dir.x * 4, y - 12);
+      neckG.addColorStop(0, color(spec.primary));
+      neckG.addColorStop(1, color(lighten(spec.primary, 10)));
+      roundRect(ctx, x + 10 + dir.x * 2, y - 6, 20, 18, 8, neckG);
+
+      // Head — fearsome reptilian
+      const dHeadG = ctx.createRadialGradient(x + 24 + dir.x * 5, y - 8, 6, x + 28 + dir.x * 5, y - 2, 16);
+      dHeadG.addColorStop(0, color(lighten(spec.primary, 18)));
+      dHeadG.addColorStop(0.5, color(spec.primary));
+      dHeadG.addColorStop(1, color(darken(spec.primary, 14)));
+      ellipse(ctx, x + 26 + dir.x * 5, y - 4, 24, 18, dHeadG);
+
+      // Jaw
+      ellipse(ctx, x + 30 + dir.x * 6, y + 2, 18, 10, color(darken(spec.primary, 8)));
+
+      // Horns — swept back
+      const hornG = ctx.createLinearGradient(0, y - 18, 0, y - 8);
+      hornG.addColorStop(0, color(0xf0e8d0));
+      hornG.addColorStop(1, color(darken(spec.primary, 10)));
+      // Left horn
+      ctx.beginPath();
+      ctx.moveTo(x + 20 + dir.x * 4, y - 10);
+      ctx.quadraticCurveTo(x + 14 + dir.x * 2, y - 22, x + 8, y - 28);
+      ctx.strokeStyle = hornG;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      // Right horn
+      ctx.beginPath();
+      ctx.moveTo(x + 28 + dir.x * 4, y - 10);
+      ctx.quadraticCurveTo(x + 34 + dir.x * 6, y - 22, x + 38 + dir.x * 8, y - 28);
+      ctx.strokeStyle = hornG;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      // Horn tips
+      circle(ctx, x + 8, y - 28, 1.5, color(0xffffff, 0.6));
+      circle(ctx, x + 38 + dir.x * 8, y - 28, 1.5, color(0xffffff, 0.6));
+
+      // Eyes — glowing, slit pupil
+      circle(ctx, x + 22 + dir.x * 4, y - 8, 4, color(spec.tertiary));
+      // Slit pupil
+      ellipse(ctx, x + 22 + dir.x * 4, y - 8, 2, 6, color(0x000000, 0.8));
+      // Eye glow
+      circle(ctx, x + 22 + dir.x * 4, y - 8, 5.5, color(spec.tertiary, 0.2));
+      circle(ctx, x + 21 + dir.x * 4, y - 9, 1, color(0xffffff, 0.7));
+
+      // Nostrils with smoke
+      circle(ctx, x + 34 + dir.x * 6, y - 4, 1.5, color(darken(spec.primary, 28)));
+      circle(ctx, x + 36 + dir.x * 6, y - 2, 1.5, color(darken(spec.primary, 28)));
+
+      // Teeth
+      for (let ti = 0; ti < 4; ti++) {
+        const toothX = x + 28 + dir.x * 5 + ti * 3;
+        triangle(ctx, toothX, y + 5, toothX + 1.5, y + 9, toothX + 3, y + 5, color(0xf0e8d0));
+      }
+
+      // Body highlight
+      ellipse(ctx, x - 8, y + 8, 20, 8, color(0xffffff, 0.1));
+
+      // Attack: fire breath!
+      if (spec.state === "attack" && swing > 4) {
+        const fbX = x + 38 + dir.x * 8;
+        const fbY = y - 2;
+        // Fire cone gradient
+        const fireG = ctx.createRadialGradient(fbX, fbY, 2, fbX + 20, fbY, 24 + swing);
+        fireG.addColorStop(0, color(0xffffff, 0.7));
+        fireG.addColorStop(0.2, color(0xffff44, 0.6));
+        fireG.addColorStop(0.5, color(0xff6600, 0.5));
+        fireG.addColorStop(0.8, color(0xff2200, 0.3));
+        fireG.addColorStop(1, color(0xff0000, 0));
+        // Fire shape
+        ctx.beginPath();
+        ctx.moveTo(fbX, fbY - 4);
+        ctx.lineTo(fbX + 18 + swing, fbY - 10 - swing * 0.3);
+        ctx.lineTo(fbX + 22 + swing * 1.2, fbY);
+        ctx.lineTo(fbX + 18 + swing, fbY + 10 + swing * 0.3);
+        ctx.lineTo(fbX, fbY + 4);
+        ctx.closePath();
+        ctx.fillStyle = fireG;
+        ctx.fill();
+        // Fire sparks
+        for (let si = 0; si < 5; si++) {
+          const sx2 = fbX + 10 + Math.random() * (12 + swing);
+          const sy2 = fbY + (Math.random() - 0.5) * (16 + swing * 0.4);
+          circle(ctx, sx2, sy2, 1 + Math.random(), color(0xffdd44, 0.5));
+        }
+      }
+
+      // Front legs
+      roundRect(ctx, x + 8 + stride * 0.5, y + 22, 8, 14, 3, color(spec.primary));
+      roundRect(ctx, x + 18 - stride * 0.5, y + 22, 8, 14, 3, color(spec.primary));
+      // Front claws
+      for (let ci = 0; ci < 2; ci++) {
+        strokeLine(ctx, x + 10 + stride * 0.5 + ci * 3, y + 34, x + 8 + stride * 0.5 + ci * 3, y + 38, color(0xf0e8d0), 1.5);
+        strokeLine(ctx, x + 20 - stride * 0.5 + ci * 3, y + 34, x + 18 - stride * 0.5 + ci * 3, y + 38, color(0xf0e8d0), 1.5);
+      }
       break;
-    case "golem":
-      ellipse(ctx, x, y + 31, 52, 12, color(0x05080d, 0.28));
-      roundRect(ctx, x - 20, y - 2, 40, 30, 10, color(spec.primary));
-      circle(ctx, x - 7, y + 6, 3.2, color(spec.secondary));
-      circle(ctx, x + 7, y + 6, 3.2, color(spec.secondary));
-      roundRect(ctx, x - 27, y + 8, 10, 20, 4, color(spec.primary));
-      roundRect(ctx, x + 17, y + 8, 10, 20, 4, color(spec.primary));
-      roundRect(ctx, x - 14, y + 3, 20, 6, 3, color(0xffffff, 0.08));
-      circle(ctx, x - 7, y + 6, 6, color(spec.secondary, 0.18));
-      circle(ctx, x + 7, y + 6, 6, color(spec.secondary, 0.18));
+    }
+    case "golem": {
+      // === Lineage Remaster Golem — massive stone construct with rune glow ===
+      // Heavy ground shadow
+      ellipse(ctx, x, y + 38, 64, 20, color(0x05080d, 0.35));
+      ellipse(ctx, x, y + 39, 58, 16, color(0x05080d, 0.18));
+
+      // Massive stone legs — blocky with cracks
+      const gLegG = ctx.createLinearGradient(0, y + 16, 0, y + 38);
+      gLegG.addColorStop(0, color(lighten(spec.primary, 8)));
+      gLegG.addColorStop(0.5, color(spec.primary));
+      gLegG.addColorStop(1, color(darken(spec.primary, 16)));
+      roundRect(ctx, x - 18 + stride, y + 16, 14, 24, 5, gLegG);
+      roundRect(ctx, x + 4 - stride, y + 16, 14, 24, 5, gLegG);
+      // Leg cracks
+      strokeLine(ctx, x - 14 + stride, y + 22, x - 10 + stride, y + 32, color(darken(spec.primary, 24), 0.6), 1.5);
+      strokeLine(ctx, x + 8 - stride, y + 20, x + 12 - stride, y + 34, color(darken(spec.primary, 24), 0.6), 1.5);
+      // Stone feet
+      roundRect(ctx, x - 20 + stride, y + 36, 18, 8, 4, color(darken(spec.primary, 14)));
+      roundRect(ctx, x + 2 - stride, y + 36, 18, 8, 4, color(darken(spec.primary, 14)));
+
+      // Massive torso — layered stone blocks
+      const gTorsoG = ctx.createRadialGradient(x - 6, y - 4, 10, x + 4, y + 12, 34);
+      gTorsoG.addColorStop(0, color(lighten(spec.primary, 16)));
+      gTorsoG.addColorStop(0.3, color(lighten(spec.primary, 6)));
+      gTorsoG.addColorStop(0.7, color(spec.primary));
+      gTorsoG.addColorStop(1, color(darken(spec.primary, 18)));
+      roundRect(ctx, x - 24, y - 12, 48, 34, 12, gTorsoG);
+
+      // Stone block texture
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 4; col++) {
+          const bx = x - 20 + col * 11 + (row % 2) * 5;
+          const by = y - 8 + row * 10;
+          roundRect(ctx, bx, by, 10, 8, 2, color(darken(spec.primary, 4 + row * 3), 0.3));
+          // Block highlight
+          roundRect(ctx, bx, by, 10, 2, 1, color(lighten(spec.primary, 10), 0.15));
+        }
+      }
+
+      // Crack patterns with ember glow
+      strokeLine(ctx, x - 16, y - 6, x - 8, y + 8, color(darken(spec.primary, 28), 0.7), 2);
+      strokeLine(ctx, x - 8, y + 8, x - 4, y + 16, color(darken(spec.primary, 28), 0.5), 1.5);
+      strokeLine(ctx, x + 10, y - 4, x + 16, y + 12, color(darken(spec.primary, 28), 0.7), 2);
+      // Ember glow in cracks
+      strokeLine(ctx, x - 15, y - 5, x - 9, y + 7, color(spec.secondary, 0.3), 1);
+      strokeLine(ctx, x + 11, y - 3, x + 15, y + 11, color(spec.secondary, 0.3), 1);
+
+      // Glowing crystal core in chest
+      const crystalG = ctx.createRadialGradient(x, y + 2, 2, x, y + 2, 12);
+      crystalG.addColorStop(0, color(lighten(spec.secondary, 40), 0.9));
+      crystalG.addColorStop(0.3, color(lighten(spec.secondary, 20), 0.7));
+      crystalG.addColorStop(0.6, color(spec.secondary, 0.4));
+      crystalG.addColorStop(1, color(spec.secondary, 0.1));
+      circle(ctx, x, y + 2, 12, crystalG);
+      // Crystal shape
+      ctx.beginPath();
+      ctx.moveTo(x, y - 6);
+      ctx.lineTo(x + 6, y + 2);
+      ctx.lineTo(x, y + 10);
+      ctx.lineTo(x - 6, y + 2);
+      ctx.closePath();
+      ctx.fillStyle = color(lighten(spec.secondary, 30), 0.5);
+      ctx.fill();
+      // Crystal inner glow
+      circle(ctx, x, y + 2, 3, color(0xffffff, 0.6));
+
+      // Rune inscriptions on torso
+      const runeGlow = color(spec.secondary, 0.4 + (spec.state === "attack" ? 0.3 : 0));
+      // Left rune
+      strokeLine(ctx, x - 16, y - 2, x - 12, y + 6, runeGlow, 1.5);
+      strokeLine(ctx, x - 12, y + 6, x - 16, y + 10, runeGlow, 1.5);
+      strokeLine(ctx, x - 14, y + 2, x - 10, y + 2, runeGlow, 1);
+      // Right rune
+      strokeLine(ctx, x + 16, y - 2, x + 12, y + 6, runeGlow, 1.5);
+      strokeLine(ctx, x + 12, y + 6, x + 16, y + 10, runeGlow, 1.5);
+      strokeLine(ctx, x + 14, y + 2, x + 10, y + 2, runeGlow, 1);
+
+      // Massive arms — stone pillars
+      const gArmG = ctx.createLinearGradient(0, y - 2, 0, y + 24);
+      gArmG.addColorStop(0, color(lighten(spec.primary, 10)));
+      gArmG.addColorStop(0.5, color(spec.primary));
+      gArmG.addColorStop(1, color(darken(spec.primary, 14)));
+      roundRect(ctx, x - 36, y - 2, 16, 28, 6, gArmG);
+      roundRect(ctx, x + 20, y - 2, 16, 28, 6, gArmG);
+      // Arm cracks
+      strokeLine(ctx, x - 32, y + 4, x - 28, y + 18, color(darken(spec.primary, 22), 0.5), 1.5);
+      strokeLine(ctx, x + 24, y + 6, x + 28, y + 20, color(darken(spec.primary, 22), 0.5), 1.5);
+      // Rune on arm
+      strokeLine(ctx, x - 30, y + 10, x - 26, y + 14, runeGlow, 1);
+      strokeLine(ctx, x + 26, y + 10, x + 30, y + 14, runeGlow, 1);
+      // Stone fists
+      roundRect(ctx, x - 38 + swing * 0.4, y + 22, 20, 14, 6, color(darken(spec.primary, 6)));
+      roundRect(ctx, x + 18 + swing * 0.4, y + 22, 20, 14, 6, color(darken(spec.primary, 6)));
+      // Fist cracks
+      strokeLine(ctx, x - 34 + swing * 0.4, y + 26, x - 26 + swing * 0.4, y + 30, color(darken(spec.primary, 20), 0.4), 1);
+
+      // Shoulder boulders
+      const shldrG = ctx.createRadialGradient(x - 28, y - 10, 4, x - 24, y - 4, 14);
+      shldrG.addColorStop(0, color(lighten(spec.primary, 14)));
+      shldrG.addColorStop(1, color(darken(spec.primary, 8)));
+      circle(ctx, x - 28, y - 8, 12, shldrG);
+      circle(ctx, x + 28, y - 8, 12, shldrG);
+      // Moss on shoulders
+      ellipse(ctx, x - 30, y - 14, 8, 4, color(0x4a6b3a, 0.4));
+      ellipse(ctx, x + 26, y - 14, 6, 3, color(0x4a6b3a, 0.3));
+
+      // Head — angular stone block
+      const gHeadG = ctx.createRadialGradient(x - 4, y - 22, 6, x + 2, y - 14, 16);
+      gHeadG.addColorStop(0, color(lighten(spec.primary, 14)));
+      gHeadG.addColorStop(0.5, color(spec.primary));
+      gHeadG.addColorStop(1, color(darken(spec.primary, 12)));
+      roundRect(ctx, x - 16, y - 30, 32, 24, 8, gHeadG);
+
+      // Glowing eyes — magical energy
+      const eyeGlowG = ctx.createRadialGradient(x - 8, y - 20, 1, x - 8, y - 20, 6);
+      eyeGlowG.addColorStop(0, color(lighten(spec.secondary, 40), 0.9));
+      eyeGlowG.addColorStop(0.5, color(spec.secondary, 0.5));
+      eyeGlowG.addColorStop(1, color(spec.secondary, 0.1));
+      circle(ctx, x - 8, y - 20, 6, eyeGlowG);
+      circle(ctx, x + 8, y - 20, 6, eyeGlowG);
+      // Eye cores
+      circle(ctx, x - 8, y - 20, 3, color(lighten(spec.secondary, 30)));
+      circle(ctx, x + 8, y - 20, 3, color(lighten(spec.secondary, 30)));
+      circle(ctx, x - 8, y - 20, 1.5, color(0xffffff, 0.8));
+      circle(ctx, x + 8, y - 20, 1.5, color(0xffffff, 0.8));
+
+      // Jaw line
+      roundRect(ctx, x - 10, y - 12, 20, 6, 3, color(darken(spec.primary, 10)));
+
+      // Attack: ground impact effect
+      if (spec.state === "attack" && swing > 8) {
+        for (let di = 0; di < 6; di++) {
+          const dAngle = (di / 6) * Math.PI * 2;
+          const dDist = 24 + swing * 0.6;
+          const debX = x + Math.cos(dAngle) * dDist;
+          const debY = y + 34 + Math.sin(dAngle) * 6;
+          circle(ctx, debX, debY, 2 + Math.random() * 3, color(spec.primary, 0.4));
+        }
+        // Impact crack lines
+        for (let ci = 0; ci < 4; ci++) {
+          const cAngle = (ci / 4) * Math.PI - Math.PI / 2;
+          const cLen = 12 + swing * 0.4;
+          strokeLine(ctx, x, y + 38, x + Math.cos(cAngle) * cLen, y + 38 + Math.sin(cAngle) * 4, color(darken(spec.primary, 20), 0.5), 1.5);
+        }
+      }
+
+      // Body highlight
+      ellipse(ctx, x - 8, y + 2, 20, 10, color(0xffffff, 0.06));
       break;
-    case "skeleton":
-      ellipse(ctx, x, y + 33, 42, 11, color(0x06080b, 0.2));
-      circle(ctx, x, y - 3, 13, color(spec.primary));
-      roundRect(ctx, x - 12, y + 10, 24, 22, 6, color(spec.primary));
-      roundRect(ctx, x - 18, y + 10, 5, 20, 2, color(spec.primary));
-      roundRect(ctx, x + 13, y + 10, 5, 20, 2, color(spec.primary));
-      roundRect(ctx, x - 7 + stride, y + 31, 4, 18, 2, color(spec.primary));
-      roundRect(ctx, x + 3 - stride, y + 31, 4, 18, 2, color(spec.primary));
-      roundRect(
-        ctx,
-        x + 16 + dir.x * 3,
-        y + 5,
-        16,
-        4,
-        2,
-        color(spec.secondary),
-      );
-      triangle(
-        ctx,
-        x + 32 + dir.x * 3,
-        y + 7,
-        x + 24 + dir.x * 3,
-        y + 1,
-        x + 24 + dir.x * 3,
-        y + 13,
-        color(0x603d21),
-      );
-      circle(ctx, x - 5, y - 5, 2.2, color(spec.accent));
-      circle(ctx, x + 5, y - 5, 2.2, color(spec.accent));
-      roundRect(ctx, x - 6, y + 17, 12, 3, 2, color(spec.accent, 0.2));
+    }
+    case "skeleton": {
+      // === Lineage Remaster Skeleton — undead warrior with soul fire ===
+      // Shadow
+      ellipse(ctx, x, y + 36, 48, 14, color(0x06080b, 0.25));
+      ellipse(ctx, x, y + 37, 42, 10, color(0x06080b, 0.12));
+
+      // Tattered cape remnants
+      const capeG = ctx.createLinearGradient(x, y - 8, x, y + 30);
+      capeG.addColorStop(0, color(darken(spec.accent, 20), 0.6));
+      capeG.addColorStop(0.5, color(darken(spec.accent, 28), 0.4));
+      capeG.addColorStop(1, color(darken(spec.accent, 28), 0.1));
+      // Tattered edges
+      triangle(ctx, x - 14, y + 28, x, y - 8, x + 2, y + 32, capeG);
+      triangle(ctx, x + 14, y + 26, x, y - 8, x - 2, y + 30, capeG);
+      triangle(ctx, x - 8, y + 34, x - 4, y + 6, x + 6, y + 30, capeG);
+
+      // Leg bones with joints
+      const boneColor = color(spec.primary);
+      const boneShadow = color(darken(spec.primary, 14));
+      const boneHighlight = color(lighten(spec.primary, 16));
+      // Left leg — femur
+      roundRect(ctx, x - 8 + stride, y + 24, 5, 14, 2, boneColor);
+      // Left leg — tibia
+      roundRect(ctx, x - 7 + stride, y + 36, 4, 12, 2, boneColor);
+      // Left knee joint
+      circle(ctx, x - 6 + stride, y + 37, 3, boneShadow);
+      circle(ctx, x - 6 + stride, y + 37, 1.5, boneHighlight);
+      // Left foot bones
+      roundRect(ctx, x - 10 + stride, y + 46, 8, 3, 1, boneShadow);
+
+      // Right leg
+      roundRect(ctx, x + 3 - stride, y + 24, 5, 14, 2, boneColor);
+      roundRect(ctx, x + 4 - stride, y + 36, 4, 12, 2, boneColor);
+      circle(ctx, x + 5 - stride, y + 37, 3, boneShadow);
+      circle(ctx, x + 5 - stride, y + 37, 1.5, boneHighlight);
+      roundRect(ctx, x + 1 - stride, y + 46, 8, 3, 1, boneShadow);
+
+      // Pelvis
+      roundRect(ctx, x - 10, y + 22, 20, 6, 3, boneColor);
+      ellipse(ctx, x, y + 23, 22, 8, color(spec.primary, 0.7));
+
+      // Spine
+      for (let vi = 0; vi < 6; vi++) {
+        const vx = x;
+        const vy = y + 20 - vi * 4;
+        roundRect(ctx, vx - 3, vy, 6, 3, 1, boneColor);
+        // Vertebrae detail
+        circle(ctx, vx, vy + 1, 1, boneShadow);
+      }
+
+      // Rib cage
+      for (let ri = 0; ri < 4; ri++) {
+        const ribY = y + 6 - ri * 4;
+        const ribWidth = 14 - ri * 1;
+        // Left ribs
+        ctx.beginPath();
+        ctx.moveTo(x - 2, ribY);
+        ctx.quadraticCurveTo(x - ribWidth - 2, ribY - 2, x - ribWidth, ribY + 4);
+        ctx.strokeStyle = boneColor;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Right ribs
+        ctx.beginPath();
+        ctx.moveTo(x + 2, ribY);
+        ctx.quadraticCurveTo(x + ribWidth + 2, ribY - 2, x + ribWidth, ribY + 4);
+        ctx.strokeStyle = boneColor;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Shoulder bones
+      roundRect(ctx, x - 18, y - 4, 36, 5, 2, boneColor);
+      // Clavicle bumps
+      circle(ctx, x - 16, y - 2, 3, boneShadow);
+      circle(ctx, x + 16, y - 2, 3, boneShadow);
+
+      // Arm bones
+      // Left arm — humerus
+      roundRect(ctx, x - 20, y + 0, 5, 16, 2, boneColor);
+      // Left elbow
+      circle(ctx, x - 18, y + 15, 2.5, boneShadow);
+      // Left forearm — radius/ulna
+      roundRect(ctx, x - 20, y + 14, 4, 14, 2, boneColor);
+      roundRect(ctx, x - 18, y + 14, 4, 14, 2, color(spec.primary, 0.6));
+      // Left hand bones
+      for (let fi = 0; fi < 3; fi++) {
+        strokeLine(ctx, x - 19 + fi * 2, y + 26, x - 20 + fi * 2, y + 32, boneColor, 1);
+      }
+
+      // Right arm
+      roundRect(ctx, x + 15, y + 0, 5, 16, 2, boneColor);
+      circle(ctx, x + 17, y + 15, 2.5, boneShadow);
+      roundRect(ctx, x + 15, y + 14, 4, 14, 2, boneColor);
+      roundRect(ctx, x + 17, y + 14, 4, 14, 2, color(spec.primary, 0.6));
+
+      // Rusty sword in right hand
+      const swordX = x + 20 + dir.x * 3 + swing * 0.6;
+      const swordY = y + 2 - swing * 0.4;
+      // Blade
+      const rustG = ctx.createLinearGradient(swordX, swordY - 16, swordX + 4, swordY + 8);
+      rustG.addColorStop(0, color(0x888070));
+      rustG.addColorStop(0.3, color(0x7a6e5e));
+      rustG.addColorStop(0.7, color(0x6b5f50));
+      rustG.addColorStop(1, color(0x5d5346));
+      roundRect(ctx, swordX, swordY - 16, 4, 24, 1, rustG);
+      // Blade edge — partially rusted
+      strokeLine(ctx, swordX + 4, swordY - 14, swordX + 4, swordY + 4, color(0xa09080, 0.5), 1);
+      // Crossguard
+      roundRect(ctx, swordX - 3, swordY + 6, 10, 3, 1, color(0x8b7355));
+      // Handle
+      roundRect(ctx, swordX, swordY + 8, 4, 10, 1, color(0x603d21));
+      // Rust spots
+      circle(ctx, swordX + 2, swordY - 8, 1.5, color(0x8b4513, 0.5));
+      circle(ctx, swordX + 1, swordY - 2, 1, color(0x8b4513, 0.4));
+
+      // Skull
+      const skullG = ctx.createRadialGradient(x - 3, y - 14, 4, x + 2, y - 8, 14);
+      skullG.addColorStop(0, color(lighten(spec.primary, 20)));
+      skullG.addColorStop(0.5, color(spec.primary));
+      skullG.addColorStop(1, color(darken(spec.primary, 14)));
+      circle(ctx, x, y - 10, 14, skullG);
+
+      // Cranium shape — slight elongation at top
+      ellipse(ctx, x, y - 16, 22, 12, color(spec.primary, 0.5));
+
+      // Eye sockets — dark with soul fire
+      circle(ctx, x - 6, y - 12, 4, color(0x111111, 0.9));
+      circle(ctx, x + 6, y - 12, 4, color(0x111111, 0.9));
+      // Soul fire in eyes
+      const eyeFireG = ctx.createRadialGradient(x - 6, y - 12, 0, x - 6, y - 12, 3.5);
+      eyeFireG.addColorStop(0, color(lighten(spec.accent, 40), 0.9));
+      eyeFireG.addColorStop(0.4, color(spec.accent, 0.7));
+      eyeFireG.addColorStop(1, color(spec.accent, 0.2));
+      circle(ctx, x - 6, y - 12, 3.5, eyeFireG);
+      circle(ctx, x + 6, y - 12, 3.5, eyeFireG);
+      // Eye fire flickers
+      triangle(ctx, x - 7, y - 14, x - 6, y - 18 - Math.sin(spec.frame) * 2, x - 5, y - 14, color(spec.accent, 0.4));
+      triangle(ctx, x + 5, y - 14, x + 6, y - 18 - Math.cos(spec.frame) * 2, x + 7, y - 14, color(spec.accent, 0.4));
+
+      // Nose cavity
+      triangle(ctx, x - 2, y - 8, x + 2, y - 8, x, y - 4, color(0x111111, 0.7));
+
+      // Jaw with teeth
+      roundRect(ctx, x - 8, y - 4, 16, 5, 2, color(darken(spec.primary, 6)));
+      // Upper teeth
+      for (let ti = 0; ti < 5; ti++) {
+        roundRect(ctx, x - 7 + ti * 3, y - 4, 2, 3, 0.5, boneHighlight);
+      }
+      // Lower jaw — slightly open
+      roundRect(ctx, x - 7, y + 1, 14, 4, 2, color(darken(spec.primary, 10)));
+      // Lower teeth
+      for (let ti = 0; ti < 4; ti++) {
+        roundRect(ctx, x - 6 + ti * 3, y, 2, 2, 0.5, boneHighlight);
+      }
+
+      // Armor remnants on shoulder
+      roundRect(ctx, x - 20, y - 6, 10, 8, 2, color(darken(spec.accent, 16), 0.5));
+      strokeLine(ctx, x - 20, y - 6, x - 10, y - 6, color(spec.accent, 0.3), 1);
+
+      // Overall skeleton glow in attack
+      if (spec.state === "attack") {
+        circle(ctx, x, y + 6, 28, color(spec.accent, 0.06));
+      }
       break;
+    }
   }
 }
 

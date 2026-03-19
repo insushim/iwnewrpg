@@ -4556,16 +4556,30 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createAtmosphere() {
+    // === Lineage Remaster atmospheric lighting system ===
+    // Sun/golden light bloom
     this.ambientBloom = this.add
-      .ellipse(this.scale.width * 0.24, 118, 420, 210, 0xffc36b, 0.12)
+      .ellipse(this.scale.width * 0.22, 100, 480, 260, 0xffc36b, 0.14)
       .setBlendMode(Phaser.BlendModes.SCREEN)
       .setScrollFactor(0)
       .setDepth(1400);
+
+    // Secondary warm haze around sun
+    const sunHaze = this.add
+      .ellipse(this.scale.width * 0.24, 130, 640, 340, 0xffa040, 0.04)
+      .setBlendMode(Phaser.BlendModes.SCREEN)
+      .setScrollFactor(0)
+      .setDepth(1399);
+    this.weatherLayer?.add(sunHaze);
+
+    // Moon/cool light
     this.ambientMoon = this.add
-      .ellipse(this.scale.width * 0.76, 96, 240, 140, 0xc7e7ff, 0.08)
+      .ellipse(this.scale.width * 0.78, 80, 280, 160, 0xc7e7ff, 0.06)
       .setBlendMode(Phaser.BlendModes.SCREEN)
       .setScrollFactor(0)
       .setDepth(1400);
+
+    // Ambient veil — overall tone overlay
     this.ambientVeil = this.add
       .rectangle(
         this.scale.width / 2,
@@ -4573,65 +4587,130 @@ export class WorldScene extends Phaser.Scene {
         this.scale.width,
         this.scale.height,
         0x07101a,
-        0.08,
+        0.06,
       )
       .setScrollFactor(0)
       .setDepth(1401);
 
+    // World-space atmospheric effects
     const upperGlow = this.add
-      .ellipse(980, 280, 840, 620, 0x78c9ff, 0.09)
+      .ellipse(980, 260, 920, 680, 0x78c9ff, 0.07)
       .setBlendMode(Phaser.BlendModes.SCREEN);
     const lowerGlow = this.add
-      .ellipse(890, 760, 420, 280, 0x9effcf, 0.05)
+      .ellipse(890, 760, 480, 320, 0x9effcf, 0.04)
       .setBlendMode(Phaser.BlendModes.SCREEN);
-    const fogBand = this.add
-      .rectangle(920, 300, 1600, 120, 0xd9c9aa, 0.06)
+
+    // Volumetric fog bands
+    const fogBand1 = this.add
+      .rectangle(920, 280, 1800, 100, 0xd9c9aa, 0.05)
       .setBlendMode(Phaser.BlendModes.SOFT_LIGHT);
+    const fogBand2 = this.add
+      .rectangle(600, 500, 1400, 80, 0xc0b898, 0.03)
+      .setBlendMode(Phaser.BlendModes.SOFT_LIGHT);
+
+    // Moon pool reflection
     const moonPool = this.add
-      .ellipse(980, 320, 190, 92, 0xe8f6ff, 0.18)
+      .ellipse(980, 310, 200, 100, 0xe8f6ff, 0.16)
       .setBlendMode(Phaser.BlendModes.SCREEN);
-    this.overlayLayer?.add([upperGlow, lowerGlow, fogBand, moonPool]);
+
+    // God rays — diagonal light shafts
+    const godRay1 = this.add
+      .rectangle(400, 200, 60, 600, 0xffd080, 0.03)
+      .setRotation(-0.3)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    const godRay2 = this.add
+      .rectangle(700, 180, 40, 500, 0xffd080, 0.02)
+      .setRotation(-0.2)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+
+    // Floating dust motes
+    const dustParticles: Phaser.GameObjects.Ellipse[] = [];
+    for (let i = 0; i < 12; i++) {
+      const dust = this.add
+        .ellipse(
+          200 + Math.random() * 1200,
+          100 + Math.random() * 600,
+          3,
+          3,
+          0xfff8e0,
+          0.15 + Math.random() * 0.1,
+        )
+        .setBlendMode(Phaser.BlendModes.SCREEN);
+      dustParticles.push(dust);
+      // Slow floating animation
+      this.tweens.add({
+        targets: dust,
+        x: dust.x + (Math.random() - 0.5) * 200,
+        y: dust.y - 50 - Math.random() * 100,
+        alpha: 0,
+        duration: 8000 + Math.random() * 6000,
+        ease: "Sine.InOut",
+        repeat: -1,
+        yoyo: true,
+      });
+    }
+
+    this.overlayLayer?.add([
+      upperGlow, lowerGlow, fogBand1, fogBand2, moonPool,
+      godRay1, godRay2, ...dustParticles,
+    ]);
   }
 
   private updateAmbientLighting() {
+    // === Lineage Remaster — dynamic day/night cycle + map-specific atmospherics ===
     const phase = (Math.sin(this.time.now / 22000) + 1) / 2;
+    const breathe = Math.sin(this.time.now / 4000) * 0.02;
+
     if (this.ambientVeil) {
       const ambientBase =
         this.mapId === "dragonValley"
-          ? { r: 28, g: 12, b: 8, alpha: 0.12 }
+          ? { r: 32, g: 14, b: 8, alpha: 0.14 }
           : this.mapId === "moonlitWetland"
-            ? { r: 6, g: 18, b: 18, alpha: 0.1 }
+            ? { r: 4, g: 16, b: 22, alpha: 0.12 }
             : this.mapId === "ancientCave"
-              ? { r: 16, g: 28, b: 44, alpha: 0.08 }
-              : { r: 7, g: 16, b: 26, alpha: 0.08 };
-      this.ambientVeil.alpha = ambientBase.alpha + phase * 0.08;
+              ? { r: 12, g: 22, b: 40, alpha: 0.1 }
+              : this.mapId === "silverKnightTown" || this.mapId === "giranTown"
+                ? { r: 8, g: 10, b: 16, alpha: 0.05 }
+                : { r: 7, g: 16, b: 26, alpha: 0.06 };
+      this.ambientVeil.alpha = ambientBase.alpha + phase * 0.1 + breathe;
       this.ambientVeil.fillColor = Phaser.Display.Color.GetColor(
-        Phaser.Math.Linear(ambientBase.r, ambientBase.r + 10, 1 - phase),
-        Phaser.Math.Linear(ambientBase.g, ambientBase.g + 18, 1 - phase),
-        Phaser.Math.Linear(ambientBase.b, ambientBase.b + 30, phase),
+        Phaser.Math.Linear(ambientBase.r, ambientBase.r + 12, 1 - phase),
+        Phaser.Math.Linear(ambientBase.g, ambientBase.g + 20, 1 - phase),
+        Phaser.Math.Linear(ambientBase.b, ambientBase.b + 35, phase),
       );
     }
 
     if (this.ambientBloom) {
       const bloomAlpha =
         this.mapId === "dragonValley"
-          ? 0.16
+          ? 0.18
           : this.mapId === "moonlitWetland"
-            ? 0.1
-            : 0.18;
-      this.ambientBloom.alpha = bloomAlpha - phase * 0.08;
-      this.ambientBloom.setScale(0.94 + Math.sin(this.time.now / 6000) * 0.04);
-      this.ambientBloom.x = this.scale.width * (0.2 + phase * 0.1);
+            ? 0.08
+            : this.mapId === "ancientCave"
+              ? 0.04
+              : 0.2;
+      this.ambientBloom.alpha = bloomAlpha - phase * 0.1 + breathe;
+      this.ambientBloom.setScale(
+        0.92 + Math.sin(this.time.now / 5500) * 0.05 + breathe,
+      );
+      this.ambientBloom.x = this.scale.width * (0.18 + phase * 0.12);
+      // Color shift from warm gold to cooler as phase increases
+      const bloomR = Math.floor(Phaser.Math.Linear(255, 200, phase));
+      const bloomG = Math.floor(Phaser.Math.Linear(195, 160, phase));
+      const bloomB = Math.floor(Phaser.Math.Linear(107, 140, phase));
+      this.ambientBloom.fillColor = Phaser.Display.Color.GetColor(bloomR, bloomG, bloomB);
     }
 
     if (this.ambientMoon) {
       const moonAlpha =
         this.mapId === "moonlitWetland" || this.mapId === "ancientCave"
-          ? 0.08
-          : 0.03;
-      this.ambientMoon.alpha = moonAlpha + phase * 0.12;
-      this.ambientMoon.setScale(0.92 + Math.cos(this.time.now / 7000) * 0.05);
-      this.ambientMoon.x = this.scale.width * (0.72 + phase * 0.07);
+          ? 0.1
+          : 0.04;
+      this.ambientMoon.alpha = moonAlpha + phase * 0.14;
+      this.ambientMoon.setScale(
+        0.9 + Math.cos(this.time.now / 6500) * 0.06,
+      );
+      this.ambientMoon.x = this.scale.width * (0.7 + phase * 0.08);
     }
   }
 
@@ -5467,79 +5546,192 @@ export class WorldScene extends Phaser.Scene {
     damage: number,
     isCrit: boolean,
   ) {
-    const glow = this.add
+    // === Lineage Remaster damage numbers — dramatic impact ===
+    // Outer impact glow
+    const outerGlow = this.add
       .ellipse(
         x,
         y - 30,
-        isCrit ? 72 : 52,
-        isCrit ? 34 : 24,
+        isCrit ? 96 : 64,
+        isCrit ? 48 : 32,
         isCrit ? 0xffdc73 : 0xffffff,
-        isCrit ? 0.22 : 0.12,
+        isCrit ? 0.28 : 0.14,
+      )
+      .setBlendMode(Phaser.BlendModes.SCREEN)
+      .setDepth(9997);
+    // Inner bright flash
+    const innerFlash = this.add
+      .ellipse(
+        x,
+        y - 30,
+        isCrit ? 48 : 32,
+        isCrit ? 24 : 16,
+        0xffffff,
+        isCrit ? 0.5 : 0.3,
       )
       .setBlendMode(Phaser.BlendModes.SCREEN)
       .setDepth(9998);
+
+    // Shadow text for depth
+    const shadow = this.add
+      .text(x + 1, y - 28, isCrit ? `${damage}!` : String(damage), {
+        fontSize: isCrit ? "26px" : "20px",
+        color: "#000000",
+        fontFamily: "serif",
+        fontStyle: isCrit ? "bold" : "normal",
+      })
+      .setOrigin(0.5)
+      .setAlpha(0.5)
+      .setDepth(9998);
+
+    // Main damage text
     const text = this.add
       .text(x, y - 30, isCrit ? `${damage}!` : String(damage), {
-        fontSize: isCrit ? "24px" : "18px",
+        fontSize: isCrit ? "26px" : "20px",
         color: isCrit ? "#ffe58a" : "#f7fbff",
         fontFamily: "serif",
-        stroke: "#07101a",
-        strokeThickness: 4,
+        stroke: isCrit ? "#8b4513" : "#07101a",
+        strokeThickness: isCrit ? 5 : 4,
         fontStyle: isCrit ? "bold" : "normal",
       })
       .setOrigin(0.5)
       .setDepth(9999);
 
-    this.effectLayer?.add(glow);
+    // Crit: spawn additional star burst
+    if (isCrit) {
+      for (let si = 0; si < 4; si++) {
+        const sAngle = (si / 4) * Math.PI * 2 + Math.random() * 0.5;
+        const star = this.add
+          .ellipse(x, y - 30, 4, 4, 0xffe58a, 0.8)
+          .setDepth(9998);
+        this.effectLayer?.add(star);
+        this.tweens.add({
+          targets: star,
+          x: x + Math.cos(sAngle) * 28,
+          y: y - 30 + Math.sin(sAngle) * 18,
+          alpha: 0,
+          scale: 0.2,
+          duration: 350,
+          ease: "Power2.Out",
+          onComplete: () => star.destroy(),
+        });
+      }
+    }
+
+    this.effectLayer?.add(outerGlow);
+    this.effectLayer?.add(innerFlash);
+    this.effectLayer?.add(shadow);
     this.effectLayer?.add(text);
+
+    // Outer glow expansion
     this.tweens.add({
-      targets: glow,
-      scaleX: isCrit ? 1.8 : 1.45,
-      scaleY: isCrit ? 1.8 : 1.45,
+      targets: outerGlow,
+      scaleX: isCrit ? 2.2 : 1.6,
+      scaleY: isCrit ? 2.2 : 1.6,
       alpha: 0,
-      duration: 320,
+      duration: 400,
       ease: "Quad.Out",
-      onComplete: () => glow.destroy(),
+      onComplete: () => outerGlow.destroy(),
     });
+    // Inner flash — fast fade
+    this.tweens.add({
+      targets: innerFlash,
+      scaleX: 2.5,
+      scaleY: 2.5,
+      alpha: 0,
+      duration: 200,
+      ease: "Quad.Out",
+      onComplete: () => innerFlash.destroy(),
+    });
+    // Text — scale up then float
     this.tweens.add({
       targets: text,
-      y: y - (isCrit ? 92 : 80),
-      alpha: 0,
-      scale: isCrit ? 1.08 : 1,
-      duration: isCrit ? 980 : 900,
+      scale: isCrit ? 1.2 : 1.05,
+      duration: 100,
+      yoyo: true,
       ease: "Quad.Out",
-      onComplete: () => text.destroy(),
+    });
+    this.tweens.add({
+      targets: [text, shadow],
+      y: y - (isCrit ? 100 : 88),
+      alpha: 0,
+      duration: isCrit ? 1100 : 950,
+      ease: "Quad.Out",
+      onComplete: () => { text.destroy(); shadow.destroy(); },
     });
   }
 
   private showHitEffect(x: number, y: number) {
+    // === Lineage Remaster hit effect — impact ring + slash + sparks ===
+    // Impact flash
+    const flash = this.add
+      .ellipse(x, y - 18, 16, 16, 0xffffff, 0.6)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+    this.effectLayer?.add(flash);
+    this.tweens.add({
+      targets: flash,
+      scaleX: 2.5,
+      scaleY: 2.5,
+      alpha: 0,
+      duration: 150,
+      ease: "Quad.Out",
+      onComplete: () => flash.destroy(),
+    });
+
+    // Expanding ring
     const ring = this.add
-      .ellipse(x, y - 18, 24, 24, 0xffffff, 0.08)
-      .setStrokeStyle(2, 0xffefb0, 0.65);
+      .ellipse(x, y - 18, 28, 28, 0xffffff, 0.06)
+      .setStrokeStyle(2.5, 0xffefb0, 0.7);
     this.effectLayer?.add(ring);
     this.tweens.add({
       targets: ring,
-      scaleX: 1.8,
-      scaleY: 1.8,
+      scaleX: 2.0,
+      scaleY: 2.0,
       alpha: 0,
-      duration: 220,
+      duration: 260,
       ease: "Quad.Out",
       onComplete: () => ring.destroy(),
     });
-    for (let i = 0; i < 5; i += 1) {
-      const angle = (i / 5) * Math.PI * 2;
-      const dist = 14 + Math.random() * 16;
+
+    // Slash lines (cross pattern)
+    const slashAngle = Math.random() * Math.PI;
+    for (let si = 0; si < 2; si++) {
+      const ang = slashAngle + si * (Math.PI / 2);
+      const slashLen = 18;
+      const slash = this.add.graphics().setDepth(9990);
+      slash.lineStyle(2, 0xffffff, 0.8);
+      slash.beginPath();
+      slash.moveTo(x + Math.cos(ang) * -slashLen, y - 18 + Math.sin(ang) * -slashLen);
+      slash.lineTo(x + Math.cos(ang) * slashLen, y - 18 + Math.sin(ang) * slashLen);
+      slash.strokePath();
+      this.effectLayer?.add(slash);
+      this.tweens.add({
+        targets: slash,
+        alpha: 0,
+        scaleX: 1.5,
+        scaleY: 1.5,
+        duration: 200,
+        ease: "Quad.Out",
+        onComplete: () => slash.destroy(),
+      });
+    }
+
+    // Sparks — more varied
+    for (let i = 0; i < 7; i += 1) {
+      const angle = (i / 7) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 16 + Math.random() * 20;
+      const sparkColor = [0xffffff, 0xffe060, 0xffb040, 0xfff0a0][i % 4];
       const spark = this.add
-        .ellipse(x, y - 20, 6, 6, i % 2 === 0 ? 0xffffff : 0xffe060, 0.9)
-        .setScale(0.6 + Math.random() * 0.6);
+        .ellipse(x, y - 20, 5, 5, sparkColor, 0.9)
+        .setScale(0.5 + Math.random() * 0.7);
       this.effectLayer?.add(spark);
       this.tweens.add({
         targets: spark,
         x: x + Math.cos(angle) * dist,
         y: y - 20 + Math.sin(angle) * dist,
         alpha: 0,
-        scale: 0.1,
-        duration: 280 + Math.random() * 160,
+        scale: 0.08,
+        duration: 300 + Math.random() * 180,
         ease: "Power2.Out",
         onComplete: () => spark.destroy(),
       });
