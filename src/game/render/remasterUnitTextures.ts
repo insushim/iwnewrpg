@@ -21,35 +21,68 @@ type FrameSpec = {
   weapon?: WeaponKind;
 };
 
+/**
+ * Register textures in batches to avoid blocking the main thread.
+ * Only generates the "s" (south) idle frame 0 immediately for each pack
+ * so sprites can appear right away. The rest are generated lazily.
+ */
 export function registerRemasterUnitTextures(scene: Phaser.Scene) {
+  // Phase 1: Generate only the essential south-facing idle frame for each pack
   REMASTER_UNIT_PACKS.forEach((pack) => {
-    REMASTER_DIRECTIONS.forEach((direction) => {
-      [0, 1].forEach((frame) =>
-        createFrame(scene, `${pack.base}_idle_${direction}_${frame}`, {
-          ...pack,
-          direction,
-          frame,
-          state: "idle",
-        }),
-      );
-      [0, 1, 2].forEach((frame) =>
-        createFrame(scene, `${pack.base}_walk_${direction}_${frame}`, {
-          ...pack,
-          direction,
-          frame,
-          state: "walk",
-        }),
-      );
-      [0, 1, 2, 3].forEach((frame) =>
-        createFrame(scene, `${pack.base}_attack_${direction}_${frame}`, {
-          ...pack,
-          direction,
-          frame,
-          state: "attack",
-        }),
-      );
+    createFrame(scene, `${pack.base}_idle_s_0`, {
+      ...pack,
+      direction: "s",
+      frame: 0,
+      state: "idle",
+    });
+    createFrame(scene, `${pack.base}_idle_s_1`, {
+      ...pack,
+      direction: "s",
+      frame: 1,
+      state: "idle",
     });
   });
+
+  // Phase 2: Generate remaining textures in batches via setTimeout
+  const queue: Array<{ key: string; spec: FrameSpec }> = [];
+  REMASTER_UNIT_PACKS.forEach((pack) => {
+    REMASTER_DIRECTIONS.forEach((direction) => {
+      [0, 1].forEach((frame) => {
+        const key = `${pack.base}_idle_${direction}_${frame}`;
+        if (!scene.textures.exists(key)) {
+          queue.push({ key, spec: { ...pack, direction, frame, state: "idle" } });
+        }
+      });
+      [0, 1, 2].forEach((frame) => {
+        queue.push({
+          key: `${pack.base}_walk_${direction}_${frame}`,
+          spec: { ...pack, direction, frame, state: "walk" },
+        });
+      });
+      [0, 1, 2, 3].forEach((frame) => {
+        queue.push({
+          key: `${pack.base}_attack_${direction}_${frame}`,
+          spec: { ...pack, direction, frame, state: "attack" },
+        });
+      });
+    });
+  });
+
+  // Process in batches of 40 per frame to avoid jank
+  const BATCH_SIZE = 40;
+  let offset = 0;
+  const processBatch = () => {
+    if (!scene.scene.isActive()) return;
+    const end = Math.min(offset + BATCH_SIZE, queue.length);
+    for (let i = offset; i < end; i++) {
+      createFrame(scene, queue[i].key, queue[i].spec);
+    }
+    offset = end;
+    if (offset < queue.length) {
+      setTimeout(processBatch, 0);
+    }
+  };
+  setTimeout(processBatch, 100);
 }
 
 function createFrame(scene: Phaser.Scene, key: string, spec: FrameSpec) {

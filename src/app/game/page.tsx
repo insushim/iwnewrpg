@@ -68,7 +68,7 @@ export default function GamePage() {
         <PhaserGame />
       </div>
 
-      <div className="pointer-events-auto absolute bottom-[110px] left-1 z-10 w-[240px]">
+      <div className="pointer-events-auto absolute bottom-[100px] left-1 z-10 w-[220px]">
         <ChatWindow />
       </div>
 

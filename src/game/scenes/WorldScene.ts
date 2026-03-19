@@ -986,6 +986,7 @@ export class WorldScene extends Phaser.Scene {
       EventBus.on("attempt_tame", () => this.attemptTaming()),
       EventBus.on("teleport_random", () => this.handleTeleportRandom()),
       EventBus.on("return_to_town", () => this.handleReturnToTown()),
+      EventBus.on("chat_bubble", (payload) => this.showChatBubble(payload.playerId, payload.message)),
     );
   }
 
@@ -3394,7 +3395,7 @@ export class WorldScene extends Phaser.Scene {
       .setScale(isSelf ? 0.9 : 0.82)
       .setOrigin(0.5, 0.94);
     const label = this.add
-      .text(0, -82, payload.name, {
+      .text(0, -96, payload.name, {
         fontSize: "12px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
@@ -3403,7 +3404,7 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0.5);
     const classBadge = this.createBadgeMarker(
       0,
-      -98,
+      -112,
       this.getPlayerClassBadgeText(),
       classTone.burstTint,
     );
@@ -3560,13 +3561,13 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0.5, 0.92)
       .setScale(this.getMonsterScale(baseId));
     const hpBack = this.add
-      .rectangle(0, -64, 52, 7, 0x160808, 0.78)
+      .rectangle(0, -68, 52, 7, 0x160808, 0.78)
       .setOrigin(0.5);
     const hpFill = this.add
-      .rectangle(-25, -64, 50, 5, 0xfb7260, 0.95)
+      .rectangle(-25, -68, 50, 5, 0xfb7260, 0.95)
       .setOrigin(0, 0.5);
     const label = this.add
-      .text(0, -82, payload.name, {
+      .text(0, -86, payload.name, {
         fontSize: isBoss ? "14px" : "13px",
         color: isBoss ? "#ffe7b4" : "#ffd9d1",
         stroke: "#07101a",
@@ -3579,7 +3580,7 @@ export class WorldScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     const bossCrest = isBoss
       ? this.add
-          .text(0, -98, "BOSS", {
+          .text(0, -102, "BOSS", {
             fontSize: "10px",
             color: "#221508",
             backgroundColor: "#f6cf83",
@@ -5077,10 +5078,20 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "ancientCave") {
+      // Dungeon: mix of dark stone, volcanic cracks, cobble floors
+      const caveNoise = this.noise(x * 0.23 + 71, y * 0.19 + 53);
+      const caveTexture =
+        ridge > 0.78
+          ? "tile_volcanic"
+          : ridge > 0.62
+            ? "tile_cobble"
+            : caveNoise > 0.6
+              ? "tile_wet_stone"
+              : "tile_cobble";
       return {
-        texture: ridge > 0.58 ? "tile_volcanic" : "tile_wet_stone",
-        alpha: 0.92,
-        tint: 0xffffff,
+        texture: caveTexture,
+        alpha: 0.88 + caveNoise * 0.08,
+        tint: 0xd8d0c8,
         rotation: 0,
         scaleX: 0,
         scaleY: 0,
@@ -5537,6 +5548,71 @@ export class WorldScene extends Phaser.Scene {
           );
         }
       }
+    });
+  }
+
+  private showChatBubble(playerId: string, message: string) {
+    const sprite = this.playerSprites.get(playerId);
+    if (!sprite) return;
+
+    // Truncate long messages
+    const displayMsg = message.length > 30 ? message.slice(0, 30) + "..." : message;
+
+    // Background plate
+    const bubbleBg = this.add.graphics();
+    const textObj = this.add
+      .text(0, -120, displayMsg, {
+        fontSize: "11px",
+        color: "#f2e4c2",
+        fontFamily: "sans-serif",
+        stroke: "#07101a",
+        strokeThickness: 2,
+        wordWrap: { width: 140 },
+        align: "center",
+      })
+      .setOrigin(0.5, 1);
+
+    const bounds = textObj.getBounds();
+    const padX = 8;
+    const padY = 5;
+    const bgW = bounds.width + padX * 2;
+    const bgH = bounds.height + padY * 2;
+
+    // Draw rounded bubble with tail
+    bubbleBg.fillStyle(0x0a0e18, 0.88);
+    bubbleBg.fillRoundedRect(-bgW / 2, -120 - bgH, bgW, bgH, 6);
+    bubbleBg.lineStyle(1, 0xb48a46, 0.5);
+    bubbleBg.strokeRoundedRect(-bgW / 2, -120 - bgH, bgW, bgH, 6);
+    // Tail triangle
+    bubbleBg.fillStyle(0x0a0e18, 0.88);
+    bubbleBg.fillTriangle(-4, -120, 4, -120, 0, -114);
+
+    textObj.setPosition(0, -120 - padY);
+
+    const container = this.add.container(0, 0, [bubbleBg, textObj]);
+    sprite.add(container);
+
+    // Fade in
+    container.setAlpha(0);
+    container.y = 4;
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      y: 0,
+      duration: 200,
+      ease: "Quad.Out",
+    });
+
+    // Auto remove after 4 seconds
+    this.time.delayedCall(4000, () => {
+      this.tweens.add({
+        targets: container,
+        alpha: 0,
+        y: -8,
+        duration: 300,
+        ease: "Quad.In",
+        onComplete: () => container.destroy(),
+      });
     });
   }
 

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useGameStore } from "@/lib/gameStore";
 import { getSocket } from "@/lib/socket";
+import { EventBus } from "@/components/game/EventBus";
 
 export function ChatWindow() {
   const chat = useGameStore((state) => state.chat);
@@ -16,17 +17,23 @@ export function ChatWindow() {
       return;
     }
 
+    const msg = value.trim();
+    const selfId = useGameStore.getState().selfId;
     const socket = getSocket();
     if (socket.connected) {
-      socket.emit("chat:send", { message: value.trim() });
+      socket.emit("chat:send", { message: msg });
     } else {
       addChat({
         id: crypto.randomUUID(),
         author: "나",
         channel: "normal",
-        message: value.trim(),
+        message: msg,
         timestamp: Date.now(),
       });
+    }
+    // Emit chat bubble event for WorldScene
+    if (selfId) {
+      EventBus.emit("chat_bubble", { playerId: selfId, message: msg });
     }
     setValue("");
   };
@@ -64,7 +71,7 @@ export function ChatWindow() {
 
   return (
     <section
-      className="relative flex h-[320px] flex-col overflow-hidden rounded border-4 border-[#8e7540] bg-[linear-gradient(145deg,#0a0e18,#060a14)] p-4"
+      className="relative flex h-[240px] flex-col overflow-hidden rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#0a0e18,#060a14)] p-3"
       style={{
         boxShadow:
           "inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(142,117,64,0.3)",
