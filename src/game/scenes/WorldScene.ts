@@ -127,7 +127,7 @@ const STARTER_TOWN_RECT = new Phaser.Geom.Rectangle(220, 180, 760, 430);
 const MOVE_SPEED = 110;
 const MELEE_RANGE = 92;
 const RANGED_RANGE = 420;
-const WALK_FRAME_COUNT = 3;
+const WALK_FRAME_COUNT = 4;
 const IDLE_FRAME_COUNT = 2;
 const ATTACK_FRAME_COUNT = 4;
 
@@ -986,7 +986,9 @@ export class WorldScene extends Phaser.Scene {
       EventBus.on("attempt_tame", () => this.attemptTaming()),
       EventBus.on("teleport_random", () => this.handleTeleportRandom()),
       EventBus.on("return_to_town", () => this.handleReturnToTown()),
-      EventBus.on("chat_bubble", (payload) => this.showChatBubble(payload.playerId, payload.message)),
+      EventBus.on("chat_bubble", (payload) =>
+        this.showChatBubble(payload.playerId, payload.message),
+      ),
     );
   }
 
@@ -4334,7 +4336,7 @@ export class WorldScene extends Phaser.Scene {
     );
     const bob =
       sprite.animState === "walk"
-        ? [0, -2.2, -0.8][sprite.animFrame % 3]
+        ? [0, -2.2, -0.8, -1.5][sprite.animFrame % 4]
         : sprite.animState === "attack"
           ? [-1, -3.5, 2, 0][sprite.animFrame % 4]
           : 0;
@@ -4342,16 +4344,16 @@ export class WorldScene extends Phaser.Scene {
       sprite.animState === "walk"
         ? (
             {
-              n: [0, 0.5, -0.5],
-              ne: [1.4, 2.8, 1],
-              e: [1.8, 3.2, 1.2],
-              se: [1.4, 2.6, 1],
-              s: [0, 0.7, -0.7],
-              sw: [-1.4, -2.8, -1],
-              w: [-1.8, -3.2, -1.2],
-              nw: [-1.4, -2.6, -1],
+              n: [0, 0.5, -0.5, 0.2],
+              ne: [1.4, 2.8, 1, 2.0],
+              e: [1.8, 3.2, 1.2, 2.4],
+              se: [1.4, 2.6, 1, 1.8],
+              s: [0, 0.7, -0.7, 0.3],
+              sw: [-1.4, -2.8, -1, -2.0],
+              w: [-1.8, -3.2, -1.2, -2.4],
+              nw: [-1.4, -2.6, -1, -1.8],
             } as const
-          )[sprite.facing][sprite.animFrame % 3]
+          )[sprite.facing][sprite.animFrame % 4]
         : sprite.animState === "attack"
           ? (
               {
@@ -4396,25 +4398,25 @@ export class WorldScene extends Phaser.Scene {
           : 0;
     const bodyScaleX =
       sprite.animState === "walk"
-        ? [0.985, 1.035, 1.005][sprite.animFrame % 3]
+        ? [0.985, 1.035, 1.005, 1.015][sprite.animFrame % 4]
         : sprite.animState === "attack"
           ? [1, 1.05, 1.08, 1.02][sprite.animFrame % 4]
           : 1;
     const bodyScaleY =
       sprite.animState === "walk"
-        ? [1.02, 0.96, 1.01][sprite.animFrame % 3]
+        ? [1.02, 0.96, 1.01, 0.99][sprite.animFrame % 4]
         : sprite.animState === "attack"
           ? [1, 0.95, 0.92, 0.98][sprite.animFrame % 4]
           : 1;
     const labelFloat =
       sprite.animState === "walk"
-        ? [0, -1.2, -0.4][sprite.animFrame % 3]
+        ? [0, -1.2, -0.4, -0.8][sprite.animFrame % 4]
         : sprite.animState === "attack"
           ? [-0.4, -1.6, 0.2, 0][sprite.animFrame % 4]
           : 0;
     const ringScaleBoost =
       sprite.animState === "walk"
-        ? [0, 0.035, 0.012][sprite.animFrame % 3]
+        ? [0, 0.035, 0.012, 0.022][sprite.animFrame % 4]
         : sprite.animState === "attack"
           ? [0.02, 0.05, 0.07, 0.03][sprite.animFrame % 4]
           : 0;
@@ -4657,8 +4659,14 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.overlayLayer?.add([
-      upperGlow, lowerGlow, fogBand1, fogBand2, moonPool,
-      godRay1, godRay2, ...dustParticles,
+      upperGlow,
+      lowerGlow,
+      fogBand1,
+      fogBand2,
+      moonPool,
+      godRay1,
+      godRay2,
+      ...dustParticles,
     ]);
   }
 
@@ -4704,7 +4712,11 @@ export class WorldScene extends Phaser.Scene {
       const bloomR = Math.floor(Phaser.Math.Linear(255, 200, phase));
       const bloomG = Math.floor(Phaser.Math.Linear(195, 160, phase));
       const bloomB = Math.floor(Phaser.Math.Linear(107, 140, phase));
-      this.ambientBloom.fillColor = Phaser.Display.Color.GetColor(bloomR, bloomG, bloomB);
+      this.ambientBloom.fillColor = Phaser.Display.Color.GetColor(
+        bloomR,
+        bloomG,
+        bloomB,
+      );
     }
 
     if (this.ambientMoon) {
@@ -4713,9 +4725,7 @@ export class WorldScene extends Phaser.Scene {
           ? 0.1
           : 0.04;
       this.ambientMoon.alpha = moonAlpha + phase * 0.14;
-      this.ambientMoon.setScale(
-        0.9 + Math.cos(this.time.now / 6500) * 0.06,
-      );
+      this.ambientMoon.setScale(0.9 + Math.cos(this.time.now / 6500) * 0.06);
       this.ambientMoon.x = this.scale.width * (0.7 + phase * 0.08);
     }
   }
@@ -5561,7 +5571,8 @@ export class WorldScene extends Phaser.Scene {
     if (!sprite) return;
 
     // Truncate long messages
-    const displayMsg = message.length > 30 ? message.slice(0, 30) + "..." : message;
+    const displayMsg =
+      message.length > 30 ? message.slice(0, 30) + "..." : message;
 
     // Background plate
     const bubbleBg = this.add.graphics();
@@ -5738,7 +5749,10 @@ export class WorldScene extends Phaser.Scene {
       alpha: 0,
       duration: isCrit ? 1100 : 950,
       ease: "Quad.Out",
-      onComplete: () => { text.destroy(); shadow.destroy(); },
+      onComplete: () => {
+        text.destroy();
+        shadow.destroy();
+      },
     });
   }
 
@@ -5782,8 +5796,14 @@ export class WorldScene extends Phaser.Scene {
       const slash = this.add.graphics().setDepth(9990);
       slash.lineStyle(2, 0xffffff, 0.8);
       slash.beginPath();
-      slash.moveTo(x + Math.cos(ang) * -slashLen, y - 18 + Math.sin(ang) * -slashLen);
-      slash.lineTo(x + Math.cos(ang) * slashLen, y - 18 + Math.sin(ang) * slashLen);
+      slash.moveTo(
+        x + Math.cos(ang) * -slashLen,
+        y - 18 + Math.sin(ang) * -slashLen,
+      );
+      slash.lineTo(
+        x + Math.cos(ang) * slashLen,
+        y - 18 + Math.sin(ang) * slashLen,
+      );
       slash.strokePath();
       this.effectLayer?.add(slash);
       this.tweens.add({

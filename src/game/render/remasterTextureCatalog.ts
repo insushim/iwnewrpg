@@ -520,7 +520,7 @@ export function getRemasterFrameDefinitions(): RemasterFrameDefinition[] {
         });
       });
 
-      [0, 1, 2].forEach((frame) => {
+      [0, 1, 2, 3].forEach((frame) => {
         definitions.push({
           key: `${pack.base}_walk_${direction}_${frame}`,
           base: pack.base,
