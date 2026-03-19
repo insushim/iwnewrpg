@@ -71,7 +71,7 @@ export function ChatWindow() {
 
   return (
     <section
-      className="relative flex h-[240px] max-w-[240px] flex-col overflow-hidden rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#0a0e18,#060a14)] p-3"
+      className="relative flex h-[260px] max-w-[320px] flex-col overflow-hidden rounded border-2 border-[#8e7540] bg-[linear-gradient(145deg,#0a0e18,#060a14)] p-3"
       style={{
         boxShadow:
           "inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(142,117,64,0.3)",
@@ -123,7 +123,7 @@ export function ChatWindow() {
 
       {/* Chat Messages Area */}
       <div
-        className="scrollbar-thin relative flex-1 space-y-1 overflow-y-auto rounded border-2 border-[#6b5530] bg-[linear-gradient(145deg,#060a14,#0a0e18)] p-3 text-sm"
+        className="scrollbar-thin relative flex-1 space-y-1.5 overflow-y-auto rounded border-2 border-[#6b5530] bg-[linear-gradient(145deg,#060a14,#0a0e18)] p-3 text-sm"
         style={{
           boxShadow: "inset 0 2px 6px rgba(0,0,0,0.8)",
           scrollbarColor: "#8e7540 #060a14",
@@ -162,13 +162,13 @@ export function ChatWindow() {
           return (
             <div
               key={message.id}
-              className="rounded border border-[#6b5530] px-2 py-1 text-xs leading-relaxed transition hover:border-[#8e7540]"
+              className="rounded border border-[#6b5530] px-2 py-1.5 text-sm leading-relaxed transition hover:border-[#8e7540]"
               style={{
                 backgroundColor: style.bgColor,
                 boxShadow: "inset 0 1px 2px rgba(0,0,0,0.3)",
               }}
             >
-              <span className="mr-1 text-[10px] text-[#8e7540]">
+              <span className="mr-1 text-xs text-[#8e7540]">
                 {message.timestamp > 0
                   ? new Date(message.timestamp).toLocaleTimeString("ko-KR", {
                       hour: "2-digit",
@@ -176,15 +176,15 @@ export function ChatWindow() {
                     })
                   : "--:--"}
               </span>
-              <span className="mr-1 text-xs opacity-70">{style.prefix}</span>
+              <span className="mr-1 text-sm opacity-70">{style.prefix}</span>
               <span
-                className="mr-2 text-xs font-bold text-[#d8c3a1]"
+                className="mr-2 text-sm font-bold text-[#d8c3a1]"
                 style={{ textShadow: "0 1px 1px rgba(0,0,0,0.8)" }}
               >
                 [{message.author}]
               </span>
               <span
-                className="text-xs"
+                className="text-sm"
                 style={{
                   color: style.color,
                   textShadow:

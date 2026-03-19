@@ -7151,13 +7151,17 @@ export class WorldScene extends Phaser.Scene {
   private handleTeleportRandom() {
     if (!this.localPlayer) return;
 
+    const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
+    const mapW = map.width * TILE_WIDTH + 320;
+    const mapH = map.height * TILE_HEIGHT + 260;
+
     // Move player to a random nearby position (±300px)
     const randomX = this.localPlayer.x + (Math.random() - 0.5) * 600;
     const randomY = this.localPlayer.y + (Math.random() - 0.5) * 600;
 
-    // Clamp to map boundaries (assuming similar to existing movement logic)
-    const clampedX = Math.max(200, Math.min(randomX, this.scale.width - 200));
-    const clampedY = Math.max(200, Math.min(randomY, this.scale.height - 200));
+    // Clamp to map boundaries
+    const clampedX = Math.max(200, Math.min(randomX, mapW - 200));
+    const clampedY = Math.max(200, Math.min(randomY, mapH - 200));
 
     // Teleport with visual effect
     this.showTeleportEffect(this.localPlayer.x, this.localPlayer.y);

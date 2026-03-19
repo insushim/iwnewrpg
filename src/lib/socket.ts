@@ -11,8 +11,11 @@ export function getSocket() {
 
   socket = io(process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001", {
     autoConnect: false,
-    reconnection: false,
-    timeout: 4000,
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 2000,
+    reconnectionDelayMax: 10000,
+    timeout: 5000,
   });
 
   return socket;

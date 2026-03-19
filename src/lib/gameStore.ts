@@ -890,6 +890,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set((state) => ({
         ui: { ...state.ui, selectedInventoryItemId: null },
       }));
+      // 스크롤 아이템은 클라이언트에서도 이벤트 발생 필요
+      const EvBus = (globalThis as Record<string, unknown>).__eventBus as
+        | { emit?: (e: string, d: unknown) => void }
+        | undefined;
+      if (itemId === "teleport_scroll") {
+        EvBus?.emit?.("teleport_random", {});
+      } else if (itemId === "return_scroll") {
+        EvBus?.emit?.("return_to_town", {});
+      }
       return;
     }
 
