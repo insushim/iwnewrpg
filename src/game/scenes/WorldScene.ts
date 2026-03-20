@@ -3397,8 +3397,8 @@ export class WorldScene extends Phaser.Scene {
       .setScale(isSelf ? 0.9 : 0.82)
       .setOrigin(0.5, 0.94);
     const label = this.add
-      .text(0, -110, payload.name, {
-        fontSize: "12px",
+      .text(0, -56, payload.name, {
+        fontSize: "11px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
         strokeThickness: 3,
@@ -3406,7 +3406,7 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0.5);
     const classBadge = this.createBadgeMarker(
       0,
-      -126,
+      -70,
       this.getPlayerClassBadgeText(),
       classTone.burstTint,
     );
@@ -5577,7 +5577,7 @@ export class WorldScene extends Phaser.Scene {
     // Background plate
     const bubbleBg = this.add.graphics();
     const textObj = this.add
-      .text(0, -135, displayMsg, {
+      .text(0, -82, displayMsg, {
         fontSize: "11px",
         color: "#f2e4c2",
         fontFamily: "sans-serif",
@@ -5596,14 +5596,14 @@ export class WorldScene extends Phaser.Scene {
 
     // Draw rounded bubble with tail
     bubbleBg.fillStyle(0x0a0e18, 0.88);
-    bubbleBg.fillRoundedRect(-bgW / 2, -120 - bgH, bgW, bgH, 6);
+    bubbleBg.fillRoundedRect(-bgW / 2, -74 - bgH, bgW, bgH, 6);
     bubbleBg.lineStyle(1, 0xb48a46, 0.5);
-    bubbleBg.strokeRoundedRect(-bgW / 2, -120 - bgH, bgW, bgH, 6);
+    bubbleBg.strokeRoundedRect(-bgW / 2, -74 - bgH, bgW, bgH, 6);
     // Tail triangle
     bubbleBg.fillStyle(0x0a0e18, 0.88);
-    bubbleBg.fillTriangle(-4, -120, 4, -120, 0, -114);
+    bubbleBg.fillTriangle(-4, -74, 4, -74, 0, -68);
 
-    textObj.setPosition(0, -120 - padY);
+    textObj.setPosition(0, -74 - padY);
 
     const container = this.add.container(0, 0, [bubbleBg, textObj]);
     sprite.add(container);

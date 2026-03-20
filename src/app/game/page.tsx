@@ -68,9 +68,7 @@ export default function GamePage() {
         <PhaserGame />
       </div>
 
-      <div className="pointer-events-auto absolute bottom-[120px] left-1 z-[25] w-[320px] max-h-[calc(100vh-140px)]">
-        <ChatWindow />
-      </div>
+{/* ChatWindow is now integrated into BottomHUD */}
 
       <div className="pointer-events-auto absolute right-1 top-1 z-10">
         <MiniMap />

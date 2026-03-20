@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MAPS } from "@/game/data/maps";
 import { useGameStore } from "@/lib/gameStore";
 import { SkillBar } from "@/components/ui/SkillBar";
+import { ChatWindow } from "@/components/ui/ChatWindow";
 
 type QuickSlot = {
   key: string;
@@ -265,7 +266,14 @@ export function BottomHUD() {
           )}
         </div>
 
-        <div className="relative ml-auto flex items-center gap-2">
+        <Divider />
+
+        {/* Chat Window - integrated */}
+        <div className="relative flex-1 min-w-[200px] max-w-[360px] self-stretch rounded-[14px] border border-white/6 bg-black/30 px-2 py-1.5">
+          <ChatWindow />
+        </div>
+
+        <div className="relative ml-auto flex shrink-0 items-center gap-2">
           {player.buffs.slice(0, 4).map((buff) => (
             <div
               key={buff.id}
