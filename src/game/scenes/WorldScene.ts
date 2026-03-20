@@ -131,25 +131,231 @@ const RANGED_RANGE = 420;
 // ── 지형 충돌 존 (이동 불가 영역) ──
 type CollisionZone = { x: number; y: number; rx: number; ry: number };
 const COLLISION_ZONES: Record<string, CollisionZone[]> = {
+  /* ═══════ 시작의 섬 (17600×10660) ═══════ */
   speakingIsland: [
-    // 중앙 호수
-    { x: 7800, y: 5800, rx: 380, ry: 250 },
-    // 서쪽 늪 깊은 곳
-    { x: 800, y: 5000, rx: 250, ry: 350 },
-    // 남쪽 해안 (바다)
-    { x: 5000, y: 10000, rx: 2800, ry: 400 },
-    // 북쪽 산맥
-    { x: 6600, y: 200, rx: 400, ry: 350 },
-    { x: 7500, y: 250, rx: 350, ry: 300 },
-    { x: 8700, y: 400, rx: 320, ry: 280 },
-    // 동쪽 동굴 내부
-    { x: 15000, y: 3000, rx: 150, ry: 100 },
-    // 동쪽 연못
-    { x: 13000, y: 6800, rx: 140, ry: 90 },
+    // 중앙 호수 (은빛 호수 — visual ellipse 900×600)
+    { x: 7800, y: 5800, rx: 420, ry: 280 },
+    // 서쪽 늪 깊은 곳 (독의 늪 — visual ellipse 600×800)
+    { x: 800, y: 5000, rx: 270, ry: 370 },
+    // 남쪽 해안 바다 (visual ellipse ~6000×1200)
+    { x: 5000, y: 10200, rx: 2900, ry: 500 },
+    { x: 10000, y: 10400, rx: 2500, ry: 400 },
+    // 북쪽 산맥 — 3봉우리 + 사이 연결
+    { x: 6600, y: 100, rx: 600, ry: 450 },
+    { x: 7500, y: 100, rx: 500, ry: 400 },
+    { x: 8700, y: 200, rx: 500, ry: 380 },
+    { x: 7050, y: 150, rx: 280, ry: 350 }, // 산맥 연결부
+    { x: 8100, y: 200, rx: 280, ry: 340 }, // 산맥 연결부
+    // 동쪽 동굴 바위벽 (visual ellipse 600×400)
+    { x: 15000, y: 3000, rx: 260, ry: 180 },
+    // 동쪽 작은 연못 (visual ellipse 340×220)
+    { x: 13000, y: 6800, rx: 150, ry: 100 },
+    // 서쪽 밀림 중심 (짙은 숲 코어 — 통과 불가)
+    { x: 1600, y: 4200, rx: 220, ry: 180 },
+    // 서쪽 해안 절벽 (맵 좌측 가장자리)
+    { x: -100, y: 5300, rx: 200, ry: 5000 },
+    // 동쪽 끝 절벽
+    { x: 17700, y: 5300, rx: 200, ry: 5000 },
   ],
+
+  /* ═══════ 철성 마을 (16160×9620) ═══════ */
   silverKnightTown: [
-    // 성벽
-    { x: 8000, y: 200, rx: 3000, ry: 150 },
+    // 북쪽 성벽 (맵 전체 폭)
+    { x: 8080, y: 60, rx: 8100, ry: 80 },
+    // 남쪽 성벽
+    { x: 8080, y: 9560, rx: 8100, ry: 80 },
+    // 서쪽 성벽
+    { x: 20, y: 4810, rx: 80, ry: 4800 },
+    // 동쪽 성벽
+    { x: 16140, y: 4810, rx: 80, ry: 4800 },
+    // 성채 건물 (keep — center)
+    { x: 8080, y: 230, rx: 140, ry: 90 },
+    // 왼쪽 망루
+    { x: 330, y: 260, rx: 65, ry: 55 },
+    // 오른쪽 망루
+    { x: 15830, y: 260, rx: 65, ry: 55 },
+    // 왼쪽 병영
+    { x: 280, y: 368, rx: 80, ry: 50 },
+    // 오른쪽 병영
+    { x: 15880, y: 368, rx: 80, ry: 50 },
+    // 중앙 분수대
+    { x: 8080, y: 352, rx: 40, ry: 30 },
+  ],
+
+  /* ═══════ 바람숲 (20480×11700) ═══════ */
+  windwoodForest: [
+    // 서쪽 연못 (drawWaterBodies: ellipse 420×520 at 1560,540)
+    { x: 1560, y: 540, rx: 190, ry: 240 },
+    // 중앙-동쪽 어두운 숲 (visual ellipse 460×220 at 13926,4914)
+    { x: 13926, y: 4914, rx: 210, ry: 100 },
+    // 왼쪽 밀림 바위 (dense trees at 338,278)
+    { x: 338, y: 278, rx: 100, ry: 50 },
+    // 오른쪽 밀림 바위 (dense trees at 20142,278)
+    { x: 20142, y: 278, rx: 100, ry: 50 },
+    // 북쪽 가장자리 — 통과 불가 깊은 숲
+    { x: 10240, y: -40, rx: 10300, ry: 100 },
+    // 남쪽 가장자리 — 통과 불가 깊은 숲
+    { x: 10240, y: 11660, rx: 10300, ry: 100 },
+    // 서쪽 경계 — 나무 벽
+    { x: 30, y: 5850, rx: 100, ry: 5800 },
+    // 동쪽 경계 — 나무 벽
+    { x: 20450, y: 5850, rx: 100, ry: 5800 },
+    // 곳곳의 거대 고목 (통과 불가 나무)
+    { x: 5200, y: 3000, rx: 80, ry: 60 },
+    { x: 8800, y: 7200, rx: 90, ry: 70 },
+    { x: 16000, y: 2400, rx: 85, ry: 65 },
+    { x: 3600, y: 8600, rx: 75, ry: 55 },
+    { x: 11400, y: 9800, rx: 80, ry: 60 },
+  ],
+
+  /* ═══════ 오크 부락지 (18960×10660) ═══════ */
+  orcForest: [
+    // 중앙 오크 캠프 구조물 (campfire + palisade area)
+    { x: 10238, y: 360, rx: 100, ry: 70 },
+    // 왼쪽 전쟁 텐트
+    { x: 326, y: 332, rx: 70, ry: 50 },
+    // 오른쪽 전쟁 텐트
+    { x: 18634, y: 430, rx: 70, ry: 50 },
+    // 왼쪽 토템
+    { x: 7205, y: 320, rx: 40, ry: 35 },
+    // 오른쪽 토템
+    { x: 13272, y: 420, rx: 40, ry: 35 },
+    // 북쪽 절벽/바위
+    { x: 9480, y: -30, rx: 9500, ry: 100 },
+    // 남쪽 절벽
+    { x: 9480, y: 10620, rx: 9500, ry: 100 },
+    // 서쪽 바위벽
+    { x: 30, y: 5330, rx: 100, ry: 5300 },
+    // 동쪽 바위벽
+    { x: 18930, y: 5330, rx: 100, ry: 5300 },
+    // 부서진 바위/고목 장애물
+    { x: 4200, y: 2800, rx: 120, ry: 80 },
+    { x: 14500, y: 6500, rx: 100, ry: 70 },
+    { x: 7800, y: 8200, rx: 110, ry: 75 },
+    { x: 2600, y: 6000, rx: 90, ry: 65 },
+    { x: 16200, y: 3200, rx: 95, ry: 70 },
+  ],
+
+  /* ═══════ 서부 대초원 (21920×12740) ═══════ */
+  gludioPlain: [
+    // 돌 서클 (stone circle at mapW*0.68=14906, 420)
+    { x: 14906, y: 420, rx: 80, ry: 60 },
+    // 풍차 (windmill at 334,250)
+    { x: 334, y: 250, rx: 50, ry: 40 },
+    // 농장 건물 (farmstead at mapW*0.34=7453, 330)
+    { x: 7453, y: 330, rx: 70, ry: 50 },
+    // 북쪽 산기슭 (초원 가장자리 — 산)
+    { x: 10960, y: -30, rx: 11000, ry: 120 },
+    // 남쪽 강/절벽
+    { x: 10960, y: 12700, rx: 11000, ry: 120 },
+    // 서쪽 숲 경계
+    { x: 30, y: 6370, rx: 100, ry: 6350 },
+    // 동쪽 숲 경계
+    { x: 21890, y: 6370, rx: 100, ry: 6350 },
+    // 초원 내 바위 군집
+    { x: 3800, y: 4500, rx: 100, ry: 70 },
+    { x: 18200, y: 8000, rx: 110, ry: 80 },
+    { x: 11000, y: 6200, rx: 90, ry: 65 },
+    // 개울 (작은 강 — 다리 근처 물)
+    { x: 10960, y: 3200, rx: 40, ry: 600 },
+  ],
+
+  /* ═══════ 달안개 습지 (21920×12740) ═══════ */
+  moonlitWetland: [
+    // 주요 늪 호수 (visual ellipse 760×820 at 1440,560)
+    { x: 1440, y: 560, rx: 350, ry: 380 },
+    // 두 번째 웅덩이 (visual ellipse 520×360 at 880,1120)
+    { x: 880, y: 1120, rx: 240, ry: 160 },
+    // 작은 웅덩이 1 (visual 180×110 at 780,360)
+    { x: 780, y: 360, rx: 80, ry: 50 },
+    // 작은 웅덩이 2 (visual 220×130 at 1090,420)
+    { x: 1090, y: 420, rx: 100, ry: 60 },
+    // 중앙 독늪 (dark area at mapW*0.54=11837, 360, 260×120)
+    { x: 11837, y: 360, rx: 120, ry: 55 },
+    // 북쪽 늪지 경계 — 깊은 수렁
+    { x: 10960, y: -30, rx: 11000, ry: 100 },
+    // 남쪽 늪지 경계
+    { x: 10960, y: 12700, rx: 11000, ry: 100 },
+    // 서쪽 깊은 늪
+    { x: 30, y: 6370, rx: 100, ry: 6350 },
+    // 동쪽 깊은 늪
+    { x: 21890, y: 6370, rx: 100, ry: 6350 },
+    // 곳곳의 깊은 수렁 (빠지면 안 되는 곳)
+    { x: 5800, y: 4000, rx: 180, ry: 120 },
+    { x: 16000, y: 7500, rx: 200, ry: 140 },
+    { x: 8500, y: 9200, rx: 160, ry: 110 },
+    { x: 19000, y: 3000, rx: 150, ry: 100 },
+  ],
+
+  /* ═══════ 황금 거래 도시 (18960×10660) ═══════ */
+  giranTown: [
+    // 중앙 시장 건물 (market hall at mapW*0.5=9480, 280)
+    { x: 9480, y: 270, rx: 160, ry: 100 },
+    // 왼쪽 건물군 (house cluster at 320,320)
+    { x: 320, y: 320, rx: 80, ry: 55 },
+    // 오른쪽 건물군 (house cluster at 18640,340)
+    { x: 18640, y: 340, rx: 80, ry: 55 },
+    // 왼쪽 대상 캐노피
+    { x: 350, y: 362, rx: 55, ry: 40 },
+    // 오른쪽 대상 캐노피
+    { x: 18610, y: 362, rx: 55, ry: 40 },
+    // 분수대
+    { x: 9480, y: 334, rx: 35, ry: 25 },
+    // 북쪽 성벽
+    { x: 9480, y: -10, rx: 9500, ry: 80 },
+    // 남쪽 성벽
+    { x: 9480, y: 10620, rx: 9500, ry: 80 },
+    // 서쪽 성벽
+    { x: 30, y: 5330, rx: 80, ry: 5300 },
+    // 동쪽 성벽
+    { x: 18930, y: 5330, rx: 80, ry: 5300 },
+  ],
+
+  /* ═══════ 용의 계곡 (24800×13780) ═══════ */
+  dragonValley: [
+    // 왼쪽 화산 (삼각형: 5952,180 → 10416,8544 → 1736,8544)
+    { x: 5952, y: 2000, rx: 1800, ry: 1800 },
+    { x: 4500, y: 5000, rx: 2200, ry: 2500 },
+    { x: 3000, y: 7500, rx: 1500, ry: 1200 },
+    // 오른쪽 화산 (삼각형: 20336,160 → 23808,7992 → 15872,7992)
+    { x: 20336, y: 2000, rx: 1800, ry: 1800 },
+    { x: 21500, y: 5000, rx: 2000, ry: 2500 },
+    { x: 22500, y: 7200, rx: 1400, ry: 1200 },
+    // 용암 지대 (lava forge area at mapW*0.72=17856, 420)
+    { x: 17856, y: 420, rx: 200, ry: 100 },
+    // 용암 분출구 (lava vent at mapW*0.58=14384, 418)
+    { x: 14384, y: 418, rx: 120, ry: 80 },
+    // 중앙 용암 호수 (small lava pool at mapW*0.52=12896, mapH*0.34=4685)
+    { x: 12896, y: 4685, rx: 180, ry: 60 },
+    // 북쪽 절벽 (맵 끝)
+    { x: 12400, y: -40, rx: 12500, ry: 100 },
+    // 남쪽 용암 강
+    { x: 12400, y: 13740, rx: 12500, ry: 100 },
+    // 협곡 바닥 용암 웅덩이들
+    { x: 9000, y: 9500, rx: 300, ry: 200 },
+    { x: 14000, y: 11000, rx: 250, ry: 180 },
+  ],
+
+  /* ═══════ 고대 동굴 (8240×4940) ═══════ */
+  ancientCave: [
+    // 동굴 벽 — 북쪽
+    { x: 4120, y: 50, rx: 4200, ry: 100 },
+    // 동굴 벽 — 남쪽
+    { x: 4120, y: 4890, rx: 4200, ry: 100 },
+    // 동굴 벽 — 서쪽
+    { x: 50, y: 2470, rx: 100, ry: 2500 },
+    // 동굴 벽 — 동쪽
+    { x: 8190, y: 2470, rx: 100, ry: 2500 },
+    // 왼쪽 수정 기둥 (crystal obelisk at mapW*0.32=2637, 340)
+    { x: 2637, y: 340, rx: 35, ry: 30 },
+    // 오른쪽 수정 기둥 (crystal obelisk at mapW*0.68=5603, 340)
+    { x: 5603, y: 340, rx: 35, ry: 30 },
+    // 중앙 제단 (crystal altar at mapW*0.5=4120, 360)
+    { x: 4120, y: 360, rx: 50, ry: 35 },
+    // 바위 돌출부 (동굴 내 자연 장애물)
+    { x: 1500, y: 1800, rx: 120, ry: 80 },
+    { x: 6500, y: 3200, rx: 100, ry: 70 },
+    { x: 3200, y: 3800, rx: 90, ry: 65 },
   ],
 };
 const WALK_FRAME_COUNT = 4;
@@ -798,7 +1004,12 @@ export class WorldScene extends Phaser.Scene {
     const useEnToKr = Math.random() > 0.5;
 
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
-    const wrongAnswers = this.pickWrongAnswers(vocab, questionEntry, questionIndex, useEnToKr);
+    const wrongAnswers = this.pickWrongAnswers(
+      vocab,
+      questionEntry,
+      questionIndex,
+      useEnToKr,
+    );
     const choices = [correctAnswer, ...wrongAnswers].sort(
       () => Math.random() - 0.5,
     );
@@ -835,7 +1046,12 @@ export class WorldScene extends Phaser.Scene {
     const useEnToKr = Math.random() > 0.5;
 
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
-    const wrongAnswers = this.pickWrongAnswers(vocab, questionEntry, questionIndex, useEnToKr);
+    const wrongAnswers = this.pickWrongAnswers(
+      vocab,
+      questionEntry,
+      questionIndex,
+      useEnToKr,
+    );
     const choices = [correctAnswer, ...wrongAnswers].sort(
       () => Math.random() - 0.5,
     );
@@ -1522,7 +1738,7 @@ export class WorldScene extends Phaser.Scene {
       g.fillStyle(0x7d8d80, 0.3);
       g.fillTriangle(7000, 600, 8000, 600, 7500, -100); // 중간 산
       g.fillStyle(0x5a6a5d, 0.28);
-      g.fillTriangle(8200, 800, 9200, 800, 8700, 100);  // 작은 산
+      g.fillTriangle(8200, 800, 9200, 800, 8700, 100); // 작은 산
       // 산 눈 덮인 봉우리
       g.fillStyle(0xe8e8e8, 0.2);
       g.fillTriangle(6400, 100, 6800, 100, 6600, -200);
@@ -1543,9 +1759,14 @@ export class WorldScene extends Phaser.Scene {
       g.lineStyle(3, 0x5a4030, 0.4);
       g.strokeEllipse(15000, 3000, 360, 250);
       // 동굴 라벨
-      const caveLbl = this.add.text(15000, 2700, "해골 동굴", {
-        fontSize: "14px", color: "#c8a878", stroke: "#000", strokeThickness: 3,
-      }).setOrigin(0.5);
+      const caveLbl = this.add
+        .text(15000, 2700, "해골 동굴", {
+          fontSize: "14px",
+          color: "#c8a878",
+          stroke: "#000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
       layer?.add(caveLbl);
 
       // ── 서쪽 숲 (짙은 초록) ──
@@ -1557,27 +1778,47 @@ export class WorldScene extends Phaser.Scene {
       // ── 남서쪽 늪 표시 ──
       g.fillStyle(0x2a4a30, 0.25);
       g.fillEllipse(800, 5000, 700, 900);
-      const swampLbl = this.add.text(800, 4400, "독의 늪", {
-        fontSize: "13px", color: "#8ab88a", stroke: "#000", strokeThickness: 3,
-      }).setOrigin(0.5);
+      const swampLbl = this.add
+        .text(800, 4400, "독의 늪", {
+          fontSize: "13px",
+          color: "#8ab88a",
+          stroke: "#000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
       layer?.add(swampLbl);
 
       // ── 동쪽 초원 표시 ──
-      const plainLbl = this.add.text(12000, 3200, "멧돼지 들판", {
-        fontSize: "13px", color: "#d4c090", stroke: "#000", strokeThickness: 3,
-      }).setOrigin(0.5);
+      const plainLbl = this.add
+        .text(12000, 3200, "멧돼지 들판", {
+          fontSize: "13px",
+          color: "#d4c090",
+          stroke: "#000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
       layer?.add(plainLbl);
 
       // ── 중앙 호수 표시 ──
-      const lakeLbl = this.add.text(7800, 5400, "은빛 호수", {
-        fontSize: "14px", color: "#88ccee", stroke: "#000", strokeThickness: 3,
-      }).setOrigin(0.5);
+      const lakeLbl = this.add
+        .text(7800, 5400, "은빛 호수", {
+          fontSize: "14px",
+          color: "#88ccee",
+          stroke: "#000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
       layer?.add(lakeLbl);
 
       // ── 고블린 야영지 표시 ──
-      const goblinLbl = this.add.text(4800, 1800, "고블린 야영지", {
-        fontSize: "13px", color: "#c89060", stroke: "#000", strokeThickness: 3,
-      }).setOrigin(0.5);
+      const goblinLbl = this.add
+        .text(4800, 1800, "고블린 야영지", {
+          fontSize: "13px",
+          color: "#c89060",
+          stroke: "#000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
       layer?.add(goblinLbl);
     }
 
@@ -3568,9 +3809,9 @@ export class WorldScene extends Phaser.Scene {
       if (dist > PICKUP_RANGE) return;
 
       // 루트 데이터 찾기
-      const lootData = useGameStore.getState().droppedLoot.find(
-        (l) => l.lootId === lootId,
-      );
+      const lootData = useGameStore
+        .getState()
+        .droppedLoot.find((l) => l.lootId === lootId);
       if (!lootData) {
         this.removeLoot(lootId);
         return;
@@ -4413,6 +4654,28 @@ export class WorldScene extends Phaser.Scene {
     return false;
   }
 
+  /** 경로 상에 충돌 지점이 있으면 직전 안전 좌표 반환, 없으면 null */
+  private findPathCollision(
+    sx: number,
+    sy: number,
+    tx: number,
+    ty: number,
+  ): { x: number; y: number } | null {
+    const dist = Phaser.Math.Distance.Between(sx, sy, tx, ty);
+    const steps = Math.max(8, Math.ceil(dist / 60)); // 60px 간격 샘플
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const px = sx + (tx - sx) * t;
+      const py = sy + (ty - sy) * t;
+      if (this.isBlocked(px, py)) {
+        // 충돌 직전 위치 반환
+        const safet = Math.max(0, (i - 1) / steps);
+        return { x: sx + (tx - sx) * safet, y: sy + (ty - sy) * safet };
+      }
+    }
+    return null;
+  }
+
   private moveSelfTo(
     targetX: number,
     targetY: number,
@@ -4429,9 +4692,32 @@ export class WorldScene extends Phaser.Scene {
     let clampedX = Phaser.Math.Clamp(targetX, 110, maxX);
     let clampedY = Phaser.Math.Clamp(targetY, 120, maxY);
 
-    // 이동 불가 지형이면 가장 가까운 경계로 밀어냄
+    // 목적지가 이동 불가 지형이면 차단
     if (this.isBlocked(clampedX, clampedY)) {
-      return; // 이동 차단
+      return;
+    }
+
+    // 경로 중간에 충돌 지형이 있으면 직전 안전 좌표로 이동
+    const collision = this.findPathCollision(
+      this.localPlayer.x,
+      this.localPlayer.y,
+      clampedX,
+      clampedY,
+    );
+    if (collision) {
+      clampedX = collision.x;
+      clampedY = collision.y;
+      // 안전 좌표가 현재 위치와 같으면 이동 불필요
+      if (
+        Phaser.Math.Distance.Between(
+          this.localPlayer.x,
+          this.localPlayer.y,
+          clampedX,
+          clampedY,
+        ) < 5
+      ) {
+        return;
+      }
     }
     const distance = Phaser.Math.Distance.Between(
       this.localPlayer.x,
@@ -4441,7 +4727,9 @@ export class WorldScene extends Phaser.Scene {
     );
     // 이동 속도 버프 적용
     const pBuffs = useGameStore.getState().player.buffs;
-    const hasSpeedBuff = pBuffs.some((b) => b.name === "신속" || b.name === "질풍");
+    const hasSpeedBuff = pBuffs.some(
+      (b) => b.name === "신속" || b.name === "질풍",
+    );
     const hasFrenzy = pBuffs.some((b) => b.name === "광전사의 격노");
     let effectiveSpeed = MOVE_SPEED;
     if (hasSpeedBuff) effectiveSpeed *= 1.4;
@@ -4611,7 +4899,12 @@ export class WorldScene extends Phaser.Scene {
     }
 
     // 걸음 효과는 플레이어만 (성능 최적화)
-    if (nextState === "walk" && frameAdvanced && sprite.animFrame !== 0 && "playerId" in sprite) {
+    if (
+      nextState === "walk" &&
+      frameAdvanced &&
+      sprite.animFrame !== 0 &&
+      "playerId" in sprite
+    ) {
       this.spawnWalkStepEffect(
         sprite.x,
         sprite.y + 10,
@@ -5237,12 +5530,16 @@ export class WorldScene extends Phaser.Scene {
     let base = 760;
     if (weaponId === "hunter_bow") base = 900;
     else if (weaponId === "arcana_staff") base = 1050;
-    else if (this.getEquippedWeaponSubtype() === WeaponSubType.DAGGER) base = 620;
-    else if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD) base = 920;
+    else if (this.getEquippedWeaponSubtype() === WeaponSubType.DAGGER)
+      base = 620;
+    else if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD)
+      base = 920;
 
     // 공격 속도 버프 적용
     const buffs = state.player.buffs;
-    const hasHaste = buffs.some((b) => b.name === "신속" || b.name === "전사의 광기");
+    const hasHaste = buffs.some(
+      (b) => b.name === "신속" || b.name === "전사의 광기",
+    );
     const hasFrenzy = buffs.some((b) => b.name === "광전사의 격노");
     if (hasHaste) base = Math.floor(base * 0.6);
     if (hasFrenzy) base = Math.floor(base * 0.5); // 추가 50% 공속 증가 (중첩)
@@ -5461,7 +5758,9 @@ export class WorldScene extends Phaser.Scene {
     const wrongIds = store.wrongWordIds;
 
     // 틀렸던 단어 우선 (복습)
-    const wrong = fullVocab.filter((w) => wrongIds.has(w.en) && !usedIds.has(w.en));
+    const wrong = fullVocab.filter(
+      (w) => wrongIds.has(w.en) && !usedIds.has(w.en),
+    );
     if (wrong.length >= 4 && Math.random() < 0.3) {
       return wrong;
     }
@@ -5509,7 +5808,11 @@ export class WorldScene extends Phaser.Scene {
     usedAnswers.add(correctAnswer);
 
     // 2개는 다른 카테고리, 1개는 같은 카테고리 (헷갈리게)
-    const pools = [otherCategory, otherCategory, sameCategory.length > 0 ? sameCategory : otherCategory];
+    const pools = [
+      otherCategory,
+      otherCategory,
+      sameCategory.length > 0 ? sameCategory : otherCategory,
+    ];
     for (const pool of pools) {
       let attempts = 0;
       while (attempts++ < 20) {
