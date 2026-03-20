@@ -797,17 +797,8 @@ export class WorldScene extends Phaser.Scene {
       this.pickQuizWord(vocab);
     const useEnToKr = Math.random() > 0.5;
 
-    const wrongSet = new Set<number>();
-    while (wrongSet.size < 3) {
-      const idx = Math.floor(Math.random() * vocab.length);
-      if (idx !== questionIndex) wrongSet.add(idx);
-    }
-    const wrongIndices = Array.from(wrongSet);
-
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
-    const wrongAnswers = wrongIndices.map((idx) =>
-      useEnToKr ? vocab[idx].kr : vocab[idx].en,
-    );
+    const wrongAnswers = this.pickWrongAnswers(vocab, questionEntry, questionIndex, useEnToKr);
     const choices = [correctAnswer, ...wrongAnswers].sort(
       () => Math.random() - 0.5,
     );
@@ -843,17 +834,8 @@ export class WorldScene extends Phaser.Scene {
       this.pickQuizWord(vocab);
     const useEnToKr = Math.random() > 0.5;
 
-    const wrongSet = new Set<number>();
-    while (wrongSet.size < 3) {
-      const idx = Math.floor(Math.random() * vocab.length);
-      if (idx !== questionIndex) wrongSet.add(idx);
-    }
-    const wrongIndices = Array.from(wrongSet);
-
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
-    const wrongAnswers = wrongIndices.map((idx) =>
-      useEnToKr ? vocab[idx].kr : vocab[idx].en,
-    );
+    const wrongAnswers = this.pickWrongAnswers(vocab, questionEntry, questionIndex, useEnToKr);
     const choices = [correctAnswer, ...wrongAnswers].sort(
       () => Math.random() - 0.5,
     );
@@ -5461,35 +5443,37 @@ export class WorldScene extends Phaser.Scene {
     return value - Math.floor(value);
   }
 
-  private getGradeVocabulary(): VocabularyEntry[] {
+  private getFullGradeVocabulary(): VocabularyEntry[] {
     const grade = useGameStore.getState().grade ?? 3;
-    const fullVocab =
-      grade >= 6
-        ? GRADE6_VOCABULARY
-        : grade >= 5
-          ? GRADE5_VOCABULARY
-          : grade >= 4
-            ? GRADE4_VOCABULARY
-            : GRADE3_VOCABULARY;
+    return grade >= 6
+      ? GRADE6_VOCABULARY
+      : grade >= 5
+        ? GRADE5_VOCABULARY
+        : grade >= 4
+          ? GRADE4_VOCABULARY
+          : GRADE3_VOCABULARY;
+  }
 
+  private getGradeVocabulary(): VocabularyEntry[] {
+    const fullVocab = this.getFullGradeVocabulary();
     const store = useGameStore.getState();
     const usedIds = store.usedWordIds;
     const wrongIds = store.wrongWordIds;
 
-    // 아직 안 나온 단어 + 틀렸던 단어 우선
-    const unused = fullVocab.filter((w) => !usedIds.has(w.en));
-    const wrong = fullVocab.filter((w) => wrongIds.has(w.en));
-
-    // 풀에서 아직 안 나온 단어가 충분하면 그것을 사용
-    // 부족하면 틀렸던 단어 포함, 그래도 부족하면 전체 리셋
-    if (unused.length >= 10) {
-      return unused;
-    }
-    if (wrong.length >= 4) {
+    // 틀렸던 단어 우선 (복습)
+    const wrong = fullVocab.filter((w) => wrongIds.has(w.en) && !usedIds.has(w.en));
+    if (wrong.length >= 4 && Math.random() < 0.3) {
       return wrong;
     }
+
+    // 아직 안 나온 단어
+    const unused = fullVocab.filter((w) => !usedIds.has(w.en));
+    if (unused.length >= 5) {
+      return unused;
+    }
+
     // 모든 단어를 다 풀었으면 리셋
-    useGameStore.getState().usedWordIds.clear();
+    useGameStore.getState().resetUsedWords();
     return fullVocab;
   }
 
@@ -5499,9 +5483,57 @@ export class WorldScene extends Phaser.Scene {
   } {
     const idx = Math.floor(Math.random() * vocab.length);
     const entry = vocab[idx];
-    // 사용한 단어 기록
     useGameStore.getState().markWordUsed(entry.en);
     return { entry, index: idx };
+  }
+
+  /** 오답 보기를 다른 카테고리에서 우선 선택 */
+  private pickWrongAnswers(
+    vocab: VocabularyEntry[],
+    questionEntry: VocabularyEntry,
+    questionIndex: number,
+    useEnToKr: boolean,
+  ): string[] {
+    const fullVocab = this.getFullGradeVocabulary();
+    // 다른 카테고리 단어 우선
+    const otherCategory = fullVocab.filter(
+      (w) => w.category !== questionEntry.category && w.en !== questionEntry.en,
+    );
+    const sameCategory = fullVocab.filter(
+      (w) => w.category === questionEntry.category && w.en !== questionEntry.en,
+    );
+
+    const wrongAnswers: string[] = [];
+    const usedAnswers = new Set<string>();
+    const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
+    usedAnswers.add(correctAnswer);
+
+    // 2개는 다른 카테고리, 1개는 같은 카테고리 (헷갈리게)
+    const pools = [otherCategory, otherCategory, sameCategory.length > 0 ? sameCategory : otherCategory];
+    for (const pool of pools) {
+      let attempts = 0;
+      while (attempts++ < 20) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        const answer = useEnToKr ? pick.kr : pick.en;
+        if (!usedAnswers.has(answer)) {
+          usedAnswers.add(answer);
+          wrongAnswers.push(answer);
+          break;
+        }
+      }
+    }
+
+    // 부족하면 랜덤 채우기
+    while (wrongAnswers.length < 3) {
+      const pick = fullVocab[Math.floor(Math.random() * fullVocab.length)];
+      const answer = useEnToKr ? pick.kr : pick.en;
+      if (!usedAnswers.has(answer)) {
+        usedAnswers.add(answer);
+        wrongAnswers.push(answer);
+      }
+    }
+
+    return wrongAnswers;
   }
 
   private getFrameKey(

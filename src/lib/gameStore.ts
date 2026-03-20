@@ -208,6 +208,7 @@ type GameStore = {
   setPlayer: (player: Partial<PlayerSnapshot>) => void;
   setServerName: (serverName: string) => void;
   setGrade: (grade: number) => void;
+  resetUsedWords: () => void;
   markWordUsed: (wordId: string) => void;
   markWordWrong: (wordId: string) => void;
   setInventory: (items: InventoryItem[]) => void;
@@ -349,8 +350,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   serverName: "아스카론 01",
   grade: 3,
-  usedWordIds: new Set<string>(),
-  wrongWordIds: new Set<string>(),
+  usedWordIds: new Set<string>(
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("usedWordIds") ?? "[]")
+      : [],
+  ),
+  wrongWordIds: new Set<string>(
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("wrongWordIds") ?? "[]")
+      : [],
+  ),
   currentMapId: "speakingIsland",
   pendingLevelUp: false,
   pendingDailyBonus: false,
@@ -422,16 +431,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setServerName: (serverName) => set(() => ({ serverName })),
   setGrade: (grade) =>
     set(() => ({ grade, usedWordIds: new Set(), wrongWordIds: new Set() })),
+  resetUsedWords: () => {
+    if (typeof window !== "undefined") localStorage.removeItem("usedWordIds");
+    return set({ usedWordIds: new Set<string>() });
+  },
   markWordUsed: (wordId) =>
     set((state) => {
       const next = new Set(state.usedWordIds);
       next.add(wordId);
+      if (typeof window !== "undefined" && next.size % 5 === 0) {
+        localStorage.setItem("usedWordIds", JSON.stringify([...next]));
+      }
       return { usedWordIds: next };
     }),
   markWordWrong: (wordId) =>
     set((state) => {
       const next = new Set(state.wrongWordIds);
       next.add(wordId);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("wrongWordIds", JSON.stringify([...next]));
+      }
       return { wrongWordIds: next };
     }),
   setInventory: (items) => set(() => ({ inventory: items })),
