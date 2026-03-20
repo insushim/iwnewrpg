@@ -4471,15 +4471,17 @@ export class WorldScene extends Phaser.Scene {
 
       const state = useGameStore.getState();
       const attackProfile = state.getAttackProfile();
-      const baseDamage =
-        1 +
-        Math.floor(attackProfile.str * 0.5) +
-        Math.floor(attackProfile.dex * 0.4) +
-        Math.floor(attackProfile.int * 0.3);
-      const variance = Math.floor(Math.random() * 3); // 0 ~ +2
-      const damage = Math.max(1, baseDamage + variance);
-      const isCrit = Math.random() < 0.1;
-      const finalDamage = isCrit ? Math.floor(damage * 1.6) : damage;
+      const physical = Math.floor(
+        attackProfile.str * 0.6 + attackProfile.dex * 0.3,
+      );
+      const magical = Math.floor(attackProfile.int * 0.8);
+      const baseDamage = Math.max(physical, magical) + 2;
+      const variance = Math.floor(
+        Math.random() * Math.max(3, Math.floor(baseDamage * 0.2)),
+      );
+      const damage = Math.max(2, baseDamage + variance);
+      const isCrit = Math.random() < 0.12;
+      const finalDamage = isCrit ? Math.floor(damage * 1.5) : damage;
 
       const newHp = Math.max(0, monsterData.hp - finalDamage);
       this.offlineMonsterHp.set(monsterId, {

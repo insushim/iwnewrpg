@@ -1143,27 +1143,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { player, equipment } = get();
     const derived = getDerivedStatsFromState(player, equipment);
     const weapon = equipment.weapon ? ITEMS[equipment.weapon.id] : null;
-    // Level scaling: +1 attack per 4 levels
-    const lvBonus = Math.floor(player.level / 4);
+    // Level scaling: +2 attack per 2 levels (was +1 per 4)
+    const lvBonus = Math.floor(player.level / 2) * 2;
+    const baseStr = 6 + lvBonus;
 
     if (weapon?.subtype === "staff" || player.className === "Arcanist") {
       return {
-        str: 1,
-        dex: 1,
-        int: 4 + derived.maxAttack + (weapon?.stats.spellPower ?? 0) + lvBonus,
+        str: 2,
+        dex: 2,
+        int: 8 + derived.maxAttack + (weapon?.stats.spellPower ?? 0) + lvBonus,
       };
     }
 
     if (weapon?.subtype === "bow" || player.className === "Ranger") {
       return {
-        str: 2,
+        str: 3,
         dex:
-          3 + derived.maxAttack + (weapon?.stats.rangedDamage ?? 0) + lvBonus,
-        int: 1,
+          8 + derived.maxAttack + (weapon?.stats.rangedDamage ?? 0) + lvBonus,
+        int: 2,
       };
     }
 
-    return { str: 3 + derived.maxAttack + lvBonus, dex: 2, int: 1 };
+    return { str: baseStr + derived.maxAttack, dex: 4, int: 2 };
   },
   getDerivedStats: () => {
     const { player, equipment } = get();

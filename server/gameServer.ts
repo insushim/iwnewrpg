@@ -840,27 +840,39 @@ function getCombatProfile(session: SessionPlayer) {
   const weapon = session.equipment.weapon
     ? ITEMS[session.equipment.weapon.id]
     : null;
+  const lvBonus = Math.floor(session.level / 2) * 2;
 
   if (weapon?.subtype === WeaponSubType.STAFF) {
     return {
       str: 2,
-      dex: 1,
-      int: 8 + (weapon.stats.maxAttack ?? 2) + (weapon.stats.spellPower ?? 0),
+      dex: 2,
+      int:
+        8 +
+        (weapon.stats.maxAttack ?? 2) +
+        (weapon.stats.spellPower ?? 0) +
+        lvBonus,
+      level: session.level,
     };
   }
 
   if (weapon?.subtype === WeaponSubType.BOW) {
     return {
       str: 3,
-      dex: 6 + (weapon.stats.maxAttack ?? 2) + (weapon.stats.rangedDamage ?? 0),
-      int: 1,
+      dex:
+        8 +
+        (weapon.stats.maxAttack ?? 2) +
+        (weapon.stats.rangedDamage ?? 0) +
+        lvBonus,
+      int: 2,
+      level: session.level,
     };
   }
 
   return {
-    str: 6 + (weapon?.stats.maxAttack ?? 2),
-    dex: 2,
-    int: 1,
+    str: 6 + (weapon?.stats.maxAttack ?? 2) + lvBonus,
+    dex: 4,
+    int: 2,
+    level: session.level,
   };
 }
 
