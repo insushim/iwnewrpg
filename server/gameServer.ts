@@ -690,7 +690,17 @@ export function createGameServer(server: HttpServer) {
         (value) => value.itemId === payload.itemId,
       );
       const price = entry?.price ?? item?.price ?? 0;
-      if (!session || !shop || !entry || !item || session.gold < price) {
+      if (!session || !shop || !entry || !item) {
+        return;
+      }
+      if (session.gold < price) {
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "시스템",
+          channel: "system",
+          message: `골드가 부족합니다. (필요: ${price}G / 보유: ${session.gold}G)`,
+          timestamp: Date.now(),
+        });
         return;
       }
 
@@ -938,6 +948,8 @@ function getDerivedAc(session: SessionPlayer) {
 
 function serializePlayerState(session: SessionPlayer) {
   return {
+    name: session.name,
+    className: session.className,
     gold: session.gold,
     exp: session.exp,
     level: session.level,

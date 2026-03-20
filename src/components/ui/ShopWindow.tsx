@@ -33,14 +33,23 @@ export function ShopWindow() {
     return null;
   }
 
+  const addChat = useGameStore((state) => state.addChat);
+
   const buyItem = (itemId: string, price: number) => {
-    const socket = getSocket();
-    if (socket.connected) {
-      socket.emit("shop:buy", { shopId: shop.id, itemId });
+    if (player.gold < price) {
+      addChat({
+        id: `gold_lack_${Date.now()}`,
+        channel: "system",
+        author: "시스템",
+        message: `골드가 부족합니다. (필요: ${price}G / 보유: ${player.gold}G)`,
+        timestamp: Date.now(),
+      });
       return;
     }
 
-    if (player.gold < price) {
+    const socket = getSocket();
+    if (socket.connected) {
+      socket.emit("shop:buy", { shopId: shop.id, itemId });
       return;
     }
 
@@ -51,7 +60,9 @@ export function ShopWindow() {
     setPlayer({ gold: player.gold - price });
     if (existing) {
       setInventory(
-        inventory.map((item) => (item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item)),
+        inventory.map((item) =>
+          item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item,
+        ),
       );
     } else {
       setInventory([
@@ -84,7 +95,9 @@ export function ShopWindow() {
     setPlayer({ gold: player.gold + sellPrice });
     setInventory(
       inventory
-        .map((item) => (item.id === itemId ? { ...item, quantity: item.quantity - 1 } : item))
+        .map((item) =>
+          item.id === itemId ? { ...item, quantity: item.quantity - 1 } : item,
+        )
         .filter((item) => item.quantity > 0),
     );
   };
@@ -96,7 +109,9 @@ export function ShopWindow() {
 
       <div className="relative mb-4 flex items-center justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-[#b79660]">Merchant Hall</p>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-[#b79660]">
+            Merchant Hall
+          </p>
           <h3 className="mt-1 text-xl font-semibold text-[#f2e4c2]">상점</h3>
           <p className="mt-1 text-xs text-[#b7a282]">{shop.name}</p>
         </div>
@@ -127,7 +142,10 @@ export function ShopWindow() {
       </div>
 
       <div className="relative mb-4 rounded-[18px] border border-white/8 bg-black/20 px-4 py-2 text-sm text-[#f2e4c2]">
-        보유 골드: <span className="font-mono text-[#f5d271]">{player.gold.toLocaleString()}</span>
+        보유 골드:{" "}
+        <span className="font-mono text-[#f5d271]">
+          {player.gold.toLocaleString()}
+        </span>
       </div>
 
       <div className="relative grid gap-4 md:grid-cols-2">
@@ -138,6 +156,7 @@ export function ShopWindow() {
             const price = entry.price ?? item.price ?? 0;
             const quantity = entry.quantity ?? 1;
 
+            const canAfford = player.gold >= price;
             return (
               <ShopEntry
                 key={entry.itemId}
@@ -145,7 +164,8 @@ export function ShopWindow() {
                 rarity={item.rarity}
                 info={`${quantity > 1 ? `${quantity}개 묶음 / ` : ""}${price} Gold`}
                 onAction={() => buyItem(entry.itemId, price)}
-                actionLabel="BUY"
+                actionLabel={canAfford ? "BUY" : `${price}G 필요`}
+                disabled={!canAfford}
               />
             );
           })}
@@ -183,7 +203,9 @@ function ShopColumn({
   return (
     <div className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(10,13,19,0.86),rgba(16,20,28,0.96))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <p className="mb-3 text-sm font-semibold text-[#f2e4c2]">{title}</p>
-      <div className="scrollbar-thin max-h-72 space-y-2 overflow-y-auto pr-1">{children}</div>
+      <div className="scrollbar-thin max-h-72 space-y-2 overflow-y-auto pr-1">
+        {children}
+      </div>
     </div>
   );
 }
@@ -195,6 +217,7 @@ function ShopEntry({
   onAction,
   actionLabel,
   actionTone = "buy",
+  disabled = false,
 }: {
   title: string;
   rarity: keyof typeof rarityClass;
@@ -202,23 +225,35 @@ function ShopEntry({
   onAction: () => void;
   actionLabel: string;
   actionTone?: "buy" | "sell";
+  disabled?: boolean;
 }) {
   return (
     <div className="rounded-[16px] border border-white/8 bg-black/22 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-      <div className={`text-sm font-semibold ${rarityClass[rarity]}`}>{title}</div>
+      <div className={`text-sm font-semibold ${rarityClass[rarity]}`}>
+        {title}
+      </div>
       <div className="mt-1 text-xs text-[#b7a282]">{info}</div>
       <button
         type="button"
         onClick={onAction}
-        className="mt-2 rounded-[12px] border px-3 py-1.5 text-[11px] font-semibold transition hover:brightness-110"
+        disabled={disabled}
+        className="mt-2 rounded-[12px] border px-3 py-1.5 text-[11px] font-semibold transition hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100"
         style={{
-          background:
-            actionTone === "buy"
+          background: disabled
+            ? "linear-gradient(180deg,#444,#333)"
+            : actionTone === "buy"
               ? "linear-gradient(180deg,#3e8b5f,#205438)"
               : "linear-gradient(180deg,#dfbe73,#9e6e25)",
-          borderColor:
-            actionTone === "buy" ? "rgba(110,227,154,0.25)" : "rgba(226,191,116,0.45)",
-          color: actionTone === "buy" ? "#ffffff" : "#140d04",
+          borderColor: disabled
+            ? "rgba(100,100,100,0.3)"
+            : actionTone === "buy"
+              ? "rgba(110,227,154,0.25)"
+              : "rgba(226,191,116,0.45)",
+          color: disabled
+            ? "#888"
+            : actionTone === "buy"
+              ? "#ffffff"
+              : "#140d04",
         }}
       >
         {actionLabel}

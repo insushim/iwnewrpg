@@ -55,6 +55,8 @@ export function GameSocketBridge() {
     socket.on(
       "player:state",
       (payload: {
+        name?: string;
+        className?: string;
         gold: number;
         exp: number;
         level: number;
@@ -68,6 +70,8 @@ export function GameSocketBridge() {
         mapId: string;
       }) => {
         setPlayer({
+          ...(payload.name ? { name: payload.name } : {}),
+          ...(payload.className ? { className: payload.className } : {}),
           gold: payload.gold,
           exp: payload.exp,
           level: payload.level,
@@ -242,7 +246,7 @@ export function GameSocketBridge() {
       socket.off("player:death");
       socket.off("chat:message");
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;
