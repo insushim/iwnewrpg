@@ -28,6 +28,11 @@ type SavedPlayerData = {
   equipment: Record<string, unknown>;
   quests: unknown[];
   quizCorrectStreak: number;
+  achievements?: unknown[];
+  loginStreak?: number;
+  lastLoginDate?: string;
+  totalKills?: number;
+  bossKills?: number;
   updatedAt: number;
 };
 

@@ -127,6 +127,31 @@ const STARTER_TOWN_RECT = new Phaser.Geom.Rectangle(220, 180, 760, 430);
 const MOVE_SPEED = 110;
 const MELEE_RANGE = 92;
 const RANGED_RANGE = 420;
+
+// ── 지형 충돌 존 (이동 불가 영역) ──
+type CollisionZone = { x: number; y: number; rx: number; ry: number };
+const COLLISION_ZONES: Record<string, CollisionZone[]> = {
+  speakingIsland: [
+    // 중앙 호수
+    { x: 7800, y: 5800, rx: 380, ry: 250 },
+    // 서쪽 늪 깊은 곳
+    { x: 800, y: 5000, rx: 250, ry: 350 },
+    // 남쪽 해안 (바다)
+    { x: 5000, y: 10000, rx: 2800, ry: 400 },
+    // 북쪽 산맥
+    { x: 6600, y: 200, rx: 400, ry: 350 },
+    { x: 7500, y: 250, rx: 350, ry: 300 },
+    { x: 8700, y: 400, rx: 320, ry: 280 },
+    // 동쪽 동굴 내부
+    { x: 15000, y: 3000, rx: 150, ry: 100 },
+    // 동쪽 연못
+    { x: 13000, y: 6800, rx: 140, ry: 90 },
+  ],
+  silverKnightTown: [
+    // 성벽
+    { x: 8000, y: 200, rx: 3000, ry: 150 },
+  ],
+};
 const WALK_FRAME_COUNT = 4;
 const IDLE_FRAME_COUNT = 2;
 const ATTACK_FRAME_COUNT = 4;
@@ -3547,8 +3572,10 @@ export class WorldScene extends Phaser.Scene {
     // 루트는 소멸하지 않음 — 플레이어가 직접 습득해야 사라짐
   }
 
-  /** 플레이어 근처 루트 자동 습득 (매 프레임 체크) */
+  private pickupFrameCounter = 0;
+  /** 플레이어 근처 루트 자동 습득 (10프레임마다 체크) */
   private checkAutoPickup() {
+    if (++this.pickupFrameCounter % 10 !== 0) return;
     if (!this.localPlayer) return;
     const px = this.localPlayer.x;
     const py = this.localPlayer.y;
@@ -4392,6 +4419,18 @@ export class WorldScene extends Phaser.Scene {
     socket.emit("combat:attack", { monsterId });
   }
 
+  /** 좌표가 이동 불가 지형인지 체크 */
+  private isBlocked(x: number, y: number): boolean {
+    const zones = COLLISION_ZONES[this.mapId];
+    if (!zones) return false;
+    for (const z of zones) {
+      const dx = (x - z.x) / z.rx;
+      const dy = (y - z.y) / z.ry;
+      if (dx * dx + dy * dy < 1) return true;
+    }
+    return false;
+  }
+
   private moveSelfTo(
     targetX: number,
     targetY: number,
@@ -4405,8 +4444,13 @@ export class WorldScene extends Phaser.Scene {
     const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
     const maxX = map.width * TILE_WIDTH + 220;
     const maxY = map.height * TILE_HEIGHT + 180;
-    const clampedX = Phaser.Math.Clamp(targetX, 110, maxX);
-    const clampedY = Phaser.Math.Clamp(targetY, 120, maxY);
+    let clampedX = Phaser.Math.Clamp(targetX, 110, maxX);
+    let clampedY = Phaser.Math.Clamp(targetY, 120, maxY);
+
+    // 이동 불가 지형이면 가장 가까운 경계로 밀어냄
+    if (this.isBlocked(clampedX, clampedY)) {
+      return; // 이동 차단
+    }
     const distance = Phaser.Math.Distance.Between(
       this.localPlayer.x,
       this.localPlayer.y,
@@ -4584,18 +4628,13 @@ export class WorldScene extends Phaser.Scene {
       frameAdvanced = sprite.animFrame !== previousFrame;
     }
 
-    if (nextState === "walk" && frameAdvanced && sprite.animFrame !== 0) {
+    // 걸음 효과는 플레이어만 (성능 최적화)
+    if (nextState === "walk" && frameAdvanced && sprite.animFrame !== 0 && "playerId" in sprite) {
       this.spawnWalkStepEffect(
         sprite.x,
         sprite.y + 10,
         sprite.facing,
-        "playerId" in sprite
-          ? sprite.playerId === this.selfId
-            ? 0xffefb2
-            : 0x9fdcff
-          : sprite.isBoss
-            ? 0xffc976
-            : 0xff9c88,
+        sprite.playerId === this.selfId ? 0xffefb2 : 0x9fdcff,
       );
     }
 
