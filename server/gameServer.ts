@@ -707,6 +707,13 @@ export function createGameServer(server: HttpServer) {
       session.gold -= price;
       addInventoryItem(session, toSessionItem(item.id, entry?.quantity ?? 1));
       socket.emit("player:state", serializePlayerState(session));
+      socket.emit("chat:message", {
+        id: crypto.randomUUID(),
+        author: "시스템",
+        channel: "system",
+        message: `${item.name}을(를) 구매했습니다. (-${price}G)`,
+        timestamp: Date.now(),
+      });
     });
 
     socket.on("shop:sell", (payload: { shopId: string; itemId: string }) => {

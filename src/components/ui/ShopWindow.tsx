@@ -36,6 +36,14 @@ export function ShopWindow() {
   const addChat = useGameStore((state) => state.addChat);
 
   const buyItem = (itemId: string, price: number) => {
+    const socket = getSocket();
+    if (socket.connected) {
+      // 온라인: 서버에서 골드/재고 검증 후 player:state로 동기화
+      socket.emit("shop:buy", { shopId: shop.id, itemId });
+      return;
+    }
+
+    // 오프라인: 클라이언트에서 직접 처리
     if (player.gold < price) {
       addChat({
         id: `gold_lack_${Date.now()}`,
@@ -44,12 +52,6 @@ export function ShopWindow() {
         message: `골드가 부족합니다. (필요: ${price}G / 보유: ${player.gold}G)`,
         timestamp: Date.now(),
       });
-      return;
-    }
-
-    const socket = getSocket();
-    if (socket.connected) {
-      socket.emit("shop:buy", { shopId: shop.id, itemId });
       return;
     }
 
@@ -162,10 +164,10 @@ export function ShopWindow() {
                 key={entry.itemId}
                 title={item.name}
                 rarity={item.rarity}
-                info={`${quantity > 1 ? `${quantity}개 묶음 / ` : ""}${price} Gold`}
+                info={`${quantity > 1 ? `${quantity}개 묶음 / ` : ""}${price} Gold${!canAfford ? " (부족)" : ""}`}
                 onAction={() => buyItem(entry.itemId, price)}
-                actionLabel={canAfford ? "BUY" : `${price}G 필요`}
-                disabled={!canAfford}
+                actionLabel="BUY"
+                dimmed={!canAfford}
               />
             );
           })}
@@ -217,7 +219,7 @@ function ShopEntry({
   onAction,
   actionLabel,
   actionTone = "buy",
-  disabled = false,
+  dimmed = false,
 }: {
   title: string;
   rarity: keyof typeof rarityClass;
@@ -225,10 +227,12 @@ function ShopEntry({
   onAction: () => void;
   actionLabel: string;
   actionTone?: "buy" | "sell";
-  disabled?: boolean;
+  dimmed?: boolean;
 }) {
   return (
-    <div className="rounded-[16px] border border-white/8 bg-black/22 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+    <div
+      className={`rounded-[16px] border border-white/8 bg-black/22 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] ${dimmed ? "opacity-60" : ""}`}
+    >
       <div className={`text-sm font-semibold ${rarityClass[rarity]}`}>
         {title}
       </div>
@@ -236,24 +240,17 @@ function ShopEntry({
       <button
         type="button"
         onClick={onAction}
-        disabled={disabled}
-        className="mt-2 rounded-[12px] border px-3 py-1.5 text-[11px] font-semibold transition hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100"
+        className="mt-2 rounded-[12px] border px-3 py-1.5 text-[11px] font-semibold transition hover:brightness-110"
         style={{
-          background: disabled
-            ? "linear-gradient(180deg,#444,#333)"
-            : actionTone === "buy"
+          background:
+            actionTone === "buy"
               ? "linear-gradient(180deg,#3e8b5f,#205438)"
               : "linear-gradient(180deg,#dfbe73,#9e6e25)",
-          borderColor: disabled
-            ? "rgba(100,100,100,0.3)"
-            : actionTone === "buy"
+          borderColor:
+            actionTone === "buy"
               ? "rgba(110,227,154,0.25)"
               : "rgba(226,191,116,0.45)",
-          color: disabled
-            ? "#888"
-            : actionTone === "buy"
-              ? "#ffffff"
-              : "#140d04",
+          color: actionTone === "buy" ? "#ffffff" : "#140d04",
         }}
       >
         {actionLabel}
