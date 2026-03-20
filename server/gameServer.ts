@@ -40,7 +40,12 @@ type EquipmentSlot =
   | "belt";
 
 type SessionEquipment = Partial<Record<EquipmentSlot, SessionInventoryItem>>;
-type QuestStatus = "available" | "in_progress" | "ready_to_turn_in" | "claimable" | "completed";
+type QuestStatus =
+  | "available"
+  | "in_progress"
+  | "ready_to_turn_in"
+  | "claimable"
+  | "completed";
 
 type SessionQuestProgress = {
   questId: string;
@@ -76,7 +81,10 @@ type GroundLoot = SessionInventoryItem & {
 
 function createStarterState(payload: ConnectPayload): SessionPlayer {
   const className = normalizeClassName(payload.className);
-  const starterInventory = [toSessionItem("red_potion", 10), toSessionItem("teleport_scroll", 3)];
+  const starterInventory = [
+    toSessionItem("red_potion", 10),
+    toSessionItem("teleport_scroll", 3),
+  ];
   const starterEquipment: SessionEquipment = {};
 
   if (className === "Ranger") {
@@ -140,7 +148,14 @@ export function createGameServer(server: HttpServer) {
           presence,
           session: sessions.get(presence.id),
         }))
-        .filter((entry): entry is { presence: ReturnType<RoomManager["list"]>[number]; session: SessionPlayer } => Boolean(entry.session));
+        .filter(
+          (
+            entry,
+          ): entry is {
+            presence: ReturnType<RoomManager["list"]>[number];
+            session: SessionPlayer;
+          } => Boolean(entry.session),
+        );
 
       const currentTarget = monster.targetId
         ? playersInMap.find((entry) => entry.presence.id === monster.targetId)
@@ -153,7 +168,12 @@ export function createGameServer(server: HttpServer) {
           playersInMap
             .map((entry) => ({
               ...entry,
-              distance: getDistance(monster.x, monster.y, entry.presence.x, entry.presence.y),
+              distance: getDistance(
+                monster.x,
+                monster.y,
+                entry.presence.x,
+                entry.presence.y,
+              ),
             }))
             .filter((entry) => entry.distance <= monster.aggroRange)
             .sort((a, b) => a.distance - b.distance)[0] ?? null;
@@ -164,22 +184,45 @@ export function createGameServer(server: HttpServer) {
       }
 
       if (!activeTarget) {
-        if (getDistance(monster.x, monster.y, monster.homeX, monster.homeY) > 4) {
+        if (
+          getDistance(monster.x, monster.y, monster.homeX, monster.homeY) > 4 &&
+          !monster.wanderTimer
+        ) {
           const returned = monsters.returnHome(monster.id);
           if (returned) {
             io.to(monster.mapId).emit("monster:updated", returned);
+          }
+        } else {
+          // 배회 (wander) — 타겟 없을 때 스폰 근처 돌아다님
+          const wandered = monsters.wander(monster.id, now);
+          if (wandered) {
+            io.to(monster.mapId).emit("monster:updated", wandered);
           }
         }
         return;
       }
 
-      const distanceToTarget = getDistance(monster.x, monster.y, activeTarget.presence.x, activeTarget.presence.y);
-      const distanceFromHome = getDistance(monster.homeX, monster.homeY, activeTarget.presence.x, activeTarget.presence.y);
+      const distanceToTarget = getDistance(
+        monster.x,
+        monster.y,
+        activeTarget.presence.x,
+        activeTarget.presence.y,
+      );
+      const distanceFromHome = getDistance(
+        monster.homeX,
+        monster.homeY,
+        activeTarget.presence.x,
+        activeTarget.presence.y,
+      );
 
       if (
         activeTarget.session.hp <= 0 ||
         distanceFromHome > monster.chaseRange ||
-        isInsideMonsterSafeZone(monster.mapId, activeTarget.presence.x, activeTarget.presence.y)
+        isInsideMonsterSafeZone(
+          monster.mapId,
+          activeTarget.presence.x,
+          activeTarget.presence.y,
+        )
       ) {
         const returned = monsters.returnHome(monster.id);
         if (returned) {
@@ -189,7 +232,11 @@ export function createGameServer(server: HttpServer) {
       }
 
       if (distanceToTarget > monster.attackRange) {
-        const moved = monsters.moveTowards(monster.id, activeTarget.presence.x, activeTarget.presence.y);
+        const moved = monsters.moveTowards(
+          monster.id,
+          activeTarget.presence.x,
+          activeTarget.presence.y,
+        );
         if (moved) {
           io.to(monster.mapId).emit("monster:updated", moved);
         }
@@ -201,23 +248,40 @@ export function createGameServer(server: HttpServer) {
       }
 
       monsters.markAttack(monster.id, now);
-      const incomingDamage = Math.max(1, monster.atk - Math.floor(getDerivedAc(activeTarget.session) / 3));
-      activeTarget.session.hp = Math.max(0, activeTarget.session.hp - incomingDamage);
+      const incomingDamage = Math.max(
+        1,
+        monster.atk - Math.floor(getDerivedAc(activeTarget.session) / 3),
+      );
+      activeTarget.session.hp = Math.max(
+        0,
+        activeTarget.session.hp - incomingDamage,
+      );
 
       if (activeTarget.session.hp === 0) {
-        const expLost = Math.floor(getExpToNext(activeTarget.session.level) * 0.1);
-        activeTarget.session.exp = Math.max(0, activeTarget.session.exp - expLost);
+        const expLost = Math.floor(
+          getExpToNext(activeTarget.session.level) * 0.1,
+        );
+        activeTarget.session.exp = Math.max(
+          0,
+          activeTarget.session.exp - expLost,
+        );
         activeTarget.session.hp = getDerivedMaxHp(activeTarget.session);
         activeTarget.session.mp = getDerivedMaxMp(activeTarget.session);
         activeTarget.session.mapId = "speakingIsland";
-        io.to(activeTarget.presence.id).emit("player:death", { expLost, respawnMapId: "speakingIsland" });
+        io.to(activeTarget.presence.id).emit("player:death", {
+          expLost,
+          respawnMapId: "speakingIsland",
+        });
         const returned = monsters.returnHome(monster.id);
         if (returned) {
           io.to(monster.mapId).emit("monster:updated", returned);
         }
       }
 
-      io.to(activeTarget.presence.id).emit("player:state", serializePlayerState(activeTarget.session));
+      io.to(activeTarget.presence.id).emit(
+        "player:state",
+        serializePlayerState(activeTarget.session),
+      );
     });
   }, 400);
 
@@ -260,6 +324,8 @@ export function createGameServer(server: HttpServer) {
         }
       }
       sessions.set(playerId, session);
+      // 저장된 이름이 있으면 우선 사용 (클라이언트 기본값 "견습 모험가" 방지)
+      playerName = session.name || playerName;
 
       const occupants = rooms.join(currentMapId, {
         id: playerId,
@@ -275,7 +341,9 @@ export function createGameServer(server: HttpServer) {
         monsters: monsters.list(currentMapId),
       });
       socket.emit("player:state", serializePlayerState(session));
-      socket.to(currentMapId).emit("player:joined", { id: playerId, name: playerName });
+      socket
+        .to(currentMapId)
+        .emit("player:joined", { id: playerId, name: playerName });
     });
 
     socket.on("player:move", (payload: { x: number; y: number }) => {
@@ -292,7 +360,9 @@ export function createGameServer(server: HttpServer) {
       }
 
       const currentMap = MAPS[currentMapId];
-      const connection = currentMap?.connections.find((entry) => entry.to === payload.to);
+      const connection = currentMap?.connections.find(
+        (entry) => entry.to === payload.to,
+      );
       if (!connection) {
         return;
       }
@@ -321,7 +391,9 @@ export function createGameServer(server: HttpServer) {
         monsters: monsters.list(currentMapId),
       });
       socket.emit("player:state", serializePlayerState(session));
-      socket.to(currentMapId).emit("player:joined", { id: playerId, name: playerName });
+      socket
+        .to(currentMapId)
+        .emit("player:joined", { id: playerId, name: playerName });
     });
 
     socket.on("npc:interact", (payload: { npcId: string }) => {
@@ -340,7 +412,9 @@ export function createGameServer(server: HttpServer) {
         return;
       }
 
-      const quest = session.quests.find((entry) => entry.questId === payload.questId);
+      const quest = session.quests.find(
+        (entry) => entry.questId === payload.questId,
+      );
       if (!quest || quest.status !== "available") {
         return;
       }
@@ -356,7 +430,9 @@ export function createGameServer(server: HttpServer) {
         return;
       }
 
-      const progress = session.quests.find((entry) => entry.questId === payload.questId);
+      const progress = session.quests.find(
+        (entry) => entry.questId === payload.questId,
+      );
       const quest = QUESTS.find((entry) => entry.id === payload.questId);
       if (!progress || !quest || progress.status !== "claimable") {
         return;
@@ -364,7 +440,9 @@ export function createGameServer(server: HttpServer) {
 
       session.gold += quest.rewards.gold;
       applyExpReward(session, quest.rewards.exp);
-      quest.rewards.items.forEach((itemId) => addInventoryItem(session, toSessionItem(itemId, 1)));
+      quest.rewards.items.forEach((itemId) =>
+        addInventoryItem(session, toSessionItem(itemId, 1)),
+      );
       progress.status = "completed";
 
       socket.emit("player:state", serializePlayerState(session));
@@ -376,7 +454,9 @@ export function createGameServer(server: HttpServer) {
         return;
       }
 
-      const weapon = session.equipment.weapon ? ITEMS[session.equipment.weapon.id] : null;
+      const weapon = session.equipment.weapon
+        ? ITEMS[session.equipment.weapon.id]
+        : null;
       const usesBow = weapon?.subtype === WeaponSubType.BOW;
       if (usesBow && !removeInventoryItem(session, "training_arrow", 1)) {
         socket.emit("chat:message", {
@@ -399,7 +479,10 @@ export function createGameServer(server: HttpServer) {
 
       monsters.setTarget(payload.monsterId, playerId);
 
-      const result = combat.attack(payload.monsterId, getCombatProfile(session));
+      const result = combat.attack(
+        payload.monsterId,
+        getCombatProfile(session),
+      );
       if (!result) {
         if (usesBow) {
           socket.emit("player:state", serializePlayerState(session));
@@ -440,12 +523,18 @@ export function createGameServer(server: HttpServer) {
       "quiz:answer",
       (payload: { questionId: string; monsterId?: string; answer: string }) => {
         const session = sessions.get(playerId);
-        const monster = payload.monsterId ? monsters.get(payload.monsterId) : null;
+        const monster = payload.monsterId
+          ? monsters.get(payload.monsterId)
+          : null;
         if (!session || !monster) {
           return;
         }
 
-        const result = quizzes.verify(payload.questionId, payload.answer, monster);
+        const result = quizzes.verify(
+          payload.questionId,
+          payload.answer,
+          monster,
+        );
         if (!result) {
           return;
         }
@@ -514,15 +603,28 @@ export function createGameServer(server: HttpServer) {
       const session = sessions.get(playerId);
       if (!session) return;
 
-      const entry = session.inventory.find((item) => item.id === payload.itemId);
+      const entry = session.inventory.find(
+        (item) => item.id === payload.itemId,
+      );
       const itemData = ITEMS[payload.itemId];
-      if (!entry || !itemData || (itemData.type !== ItemType.CONSUMABLE && itemData.type !== ItemType.SCROLL)) {
+      if (
+        !entry ||
+        !itemData ||
+        (itemData.type !== ItemType.CONSUMABLE &&
+          itemData.type !== ItemType.SCROLL)
+      ) {
         return;
       }
 
       removeInventoryItem(session, payload.itemId, 1);
-      session.hp = Math.min(getDerivedMaxHp(session), session.hp + (itemData.stats.hp ?? 0));
-      session.mp = Math.min(getDerivedMaxMp(session), session.mp + (itemData.stats.mp ?? 0));
+      session.hp = Math.min(
+        getDerivedMaxHp(session),
+        session.hp + (itemData.stats.hp ?? 0),
+      );
+      session.mp = Math.min(
+        getDerivedMaxMp(session),
+        session.mp + (itemData.stats.mp ?? 0),
+      );
 
       // 순간이동 주문서 - 서버 위치도 업데이트
       if (payload.itemId === "teleport_scroll") {
@@ -546,7 +648,9 @@ export function createGameServer(server: HttpServer) {
       const session = sessions.get(playerId);
       if (!session) return;
 
-      const index = session.inventory.findIndex((item) => item.id === payload.itemId);
+      const index = session.inventory.findIndex(
+        (item) => item.id === payload.itemId,
+      );
       if (index === -1) return;
 
       const slot = getEquipSlot(payload.itemId, session.equipment);
@@ -582,7 +686,9 @@ export function createGameServer(server: HttpServer) {
       const session = sessions.get(playerId);
       const shop = NPCS[payload.shopId];
       const item = ITEMS[payload.itemId];
-      const entry = shop?.shopInventory?.find((value) => value.itemId === payload.itemId);
+      const entry = shop?.shopInventory?.find(
+        (value) => value.itemId === payload.itemId,
+      );
       const price = entry?.price ?? item?.price ?? 0;
       if (!session || !shop || !entry || !item || session.gold < price) {
         return;
@@ -710,7 +816,11 @@ function addInventoryItem(session: SessionPlayer, item: SessionInventoryItem) {
   });
 }
 
-function removeInventoryItem(session: SessionPlayer, itemId: string, quantity: number) {
+function removeInventoryItem(
+  session: SessionPlayer,
+  itemId: string,
+  quantity: number,
+) {
   const existing = session.inventory.find((entry) => entry.id === itemId);
   if (!existing || existing.quantity < quantity) {
     return false;
@@ -718,14 +828,18 @@ function removeInventoryItem(session: SessionPlayer, itemId: string, quantity: n
 
   existing.quantity -= quantity;
   if (existing.quantity <= 0) {
-    session.inventory = session.inventory.filter((entry) => entry.id !== itemId);
+    session.inventory = session.inventory.filter(
+      (entry) => entry.id !== itemId,
+    );
   }
 
   return true;
 }
 
 function getCombatProfile(session: SessionPlayer) {
-  const weapon = session.equipment.weapon ? ITEMS[session.equipment.weapon.id] : null;
+  const weapon = session.equipment.weapon
+    ? ITEMS[session.equipment.weapon.id]
+    : null;
 
   if (weapon?.subtype === WeaponSubType.STAFF) {
     return {
@@ -751,7 +865,9 @@ function getCombatProfile(session: SessionPlayer) {
 }
 
 function getAttackCooldown(session: SessionPlayer) {
-  const weapon = session.equipment.weapon ? ITEMS[session.equipment.weapon.id] : null;
+  const weapon = session.equipment.weapon
+    ? ITEMS[session.equipment.weapon.id]
+    : null;
 
   if (weapon?.subtype === WeaponSubType.BOW) {
     return 1600;
@@ -764,7 +880,10 @@ function getAttackCooldown(session: SessionPlayer) {
   return 1400;
 }
 
-function getEquipSlot(itemId: string, equipment: SessionEquipment): EquipmentSlot | null {
+function getEquipSlot(
+  itemId: string,
+  equipment: SessionEquipment,
+): EquipmentSlot | null {
   const item = ITEMS[itemId];
   if (!item) return null;
   if (item.type === ItemType.WEAPON) return "weapon";
@@ -774,7 +893,8 @@ function getEquipSlot(itemId: string, equipment: SessionEquipment): EquipmentSlo
   if (item.subtype === ArmorSubType.CLOAK) return "cloak";
   if (item.subtype === ArmorSubType.BOOTS) return "boots";
   if (item.subtype === ArmorSubType.GLOVES) return "gloves";
-  if (item.subtype === ArmorSubType.RING) return equipment.ring1 ? "ring2" : "ring1";
+  if (item.subtype === ArmorSubType.RING)
+    return equipment.ring1 ? "ring2" : "ring1";
   if (item.subtype === ArmorSubType.AMULET) return "amulet";
   if (item.subtype === ArmorSubType.BELT) return "belt";
   return null;
@@ -837,9 +957,15 @@ function applyExpReward(session: SessionPlayer, expReward: number) {
 function progressTalkQuests(session: SessionPlayer, npcId: string) {
   QUESTS.forEach((questData) => {
     const objective = questData.objectives[0];
-    const progress = session.quests.find((entry) => entry.questId === questData.id);
+    const progress = session.quests.find(
+      (entry) => entry.questId === questData.id,
+    );
     if (!objective || !progress || progress.status !== "in_progress") {
-      if (progress && progress.status === "ready_to_turn_in" && questData.npc === npcId) {
+      if (
+        progress &&
+        progress.status === "ready_to_turn_in" &&
+        questData.npc === npcId
+      ) {
         progress.status = "claimable";
       }
       return;
@@ -856,13 +982,23 @@ function progressTalkQuests(session: SessionPlayer, npcId: string) {
 function progressKillQuests(session: SessionPlayer, monster: MonsterState) {
   QUESTS.forEach((questData) => {
     const objective = questData.objectives[0];
-    const progress = session.quests.find((entry) => entry.questId === questData.id);
-    if (!objective || !progress || progress.status !== "in_progress" || objective.type !== "kill") {
+    const progress = session.quests.find(
+      (entry) => entry.questId === questData.id,
+    );
+    if (
+      !objective ||
+      !progress ||
+      progress.status !== "in_progress" ||
+      objective.type !== "kill"
+    ) {
       return;
     }
 
     const target = objective.target;
-    const matches = target === "any" || target === monster.id || monster.id.startsWith(`${target ?? ""}-`);
+    const matches =
+      target === "any" ||
+      target === monster.id ||
+      monster.id.startsWith(`${target ?? ""}-`);
     if (!matches) {
       return;
     }
@@ -878,26 +1014,37 @@ function progressKillQuests(session: SessionPlayer, monster: MonsterState) {
 function syncQuizStreakQuests(session: SessionPlayer) {
   QUESTS.forEach((questData) => {
     const objective = questData.objectives[0];
-    const progress = session.quests.find((entry) => entry.questId === questData.id);
-    if (!objective || !progress || progress.status !== "in_progress" || objective.type !== "quiz_streak") {
+    const progress = session.quests.find(
+      (entry) => entry.questId === questData.id,
+    );
+    if (
+      !objective ||
+      !progress ||
+      progress.status !== "in_progress" ||
+      objective.type !== "quiz_streak"
+    ) {
       return;
     }
 
     const goal = objective.count ?? 1;
     progress.progress = Math.min(goal, session.quizCorrectStreak);
-    progress.status = session.quizCorrectStreak >= goal ? "ready_to_turn_in" : "in_progress";
+    progress.status =
+      session.quizCorrectStreak >= goal ? "ready_to_turn_in" : "in_progress";
   });
 }
 
 function progressTravelQuests(session: SessionPlayer, mapId: string) {
   QUESTS.forEach((questData) => {
     const objective = questData.objectives[0];
-    const progress = session.quests.find((entry) => entry.questId === questData.id);
+    const progress = session.quests.find(
+      (entry) => entry.questId === questData.id,
+    );
     if (!objective || !progress || progress.status !== "in_progress") {
       return;
     }
 
-    const isTravelObjective = objective.type === "travel" || objective.type === "reach";
+    const isTravelObjective =
+      objective.type === "travel" || objective.type === "reach";
     if (!isTravelObjective || objective.target !== mapId) {
       return;
     }
@@ -922,9 +1069,12 @@ function getDistance(ax: number, ay: number, bx: number, by: number) {
 function normalizeClassName(value?: string) {
   const normalized = (value ?? "Guardian").trim().toLowerCase();
 
-  if (normalized.includes("ranger") || normalized.includes("레인저")) return "Ranger";
-  if (normalized.includes("arcan") || normalized.includes("아르카")) return "Arcanist";
-  if (normalized.includes("sovereign") || normalized.includes("군주")) return "Sovereign";
+  if (normalized.includes("ranger") || normalized.includes("레인저"))
+    return "Ranger";
+  if (normalized.includes("arcan") || normalized.includes("아르카"))
+    return "Arcanist";
+  if (normalized.includes("sovereign") || normalized.includes("군주"))
+    return "Sovereign";
   return "Guardian";
 }
 

@@ -39,6 +39,9 @@ export type MonsterState = {
   lastAttackAt: number;
   targetId: string | null;
   deadUntil: number | null;
+  wanderX: number;
+  wanderY: number;
+  wanderTimer: number;
 };
 
 const SPAWN_LAYOUTS: SpawnZone[] = [
@@ -549,9 +552,36 @@ export class MonsterManager {
           lastAttackAt: 0,
           targetId: null,
           deadUntil: null,
+          wanderX: home.x,
+          wanderY: home.y,
+          wanderTimer: 0,
         });
       }
     });
+  }
+
+  wander(id: string, now: number): MonsterState | null {
+    const monster = this.monsters.get(id);
+    if (!monster || monster.deadUntil || monster.targetId) return null;
+
+    // 새 wander 목표 설정
+    if (now > monster.wanderTimer) {
+      monster.wanderTimer = now + 2000 + Math.random() * 4000;
+      const radius = 100;
+      monster.wanderX = monster.homeX + (Math.random() - 0.5) * radius * 2;
+      monster.wanderY = monster.homeY + (Math.random() - 0.5) * radius * 2;
+    }
+
+    const dx = monster.wanderX - monster.x;
+    const dy = monster.wanderY - monster.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 5) return null; // 이미 도착
+
+    const speed = monster.moveSpeed * 8; // 느린 배회 속도
+    const angle = Math.atan2(dy, dx);
+    monster.x += Math.cos(angle) * speed;
+    monster.y += Math.sin(angle) * speed;
+    return monster;
   }
 
   private reseedMonster(monster: MonsterState) {
@@ -586,6 +616,9 @@ export class MonsterManager {
       targetId: null,
       deadUntil: null,
       lastAttackAt: 0,
+      wanderX: home.x,
+      wanderY: home.y,
+      wanderTimer: 0,
     };
   }
 
