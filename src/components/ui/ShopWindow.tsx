@@ -22,6 +22,7 @@ export function ShopWindow() {
   const setInventory = useGameStore((state) => state.setInventory);
   const toggleShop = useGameStore((state) => state.toggleShop);
   const setActiveShop = useGameStore((state) => state.setActiveShop);
+  const addChat = useGameStore((state) => state.addChat);
 
   if (!ui.shopOpen) {
     return null;
@@ -32,8 +33,6 @@ export function ShopWindow() {
   if (!shop) {
     return null;
   }
-
-  const addChat = useGameStore((state) => state.addChat);
 
   const buyItem = (itemId: string, price: number) => {
     const socket = getSocket();
