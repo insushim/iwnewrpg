@@ -16,6 +16,20 @@ const uiFont = Noto_Sans_KR({
 export const metadata: Metadata = {
   title: "룬워드 크로니클",
   description: "고전 MMORPG 감성과 단어 퀴즈를 결합한 웹 게임 프로토타입",
+  icons: {
+    icon: "/icon.svg",
+  },
+  openGraph: {
+    title: "룬워드 크로니클",
+    description: "고전 MMORPG 감성과 단어 퀴즈를 결합한 웹 게임",
+    images: [{ url: "/og-image.svg", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "룬워드 크로니클",
+    description: "MMORPG x Word Quiz — Fantasy Web Game",
+    images: ["/og-image.svg"],
+  },
 };
 
 export default function RootLayout({

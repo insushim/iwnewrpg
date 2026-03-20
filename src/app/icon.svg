@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0e18"/>
+      <stop offset="100%" stop-color="#1a1428"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0d060"/>
+      <stop offset="100%" stop-color="#b48a46"/>
+    </linearGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8e8f0"/>
+      <stop offset="60%" stop-color="#a0a8c0"/>
+      <stop offset="100%" stop-color="#6878a0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Background shield shape -->
+  <path d="M256 20 L460 100 L440 340 Q256 500 256 500 Q256 500 72 340 L52 100 Z" fill="url(#bg)" stroke="url(#gold)" stroke-width="8"/>
+  <path d="M256 40 L440 112 L422 330 Q256 476 256 476 Q256 476 90 330 L72 112 Z" fill="none" stroke="#b48a46" stroke-width="2" opacity="0.4"/>
+  <!-- Sword -->
+  <g filter="url(#glow)">
+    <!-- Blade -->
+    <path d="M256 80 L272 300 L256 320 L240 300 Z" fill="url(#blade)" opacity="0.95"/>
+    <!-- Blade center line -->
+    <line x1="256" y1="100" x2="256" y2="290" stroke="#ffffff" stroke-width="1.5" opacity="0.5"/>
+    <!-- Guard -->
+    <rect x="210" y="300" width="92" height="16" rx="4" fill="url(#gold)"/>
+    <!-- Grip -->
+    <rect x="246" y="316" width="20" height="50" rx="3" fill="#5a3a20"/>
+    <rect x="248" y="320" width="16" height="42" rx="2" fill="#7a5030"/>
+    <!-- Pommel -->
+    <circle cx="256" cy="374" r="14" fill="url(#gold)"/>
+    <circle cx="256" cy="374" r="8" fill="#f46f57" opacity="0.9"/>
+    <circle cx="256" cy="374" r="4" fill="#ffaa80" opacity="0.7"/>
+  </g>
+  <!-- Rune R -->
+  <g opacity="0.8" filter="url(#glow)">
+    <text x="256" y="440" text-anchor="middle" font-family="serif" font-size="64" font-weight="bold" fill="#f0d060" letter-spacing="12">RC</text>
+  </g>
+  <!-- Corner runes -->
+  <text x="120" y="180" text-anchor="middle" font-family="serif" font-size="28" fill="#f0d060" opacity="0.5">&#x16A0;</text>
+  <text x="392" y="180" text-anchor="middle" font-family="serif" font-size="28" fill="#f0d060" opacity="0.5">&#x16B1;</text>
+</svg>

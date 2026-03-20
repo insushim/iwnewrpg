@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0e18"/>
+      <stop offset="50%" stop-color="#1a1428"/>
+      <stop offset="100%" stop-color="#0a1018"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0d060"/>
+      <stop offset="100%" stop-color="#b48a46"/>
+    </linearGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8e8f0"/>
+      <stop offset="60%" stop-color="#a0a8c0"/>
+      <stop offset="100%" stop-color="#6878a0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative borders -->
+  <rect x="16" y="16" width="1168" height="598" rx="20" fill="none" stroke="#b48a46" stroke-width="3" opacity="0.4"/>
+  <rect x="28" y="28" width="1144" height="574" rx="14" fill="none" stroke="#b48a46" stroke-width="1" opacity="0.15"/>
+
+  <!-- Corner runes -->
+  <text x="60" y="70" font-family="serif" font-size="28" fill="#f0d060" opacity="0.4">&#x16A0;</text>
+  <text x="1140" y="70" font-family="serif" font-size="28" fill="#f0d060" opacity="0.4" text-anchor="end">&#x16B1;</text>
+  <text x="60" y="590" font-family="serif" font-size="28" fill="#f0d060" opacity="0.4">&#x16B2;</text>
+  <text x="1140" y="590" font-family="serif" font-size="28" fill="#f0d060" opacity="0.4" text-anchor="end">&#x16A2;</text>
+
+  <!-- Left sword -->
+  <g transform="translate(340, 160) rotate(-20)" filter="url(#glow)" opacity="0.7">
+    <path d="M0 0 L10 140 L0 150 L-10 140 Z" fill="url(#blade)"/>
+    <rect x="-18" y="140" width="36" height="8" rx="2" fill="url(#gold)"/>
+    <rect x="-5" y="148" width="10" height="24" rx="2" fill="#7a5030"/>
+    <circle cx="0" cy="176" r="7" fill="url(#gold)"/>
+  </g>
+
+  <!-- Right sword -->
+  <g transform="translate(860, 160) rotate(20)" filter="url(#glow)" opacity="0.7">
+    <path d="M0 0 L10 140 L0 150 L-10 140 Z" fill="url(#blade)"/>
+    <rect x="-18" y="140" width="36" height="8" rx="2" fill="url(#gold)"/>
+    <rect x="-5" y="148" width="10" height="24" rx="2" fill="#7a5030"/>
+    <circle cx="0" cy="176" r="7" fill="url(#gold)"/>
+  </g>
+
+  <!-- Center shield -->
+  <g transform="translate(600, 100)" filter="url(#glow)">
+    <path d="M0 -20 L50 0 L45 60 Q0 90 0 90 Q0 90 -45 60 L-50 0 Z" fill="#0a0e18" stroke="url(#gold)" stroke-width="3"/>
+    <text x="0" y="50" text-anchor="middle" font-family="serif" font-size="42" font-weight="bold" fill="#f0d060">R</text>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="270" text-anchor="middle" font-family="Georgia, serif" font-size="68" font-weight="bold" fill="url(#gold)" letter-spacing="6" filter="url(#glow)">RUNEWORD CHRONICLE</text>
+
+  <!-- Divider -->
+  <line x1="380" y1="300" x2="820" y2="300" stroke="url(#gold)" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="600" cy="300" r="4" fill="#f0d060" opacity="0.6"/>
+
+  <!-- Korean title -->
+  <text x="600" y="360" text-anchor="middle" font-family="sans-serif" font-size="40" fill="#f2e4c2" letter-spacing="10">룬워드 크로니클</text>
+
+  <!-- Description -->
+  <text x="600" y="420" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#af9166" letter-spacing="4">MMORPG x Word Quiz — Fantasy Web Game</text>
+
+  <!-- Bottom decorative -->
+  <line x1="460" y1="470" x2="740" y2="470" stroke="#b48a46" stroke-width="1" opacity="0.3"/>
+  <text x="600" y="520" text-anchor="middle" font-family="serif" font-size="16" fill="#8e7540" letter-spacing="6" opacity="0.6">PLAY NOW AT IWNEWRPG.PAGES.DEV</text>
+</svg>
