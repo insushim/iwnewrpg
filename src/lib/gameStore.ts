@@ -986,6 +986,35 @@ export const useGameStore = create<GameStore>((set, get) => ({
         effectMsg = "질풍의 물약! 60초간 이동 속도 40% 증가!";
       }
 
+      // 광전사의 격노 - 근접 전용 공속+이속 올인 버프
+      if (itemId === "frenzy_elixir") {
+        const cls = state.player.className.toLowerCase();
+        if (cls === "ranger" || cls === "arcanist") {
+          effectMsg = "근접 클래스만 사용할 수 있습니다!";
+          // 소비 취소 — 인벤토리 복원
+          return {
+            player: { ...state.player, hp: newHp, mp: newMp },
+            chat: [
+              ...state.chat.slice(-48),
+              {
+                id: crypto.randomUUID(),
+                channel: "system",
+                author: "시스템",
+                message: effectMsg,
+                timestamp: Date.now(),
+              },
+            ],
+            ui: { ...state.ui, selectedInventoryItemId: null },
+          };
+        }
+        newBuffs.push({
+          id: "frenzy_" + Date.now(),
+          name: "광전사의 격노",
+          remaining: 50,
+        });
+        effectMsg = "광전사의 격노! 50초간 공격/이동 속도 대폭 증가!";
+      }
+
       // 완전 회복약
       if (itemId === "full_restore") {
         newHp = derived.maxHp;

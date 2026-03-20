@@ -572,6 +572,19 @@ export const ITEMS: Record<string, Item> = {
     price: 300,
     maxStack: 50,
   },
+  frenzy_elixir: {
+    id: "frenzy_elixir",
+    name: "광전사의 격노 엘릭서",
+    type: ItemType.CONSUMABLE,
+    rarity: ItemRarity.RARE,
+    stats: { attackSpeedTier: 3, moveSpeedPercent: 50 },
+    weight: 3,
+    stackable: true,
+    description: "근접 전용. 50초간 공격/이동 속도 대폭 증가. 다른 버프와 중첩 가능.",
+    icon: "potion_red_rare",
+    price: 800,
+    maxStack: 20,
+  },
   // ═══ SCROLLS ═══
   armor_enchant_scroll: {
     id: "armor_enchant_scroll",

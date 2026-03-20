@@ -4414,10 +4414,12 @@ export class WorldScene extends Phaser.Scene {
       clampedY,
     );
     // 이동 속도 버프 적용
-    const hasSpeedBuff = useGameStore.getState().player.buffs.some(
-      (b) => b.name === "신속" || b.name === "질풍",
-    );
-    const effectiveSpeed = hasSpeedBuff ? MOVE_SPEED * 1.4 : MOVE_SPEED;
+    const pBuffs = useGameStore.getState().player.buffs;
+    const hasSpeedBuff = pBuffs.some((b) => b.name === "신속" || b.name === "질풍");
+    const hasFrenzy = pBuffs.some((b) => b.name === "광전사의 격노");
+    let effectiveSpeed = MOVE_SPEED;
+    if (hasSpeedBuff) effectiveSpeed *= 1.4;
+    if (hasFrenzy) effectiveSpeed *= 1.5; // 추가 50% 이속 (중첩)
     const duration = Math.max(200, (distance / effectiveSpeed) * 1000);
 
     this.destinationMarker
@@ -5217,9 +5219,12 @@ export class WorldScene extends Phaser.Scene {
     else if (this.getEquippedWeaponSubtype() === WeaponSubType.DAGGER) base = 620;
     else if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD) base = 920;
 
-    // 공격 속도 버프 적용 (신속, 전사의 광기 등)
-    const hasHaste = state.player.buffs.some((b) => b.name === "신속" || b.name === "전사의 광기");
-    if (hasHaste) base = Math.floor(base * 0.6); // 40% 공격 속도 증가
+    // 공격 속도 버프 적용
+    const buffs = state.player.buffs;
+    const hasHaste = buffs.some((b) => b.name === "신속" || b.name === "전사의 광기");
+    const hasFrenzy = buffs.some((b) => b.name === "광전사의 격노");
+    if (hasHaste) base = Math.floor(base * 0.6);
+    if (hasFrenzy) base = Math.floor(base * 0.5); // 추가 50% 공속 증가 (중첩)
     return base;
   }
 
