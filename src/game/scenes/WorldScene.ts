@@ -518,18 +518,50 @@ export class WorldScene extends Phaser.Scene {
       { monsterId: "slime", x: 1040, y: 4300 },
       { monsterId: "slime", x: 480, y: 5100 },
       { monsterId: "slime", x: 1080, y: 5900 },
+      { monsterId: "slime", x: 760, y: 3900 },
+      { monsterId: "slime", x: 340, y: 4800 },
+      { monsterId: "slime", x: 900, y: 5500 },
+      { monsterId: "slime", x: 1300, y: 4600 },
+      // ── 슬라임 남쪽 해안 (lv1-2) ─ 추가 초보 사냥터
+      { monsterId: "slime", x: 2200, y: 8400 },
+      { monsterId: "slime", x: 3000, y: 8800 },
+      { monsterId: "slime", x: 3800, y: 9100 },
       // ── 고블린 야영지 (lv3-5) ─ 중앙 평원
       { monsterId: "goblin_child", x: 4400, y: 2200 },
       { monsterId: "goblin_child", x: 5200, y: 2900 },
       { monsterId: "goblin_child", x: 4400, y: 3800 },
       { monsterId: "goblin_child", x: 5200, y: 4700 },
+      { monsterId: "goblin_child", x: 4800, y: 2600 },
+      { monsterId: "goblin_child", x: 5600, y: 3400 },
+      { monsterId: "goblin_child", x: 4200, y: 4200 },
+      { monsterId: "goblin_child", x: 5400, y: 5200 },
+      // ── 고블린 북쪽 산기슭 (lv3-5)
+      { monsterId: "goblin_child", x: 6800, y: 1400 },
+      { monsterId: "goblin_child", x: 7600, y: 1800 },
+      { monsterId: "goblin_child", x: 8200, y: 1200 },
       // ── 멧돼지 동쪽 들판 (lv5-7) ─ 마을 반대편 넓은 평원
       { monsterId: "wild_boar", x: 11600, y: 3600 },
       { monsterId: "wild_boar", x: 12500, y: 4400 },
       { monsterId: "wild_boar", x: 11600, y: 5400 },
       { monsterId: "wild_boar", x: 12500, y: 6400 },
+      { monsterId: "wild_boar", x: 12000, y: 3000 },
+      { monsterId: "wild_boar", x: 13200, y: 3800 },
+      { monsterId: "wild_boar", x: 11200, y: 4800 },
+      { monsterId: "wild_boar", x: 13000, y: 5600 },
+      // ── 멧돼지 남동쪽 숲 (lv5-7)
+      { monsterId: "wild_boar", x: 10400, y: 7200 },
+      { monsterId: "wild_boar", x: 11200, y: 7800 },
+      { monsterId: "wild_boar", x: 10800, y: 8400 },
+      // ── 해골 전사 동굴 근처 (lv7-9) ─ 동쪽 동굴 입구
+      { monsterId: "skeleton_warrior", x: 14200, y: 2800 },
+      { monsterId: "skeleton_warrior", x: 14800, y: 3400 },
+      { monsterId: "skeleton_warrior", x: 15400, y: 2600 },
+      { monsterId: "skeleton_warrior", x: 15000, y: 4000 },
+      { monsterId: "skeleton_warrior", x: 14600, y: 4600 },
       // ── [보스] 고블린 두목 ─ 동쪽 깊은 곳
       { monsterId: "goblin_boss", x: 15000, y: 5600 },
+      // ── [보스] 슬라임 킹 ─ 서쪽 늪 깊은 곳
+      { monsterId: "slime_boss", x: 600, y: 7400 },
     ];
 
     // 은기사의 마을 (silverKnightTown) 16160w×9620h — Lv 10-20
@@ -845,6 +877,10 @@ export class WorldScene extends Phaser.Scene {
       if (payload.answer) {
         useGameStore.getState().markWordWrong(payload.answer);
       }
+      // 오답이어도 몬스터가 살아있으면 자동공격 재개
+      if (monsterData.hp > 0 && this.selectedMonsterId === monsterId) {
+        this.startAutoAttack(monsterId);
+      }
       return;
     }
 
@@ -966,6 +1002,11 @@ export class WorldScene extends Phaser.Scene {
       useGameStore
         .getState()
         .updateQuestProgress("mq_003", Math.min(10, streakQuest.progress + 1));
+    }
+
+    // 퀴즈 후 자동공격 재개 (몬스터가 아직 살아있을 때)
+    if (newHp > 0 && this.selectedMonsterId === monsterId) {
+      this.startAutoAttack(monsterId);
     }
   }
 
@@ -1333,9 +1374,37 @@ export class WorldScene extends Phaser.Scene {
     water.fillStyle(0x2b83aa, 0.18);
 
     if (mapId === "speakingIsland") {
-      water.fillEllipse(1480, 480, 520, 720);
-      water.fillEllipse(1420, 920, 380, 300);
-      water.fillEllipse(1180, 356, 170, 96);
+      // ── 중앙 호수 ──
+      water.fillStyle(0x1a5e8a, 0.35);
+      water.fillEllipse(7800, 5800, 900, 600);
+      water.fillStyle(0x2b83aa, 0.22);
+      water.fillEllipse(7800, 5800, 700, 440);
+      water.fillStyle(0x4db8d9, 0.12);
+      water.fillEllipse(7800, 5700, 400, 240);
+      // 호수 물결 효과
+      water.lineStyle(1, 0x7ecef0, 0.15);
+      water.strokeEllipse(7800, 5800, 600, 360);
+      water.strokeEllipse(7800, 5800, 450, 280);
+
+      // ── 서쪽 늪지대 ──
+      water.fillStyle(0x2b6b4a, 0.25);
+      water.fillEllipse(800, 5000, 600, 800);
+      water.fillStyle(0x3a8a5a, 0.15);
+      water.fillEllipse(800, 5000, 400, 500);
+
+      // ── 남쪽 해안선 ──
+      water.fillStyle(0x1a5e8a, 0.3);
+      water.fillEllipse(5000, 9800, 6000, 1200);
+      water.fillStyle(0x2b83aa, 0.2);
+      water.fillEllipse(5000, 10000, 5400, 800);
+      water.fillStyle(0x4db8d9, 0.1);
+      water.fillEllipse(5000, 10200, 4800, 500);
+
+      // ── 동쪽 작은 연못 ──
+      water.fillStyle(0x2b83aa, 0.28);
+      water.fillEllipse(13000, 6800, 340, 220);
+      water.fillStyle(0x4db8d9, 0.14);
+      water.fillEllipse(13000, 6750, 200, 130);
     } else if (mapId === "moonlitWetland") {
       water.fillEllipse(1440, 560, 760, 820);
       water.fillEllipse(880, 1120, 520, 360);
@@ -1427,14 +1496,75 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "speakingIsland") {
+      // ── 마을 광장 ──
       g.fillStyle(0xf2d9a2, 0.08);
       g.fillEllipse(520, 330, 260, 132);
       g.lineStyle(2, 0xf5dfae, 0.1);
       g.strokeEllipse(520, 330, 220, 96);
-      g.fillStyle(0xb9ecff, 0.06);
-      g.fillRoundedRect(1030, 330, 190, 86, 22);
-      g.lineStyle(2, 0xd5f7ff, 0.08);
-      g.strokeRoundedRect(1042, 342, 164, 58, 18);
+
+      // ── 북쪽 산맥 ──
+      g.fillStyle(0x6b7b6e, 0.35);
+      g.fillTriangle(6000, 600, 7200, 600, 6600, -200); // 큰 산
+      g.fillStyle(0x7d8d80, 0.3);
+      g.fillTriangle(7000, 600, 8000, 600, 7500, -100); // 중간 산
+      g.fillStyle(0x5a6a5d, 0.28);
+      g.fillTriangle(8200, 800, 9200, 800, 8700, 100);  // 작은 산
+      // 산 눈 덮인 봉우리
+      g.fillStyle(0xe8e8e8, 0.2);
+      g.fillTriangle(6400, 100, 6800, 100, 6600, -200);
+      g.fillTriangle(7300, 200, 7700, 200, 7500, -100);
+      // 산 그림자
+      g.fillStyle(0x3a4a3d, 0.15);
+      g.fillTriangle(6600, 600, 7200, 600, 6900, 200);
+      g.fillTriangle(7500, 600, 8000, 600, 7750, 250);
+
+      // ── 동쪽 동굴 ──
+      g.fillStyle(0x2a1f1a, 0.45);
+      g.fillEllipse(15000, 3000, 600, 400);
+      g.fillStyle(0x1a1210, 0.55);
+      g.fillEllipse(15000, 3000, 350, 240);
+      g.fillStyle(0x0d0a08, 0.65);
+      g.fillEllipse(15000, 3000, 180, 120);
+      // 동굴 입구 테두리
+      g.lineStyle(3, 0x5a4030, 0.4);
+      g.strokeEllipse(15000, 3000, 360, 250);
+      // 동굴 라벨
+      const caveLbl = this.add.text(15000, 2700, "해골 동굴", {
+        fontSize: "14px", color: "#c8a878", stroke: "#000", strokeThickness: 3,
+      }).setOrigin(0.5);
+      layer?.add(caveLbl);
+
+      // ── 서쪽 숲 (짙은 초록) ──
+      g.fillStyle(0x1a3a1a, 0.3);
+      g.fillEllipse(1600, 4200, 800, 600);
+      g.fillStyle(0x2a5a2a, 0.2);
+      g.fillEllipse(1600, 4200, 500, 380);
+
+      // ── 남서쪽 늪 표시 ──
+      g.fillStyle(0x2a4a30, 0.25);
+      g.fillEllipse(800, 5000, 700, 900);
+      const swampLbl = this.add.text(800, 4400, "독의 늪", {
+        fontSize: "13px", color: "#8ab88a", stroke: "#000", strokeThickness: 3,
+      }).setOrigin(0.5);
+      layer?.add(swampLbl);
+
+      // ── 동쪽 초원 표시 ──
+      const plainLbl = this.add.text(12000, 3200, "멧돼지 들판", {
+        fontSize: "13px", color: "#d4c090", stroke: "#000", strokeThickness: 3,
+      }).setOrigin(0.5);
+      layer?.add(plainLbl);
+
+      // ── 중앙 호수 표시 ──
+      const lakeLbl = this.add.text(7800, 5400, "은빛 호수", {
+        fontSize: "14px", color: "#88ccee", stroke: "#000", strokeThickness: 3,
+      }).setOrigin(0.5);
+      layer?.add(lakeLbl);
+
+      // ── 고블린 야영지 표시 ──
+      const goblinLbl = this.add.text(4800, 1800, "고블린 야영지", {
+        fontSize: "13px", color: "#c89060", stroke: "#000", strokeThickness: 3,
+      }).setOrigin(0.5);
+      layer?.add(goblinLbl);
     }
 
     if (mapId === "silverKnightTown") {
@@ -4139,7 +4269,12 @@ export class WorldScene extends Phaser.Scene {
       clampedX,
       clampedY,
     );
-    const duration = Math.max(260, (distance / MOVE_SPEED) * 1000);
+    // 이동 속도 버프 적용
+    const hasSpeedBuff = useGameStore.getState().player.buffs.some(
+      (b) => b.name === "신속" || b.name === "질풍",
+    );
+    const effectiveSpeed = hasSpeedBuff ? MOVE_SPEED * 1.4 : MOVE_SPEED;
+    const duration = Math.max(200, (distance / effectiveSpeed) * 1000);
 
     this.destinationMarker
       ?.setPosition(clampedX, clampedY + 10)
@@ -4930,13 +5065,18 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private getAttackCooldown() {
-    const weaponId = useGameStore.getState().equipment.weapon?.id ?? "";
-    if (weaponId === "hunter_bow") return 900;
-    if (weaponId === "arcana_staff") return 1050;
-    if (this.getEquippedWeaponSubtype() === WeaponSubType.DAGGER) return 620;
-    if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD)
-      return 920;
-    return 760;
+    const state = useGameStore.getState();
+    const weaponId = state.equipment.weapon?.id ?? "";
+    let base = 760;
+    if (weaponId === "hunter_bow") base = 900;
+    else if (weaponId === "arcana_staff") base = 1050;
+    else if (this.getEquippedWeaponSubtype() === WeaponSubType.DAGGER) base = 620;
+    else if (this.getEquippedWeaponSubtype() === WeaponSubType.TWO_HAND_SWORD) base = 920;
+
+    // 공격 속도 버프 적용 (신속, 전사의 광기 등)
+    const hasHaste = state.player.buffs.some((b) => b.name === "신속" || b.name === "전사의 광기");
+    if (hasHaste) base = Math.floor(base * 0.6); // 40% 공격 속도 증가
+    return base;
   }
 
   private getEquippedWeaponSubtype() {
@@ -5422,10 +5562,10 @@ export class WorldScene extends Phaser.Scene {
       const mBase = monsterId.split("-offline-")[0];
       const isAggressive = MONSTERS[mBase]?.aggressive ?? true;
       // Aggressive monsters spot player from further away
-      const AGGRO_RANGE = isAggressive ? 250 : 200;
-      const ATTACK_RANGE = 45;
+      const AGGRO_RANGE = isAggressive ? 320 : 240;
+      const ATTACK_RANGE = 50;
       // Leash: monster gives up if too far from spawn
-      const LEASH_DIST = 700;
+      const LEASH_DIST = 900;
 
       // Check if monster was recently attacked by player (fight back mechanic)
       const monsterData = this.offlineMonsterHp.get(monsterId);
@@ -5460,7 +5600,7 @@ export class WorldScene extends Phaser.Scene {
           ai.state = "idle";
           ai.lastChaseAt = 0;
         } else if (distToPlayer > ATTACK_RANGE) {
-          const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 124; // Doubled speed
+          const speed = (MONSTERS[mBase]?.moveSpeed ?? 2) * 200; // Fast chase speed
           const angle = Phaser.Math.Angle.Between(
             sprite.x,
             sprite.y,

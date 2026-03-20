@@ -966,6 +966,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
         effectMsg = "경험치 물약을 사용했습니다! 30초간 경험치 50% 증가!";
       }
 
+      // 전사의 광기 물약 - 공격 속도 버프
+      if (itemId === "berserk_potion") {
+        newBuffs.push({
+          id: "berserk_" + Date.now(),
+          name: "전사의 광기",
+          remaining: 30,
+        });
+        effectMsg = "전사의 광기 물약! 30초간 공격 속도 40% 증가!";
+      }
+
+      // 질풍의 물약 - 이동 속도 버프
+      if (itemId === "wind_potion") {
+        newBuffs.push({
+          id: "wind_" + Date.now(),
+          name: "질풍",
+          remaining: 30,
+        });
+        effectMsg = "질풍의 물약! 30초간 이동 속도 40% 증가!";
+      }
+
       // 완전 회복약
       if (itemId === "full_restore") {
         newHp = derived.maxHp;
