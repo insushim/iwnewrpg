@@ -302,6 +302,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateSummonedAllies();
     this.updateTamedMonsters();
     this.checkPortalTransitions();
+    this.checkAutoPickup();
 
     if (this.targetMarker.visible) {
       const target = this.selectedMonsterId
@@ -943,11 +944,17 @@ export class WorldScene extends Phaser.Scene {
           if (Math.random() < drop.rate) droppedItemsQ.push(drop.itemId);
         }
       }
+      // EXP 즉시, 골드+아이템 바닥 드롭
       useGameStore.getState().applyOfflineReward({
-        gold: goldReward + 10,
+        gold: 0,
         exp: monsterData.exp + 20,
-        items: droppedItemsQ,
       });
+      this.spawnGroundLoot(
+        monsterSprite.x,
+        monsterSprite.y,
+        goldReward + 10,
+        droppedItemsQ,
+      );
       useGameStore.getState().registerKill(mBaseQ, mDefQ?.isBoss ?? false);
 
       const killQuest = state.quests.find(
@@ -3486,6 +3493,141 @@ export class WorldScene extends Phaser.Scene {
     this.lootSprites.delete(lootId);
   }
 
+  /** 몬스터 처치 시 골드/아이템을 바닥에 드롭 */
+  private spawnGroundLoot(
+    x: number,
+    y: number,
+    gold: number,
+    itemIds: string[],
+  ) {
+    const lootItems: Array<{
+      lootId: string;
+      itemId: string;
+      name: string;
+      quantity: number;
+      x: number;
+      y: number;
+    }> = [];
+
+    // 골드 드롭
+    if (gold > 0) {
+      const id = `gold_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      lootItems.push({
+        lootId: id,
+        itemId: "__gold__",
+        name: `${gold} Gold`,
+        quantity: gold,
+        x: x + (Math.random() - 0.5) * 40,
+        y: y + 20 + Math.random() * 20,
+      });
+    }
+
+    // 아이템 드롭
+    itemIds.forEach((itemId, i) => {
+      const itemData = ITEMS[itemId];
+      if (!itemData) return;
+      const id = `loot_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`;
+      lootItems.push({
+        lootId: id,
+        itemId,
+        name: itemData.name,
+        quantity: 1,
+        x: x + (Math.random() - 0.5) * 60,
+        y: y + 20 + Math.random() * 30,
+      });
+    });
+
+    if (lootItems.length === 0) return;
+
+    // 스토어에 저장
+    useGameStore.getState().addDroppedLoot(lootItems);
+    // 씬에 스프라이트 생성
+    this.spawnLoot({ items: lootItems });
+
+    // 15초 후 자동 소멸
+    lootItems.forEach((item) => {
+      this.time.delayedCall(15000, () => {
+        this.removeLoot(item.lootId);
+        useGameStore.getState().removeDroppedLoot(item.lootId);
+      });
+    });
+  }
+
+  /** 플레이어 근처 루트 자동 습득 (매 프레임 체크) */
+  private checkAutoPickup() {
+    if (!this.localPlayer) return;
+    const px = this.localPlayer.x;
+    const py = this.localPlayer.y;
+    const PICKUP_RANGE = 80;
+
+    this.lootSprites.forEach((sprite, lootId) => {
+      const dist = Phaser.Math.Distance.Between(px, py, sprite.x, sprite.y);
+      if (dist > PICKUP_RANGE) return;
+
+      // 루트 데이터 찾기
+      const lootData = useGameStore.getState().droppedLoot.find(
+        (l) => l.lootId === lootId,
+      );
+      if (!lootData) {
+        this.removeLoot(lootId);
+        return;
+      }
+
+      // 골드 습득
+      if (lootData.itemId === "__gold__") {
+        useGameStore.getState().applyOfflineReward({
+          gold: lootData.quantity,
+          exp: 0,
+        });
+        useGameStore.getState().addChat({
+          id: crypto.randomUUID(),
+          channel: "system",
+          author: "습득",
+          message: `💰 ${lootData.quantity} Gold 획득!`,
+          timestamp: Date.now(),
+        });
+      } else {
+        // 아이템 습득
+        const itemData = ITEMS[lootData.itemId];
+        if (itemData) {
+          useGameStore.getState().applyOfflineReward({
+            gold: 0,
+            exp: 0,
+            items: [lootData.itemId],
+          });
+          useGameStore.getState().addChat({
+            id: crypto.randomUUID(),
+            channel: "system",
+            author: "습득",
+            message: `📦 ${itemData.name} 획득!`,
+            timestamp: Date.now(),
+          });
+        }
+      }
+
+      // 습득 이펙트
+      this.showPickupEffect(sprite.x, sprite.y);
+      this.removeLoot(lootId);
+      useGameStore.getState().removeDroppedLoot(lootId);
+    });
+  }
+
+  /** 아이템 습득 이펙트 */
+  private showPickupEffect(x: number, y: number) {
+    const sparkle = this.add
+      .text(x, y, "✨", { fontSize: "18px" })
+      .setOrigin(0.5);
+    this.effectLayer?.add(sparkle);
+    this.tweens.add({
+      targets: sparkle,
+      y: y - 40,
+      alpha: 0,
+      duration: 600,
+      ease: "Quad.Out",
+      onComplete: () => sparkle.destroy(),
+    });
+  }
+
   private upsertPlayer(payload: WorldPlayerPayload) {
     const textureBase = this.getPlayerTexture();
     const existing = this.playerSprites.get(payload.id);
@@ -4176,11 +4318,19 @@ export class WorldScene extends Phaser.Scene {
           }
         }
 
+        // EXP는 즉시 지급, 골드+아이템은 바닥 드롭
         useGameStore.getState().applyOfflineReward({
-          gold: goldReward,
+          gold: 0,
           exp: expReward,
-          items: droppedItems,
         });
+
+        // 바닥에 루트 드롭
+        this.spawnGroundLoot(
+          monsterSprite?.x ?? 0,
+          monsterSprite?.y ?? 0,
+          goldReward,
+          droppedItems,
+        );
 
         // 킬 트래킹 (업적)
         const isBoss2 = mDef2?.isBoss ?? false;
