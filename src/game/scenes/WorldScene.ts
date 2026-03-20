@@ -3544,13 +3544,7 @@ export class WorldScene extends Phaser.Scene {
     // 씬에 스프라이트 생성
     this.spawnLoot({ items: lootItems });
 
-    // 15초 후 자동 소멸
-    lootItems.forEach((item) => {
-      this.time.delayedCall(15000, () => {
-        this.removeLoot(item.lootId);
-        useGameStore.getState().removeDroppedLoot(item.lootId);
-      });
-    });
+    // 루트는 소멸하지 않음 — 플레이어가 직접 습득해야 사라짐
   }
 
   /** 플레이어 근처 루트 자동 습득 (매 프레임 체크) */
