@@ -824,42 +824,62 @@ function drawBeast(
       // Enhanced shadow
       ellipse(ctx, x, y + 33, 52, 14, color(0x05080d, 0.32));
 
-      // Segmented legs with joints and hair tufts
+      // Segmented legs with joints and hair tufts - more symmetrical walking animation
+      const legOffset =
+        spec.state === "walk" ? Math.sin(spec.frame * 1.5) * 3 : 0;
       const legSegments = [
-        {
-          start: { x: x - 6, y: y + 12 },
-          mid: { x: x - 25, y: y + 2 },
-          end: { x: x - 38, y: y - 6 + stride },
-        },
-        {
-          start: { x: x - 4, y: y + 16 },
-          mid: { x: x - 18, y: y + 25 },
-          end: { x: x - 28, y: y + 35 - stride },
-        },
-        {
-          start: { x: x + 6, y: y + 12 },
-          mid: { x: x + 25, y: y + 2 },
-          end: { x: x + 38, y: y - 6 + stride },
-        },
-        {
-          start: { x: x + 4, y: y + 16 },
-          mid: { x: x + 18, y: y + 25 },
-          end: { x: x + 28, y: y + 35 - stride },
-        },
+        // Left front leg
         {
           start: { x: x - 8, y: y + 10 },
-          mid: { x: x - 30, y: y + 8 },
-          end: { x: x - 45, y: y + 6 },
+          mid: { x: x - 28, y: y + 4 - legOffset },
+          end: { x: x - 42, y: y - 2 + stride + legOffset },
         },
+        // Left mid-front leg
+        {
+          start: { x: x - 6, y: y + 12 },
+          mid: { x: x - 25, y: y + 8 + legOffset },
+          end: { x: x - 38, y: y + 2 + stride - legOffset },
+        },
+        // Left mid-back leg
+        {
+          start: { x: x - 4, y: y + 16 },
+          mid: { x: x - 22, y: y + 24 - legOffset },
+          end: { x: x - 35, y: y + 32 + stride + legOffset },
+        },
+        // Left back leg
+        {
+          start: { x: x - 2, y: y + 18 },
+          mid: { x: x - 18, y: y + 28 + legOffset },
+          end: { x: x - 28, y: y + 35 - stride - legOffset },
+        },
+        // Right front leg
         {
           start: { x: x + 8, y: y + 10 },
-          mid: { x: x + 30, y: y + 8 },
-          end: { x: x + 45, y: y + 6 },
+          mid: { x: x + 28, y: y + 4 + legOffset },
+          end: { x: x + 42, y: y - 2 + stride - legOffset },
+        },
+        // Right mid-front leg
+        {
+          start: { x: x + 6, y: y + 12 },
+          mid: { x: x + 25, y: y + 8 - legOffset },
+          end: { x: x + 38, y: y + 2 + stride + legOffset },
+        },
+        // Right mid-back leg
+        {
+          start: { x: x + 4, y: y + 16 },
+          mid: { x: x + 22, y: y + 24 + legOffset },
+          end: { x: x + 35, y: y + 32 + stride - legOffset },
+        },
+        // Right back leg
+        {
+          start: { x: x + 2, y: y + 18 },
+          mid: { x: x + 18, y: y + 28 - legOffset },
+          end: { x: x + 28, y: y + 35 - stride + legOffset },
         },
       ];
 
       legSegments.forEach((leg, i) => {
-        // Leg segments with joints
+        // Leg segments with joints - thicker for more spider-like appearance
         strokeLine(
           ctx,
           leg.start.x,
@@ -867,7 +887,7 @@ function drawBeast(
           leg.mid.x,
           leg.mid.y,
           color(darken(spec.accent, 8)),
-          3.5,
+          4,
         );
         strokeLine(
           ctx,
@@ -876,26 +896,32 @@ function drawBeast(
           leg.end.x,
           leg.end.y,
           color(spec.accent),
-          3,
+          3.5,
         );
 
-        // Joint details
-        circle(ctx, leg.mid.x, leg.mid.y, 2, color(darken(spec.accent, 12)));
+        // Joint details - larger and more visible
+        circle(ctx, leg.mid.x, leg.mid.y, 2.5, color(darken(spec.accent, 12)));
+        circle(ctx, leg.mid.x, leg.mid.y, 1, color(lighten(spec.accent, 8)));
 
-        // Hair tufts on legs
+        // Hair tufts on legs - more consistent placement
         if (i % 2 === 0) {
-          const hairX = leg.mid.x + (Math.random() - 0.5) * 4;
-          const hairY = leg.mid.y + (Math.random() - 0.5) * 4;
-          strokeLine(
-            ctx,
-            hairX,
-            hairY,
-            hairX + (Math.random() - 0.5) * 6,
-            hairY + (Math.random() - 0.5) * 6,
-            color(spec.accent, 0.6),
-            1,
-          );
+          for (let h = 0; h < 2; h++) {
+            const hairX = leg.mid.x + (h - 0.5) * 3;
+            const hairY = leg.mid.y + (h - 0.5) * 2;
+            strokeLine(
+              ctx,
+              hairX,
+              hairY,
+              hairX + Math.sin(i + h) * 4,
+              hairY + Math.cos(i + h) * 3,
+              color(spec.accent, 0.7),
+              1,
+            );
+          }
         }
+
+        // Leg tips - add small clawed feet
+        circle(ctx, leg.end.x, leg.end.y, 1.5, color(darken(spec.accent, 16)));
       });
 
       // Main abdomen with pattern
@@ -1203,25 +1229,49 @@ function drawBeast(
 
       break;
     case "orc": {
-      // === Lineage Remaster Orc — muscular brute with crude armor ===
+      // === Lineage Remaster Orc — muscular brute with crude armor and tusks ===
       // Enhanced ground shadow
       ellipse(ctx, x, y + 36, 60, 18, color(0x05080d, 0.32));
       ellipse(ctx, x, y + 37, 54, 14, color(0x05080d, 0.16));
 
-      // Muscular legs with leather boots
+      // Muscular legs with leather boots - add more muscle definition
       const orcLegG = ctx.createLinearGradient(0, y + 18, 0, y + 40);
-      orcLegG.addColorStop(0, color(spec.primary));
+      orcLegG.addColorStop(0, color(lighten(spec.primary, 8)));
+      orcLegG.addColorStop(0.3, color(spec.primary));
       orcLegG.addColorStop(0.6, color(darken(spec.primary, 10)));
       orcLegG.addColorStop(1, color(darken(spec.primary, 22)));
-      roundRect(ctx, x - 14 + stride, y + 18, 11, 22, 5, orcLegG);
-      roundRect(ctx, x + 3 - stride, y + 18, 11, 22, 5, orcLegG);
-      // Leather boots with straps
+
+      // Thicker, more muscular legs
+      roundRect(ctx, x - 16 + stride, y + 18, 13, 22, 6, orcLegG);
+      roundRect(ctx, x + 3 - stride, y + 18, 13, 22, 6, orcLegG);
+
+      // Muscle definition lines on legs
+      strokeLine(
+        ctx,
+        x - 12 + stride,
+        y + 20,
+        x - 10 + stride,
+        y + 32,
+        color(darken(spec.primary, 20), 0.5),
+        1,
+      );
+      strokeLine(
+        ctx,
+        x + 7 - stride,
+        y + 20,
+        x + 9 - stride,
+        y + 32,
+        color(darken(spec.primary, 20), 0.5),
+        1,
+      );
+
+      // Leather boots with straps and more detail
       roundRect(
         ctx,
-        x - 16 + stride,
+        x - 17 + stride,
         y + 34,
-        14,
-        8,
+        15,
+        9,
         4,
         color(darken(spec.accent, 22)),
       );
@@ -1229,11 +1279,13 @@ function drawBeast(
         ctx,
         x + 2 - stride,
         y + 34,
-        14,
-        8,
+        15,
+        9,
         4,
         color(darken(spec.accent, 22)),
       );
+
+      // Boot straps and buckles
       roundRect(
         ctx,
         x - 14 + stride,
@@ -1244,6 +1296,8 @@ function drawBeast(
         color(spec.accent, 0.6),
       );
       roundRect(ctx, x + 4 - stride, y + 32, 10, 2, 1, color(spec.accent, 0.6));
+      circle(ctx, x - 12 + stride, y + 33, 1, color(lighten(spec.accent, 20)));
+      circle(ctx, x + 6 - stride, y + 33, 1, color(lighten(spec.accent, 20)));
 
       // Muscular torso with layered armor
       const orcTorsoG = ctx.createRadialGradient(
@@ -1505,54 +1559,84 @@ function drawBeast(
       break;
     }
     case "boar": {
-      // === Lineage Remaster Boar — bristly wild beast ===
-      // Ground shadow
-      ellipse(ctx, x - dir.x * 3, y + 36, 58, 16, color(0x07090c, 0.3));
-      ellipse(ctx, x - dir.x * 3, y + 37, 52, 12, color(0x07090c, 0.15));
+      // === Lineage Remaster Boar — bristly wild beast with tusks ===
+      // Ground shadow with muddy texture
+      ellipse(ctx, x - dir.x * 3, y + 36, 58, 16, color(0x0a0704, 0.35));
+      ellipse(ctx, x - dir.x * 3, y + 37, 52, 12, color(0x0a0704, 0.18));
 
-      // Four muscular legs with hooves
-      const boarLegG = ctx.createLinearGradient(0, y + 16, 0, y + 36);
-      boarLegG.addColorStop(0, color(spec.primary));
-      boarLegG.addColorStop(0.7, color(darken(spec.primary, 10)));
-      boarLegG.addColorStop(1, color(darken(spec.primary, 22)));
-      // Back legs
-      roundRect(ctx, x - 20 + stride, y + 18, 9, 20, 4, boarLegG);
-      roundRect(ctx, x - 10 - stride, y + 18, 9, 20, 4, boarLegG);
-      // Front legs
-      roundRect(ctx, x + 8 + stride, y + 16, 9, 22, 4, boarLegG);
-      roundRect(ctx, x + 18 - stride, y + 16, 9, 22, 4, boarLegG);
-      // Hooves
-      ellipse(
+      // Mud splatters around hooves
+      for (let m = 0; m < 5; m++) {
+        const mudX = x - 20 + m * 10 + Math.sin(m) * 5;
+        const mudY = y + 35 + Math.cos(m) * 3;
+        circle(ctx, mudX, mudY, 1 + Math.random() * 2, color(0x3d2817, 0.4));
+      }
+
+      // Four muscular legs with more definition
+      const boarLegG = ctx.createLinearGradient(0, y + 16, 0, y + 38);
+      boarLegG.addColorStop(0, color(lighten(spec.primary, 6)));
+      boarLegG.addColorStop(0.4, color(spec.primary));
+      boarLegG.addColorStop(0.7, color(darken(spec.primary, 12)));
+      boarLegG.addColorStop(1, color(darken(spec.primary, 24)));
+
+      // Back legs - thicker and more muscular
+      roundRect(ctx, x - 22 + stride, y + 18, 11, 20, 5, boarLegG);
+      roundRect(ctx, x - 10 - stride, y + 18, 11, 20, 5, boarLegG);
+
+      // Front legs - slightly different positioning
+      roundRect(ctx, x + 6 + stride, y + 16, 11, 22, 5, boarLegG);
+      roundRect(ctx, x + 18 - stride, y + 16, 11, 22, 5, boarLegG);
+
+      // Joint definition on legs
+      circle(ctx, x - 17 + stride, y + 26, 2, color(darken(spec.primary, 18)));
+      circle(ctx, x - 5 - stride, y + 26, 2, color(darken(spec.primary, 18)));
+      circle(ctx, x + 11 + stride, y + 25, 2, color(darken(spec.primary, 18)));
+      circle(ctx, x + 23 - stride, y + 25, 2, color(darken(spec.primary, 18)));
+
+      // Hooves - split hooves like real boars
+      const hoofColor = color(0x2a2015);
+      // Back hooves
+      ellipse(ctx, x - 17 + stride, y + 37, 10, 7, hoofColor);
+      ellipse(ctx, x - 5 - stride, y + 37, 10, 7, hoofColor);
+      // Front hooves
+      ellipse(ctx, x + 11 + stride, y + 38, 10, 7, hoofColor);
+      ellipse(ctx, x + 23 - stride, y + 38, 10, 7, hoofColor);
+
+      // Hoof split lines
+      strokeLine(
         ctx,
-        x - 16 + stride,
-        y + 37,
-        10,
-        6,
-        color(darken(spec.primary, 28)),
+        x - 17 + stride,
+        y + 34,
+        x - 17 + stride,
+        y + 40,
+        color(0x151010),
+        1,
       );
-      ellipse(
+      strokeLine(
         ctx,
-        x - 6 - stride,
-        y + 37,
-        10,
-        6,
-        color(darken(spec.primary, 28)),
+        x - 5 - stride,
+        y + 34,
+        x - 5 - stride,
+        y + 40,
+        color(0x151010),
+        1,
       );
-      ellipse(
+      strokeLine(
         ctx,
-        x + 12 + stride,
-        y + 37,
-        10,
-        6,
-        color(darken(spec.primary, 28)),
+        x + 11 + stride,
+        y + 35,
+        x + 11 + stride,
+        y + 41,
+        color(0x151010),
+        1,
       );
-      ellipse(
+      strokeLine(
         ctx,
-        x + 22 - stride,
-        y + 37,
-        10,
-        6,
-        color(darken(spec.primary, 28)),
+        x + 23 - stride,
+        y + 35,
+        x + 23 - stride,
+        y + 41,
+        color(0x151010),
+        1,
       );
 
       // Main body with bristle texture
@@ -1621,46 +1705,169 @@ function drawBeast(
         );
       }
 
-      // Head with snout
+      // Head with snout - more boar-like proportions
       const boarHeadG = ctx.createRadialGradient(
-        x + 22 + dir.x * 4,
-        y + 6,
-        6,
-        x + 28 + dir.x * 4,
+        x + 20 + dir.x * 4,
+        y + 4,
+        8,
+        x + 26 + dir.x * 4,
         y + 12,
-        16,
+        18,
       );
-      boarHeadG.addColorStop(0, color(lighten(spec.secondary, 14)));
-      boarHeadG.addColorStop(0.5, color(spec.secondary));
-      boarHeadG.addColorStop(1, color(darken(spec.secondary, 12)));
-      ellipse(ctx, x + 22 + dir.x * 3, y + 12, 28, 20, boarHeadG);
+      boarHeadG.addColorStop(0, color(lighten(spec.secondary, 16)));
+      boarHeadG.addColorStop(0.4, color(lighten(spec.secondary, 6)));
+      boarHeadG.addColorStop(0.7, color(spec.secondary));
+      boarHeadG.addColorStop(1, color(darken(spec.secondary, 14)));
 
-      // Snout — protruding
-      const snoutG = ctx.createRadialGradient(
-        x + 32 + dir.x * 4,
-        y + 14,
+      ellipse(ctx, x + 22 + dir.x * 3, y + 10, 30, 22, boarHeadG);
+
+      // Ear - pointed and alert
+      triangle(
+        ctx,
+        x + 14 + dir.x * 2,
+        y + 2,
+        x + 18 + dir.x * 2,
+        y - 4,
+        x + 22 + dir.x * 2,
+        y + 4,
+        color(spec.secondary),
+      );
+      triangle(
+        ctx,
+        x + 16 + dir.x * 2,
+        y + 1,
+        x + 18 + dir.x * 2,
+        y - 2,
+        x + 20 + dir.x * 2,
+        y + 3,
+        color(lighten(spec.secondary, 12)),
+      );
+
+      // Eye - small and fierce
+      circle(
+        ctx,
+        x + 18 + dir.x * 3,
+        y + 8,
         3,
-        x + 34 + dir.x * 4,
-        y + 16,
-        10,
+        color(darken(spec.secondary, 25)),
       );
-      snoutG.addColorStop(0, color(lighten(spec.secondary, 8)));
-      snoutG.addColorStop(1, color(darken(spec.secondary, 8)));
-      ellipse(ctx, x + 32 + dir.x * 4, y + 14, 16, 12, snoutG);
-      // Nostrils
-      circle(
-        ctx,
-        x + 36 + dir.x * 4,
+      circle(ctx, x + 18 + dir.x * 3, y + 8, 1.5, color(spec.tertiary));
+      circle(ctx, x + 18 + dir.x * 3, y + 8, 0.8, color(0x000000));
+
+      // Prominent snout — protruding and pig-like
+      const snoutG = ctx.createRadialGradient(
+        x + 30 + dir.x * 5,
         y + 12,
-        2,
-        color(darken(spec.secondary, 30)),
-      );
-      circle(
-        ctx,
-        x + 36 + dir.x * 4,
+        4,
+        x + 34 + dir.x * 5,
         y + 16,
+        12,
+      );
+      snoutG.addColorStop(0, color(lighten(spec.secondary, 12)));
+      snoutG.addColorStop(0.5, color(spec.secondary));
+      snoutG.addColorStop(1, color(darken(spec.secondary, 12)));
+
+      ellipse(ctx, x + 32 + dir.x * 5, y + 14, 18, 14, snoutG);
+
+      // Snout disk - characteristic flat nose
+      ellipse(
+        ctx,
+        x + 38 + dir.x * 5,
+        y + 14,
+        8,
+        6,
+        color(darken(spec.secondary, 18)),
+      );
+
+      // Nostrils - large and flaring
+      ellipse(
+        ctx,
+        x + 36 + dir.x * 5,
+        y + 12,
+        3,
         2,
-        color(darken(spec.secondary, 30)),
+        color(darken(spec.secondary, 35)),
+      );
+      ellipse(
+        ctx,
+        x + 36 + dir.x * 5,
+        y + 16,
+        3,
+        2,
+        color(darken(spec.secondary, 35)),
+      );
+
+      // TUSKS - the signature boar feature!
+      const tuskColor = color(0xf5f5dc);
+      const tuskShadow = color(0xe0e0c8);
+
+      // Lower tusks - curved upward
+      const tuskCurve = spec.state === "attack" ? swing * 0.2 : 0;
+
+      // Left tusk
+      ctx.beginPath();
+      ctx.moveTo(x + 28 + dir.x * 4, y + 18);
+      ctx.quadraticCurveTo(
+        x + 26 + dir.x * 4 + tuskCurve,
+        y + 10 - tuskCurve,
+        x + 24 + dir.x * 4,
+        y + 4,
+      );
+      ctx.strokeStyle = tuskColor;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Right tusk
+      ctx.beginPath();
+      ctx.moveTo(x + 32 + dir.x * 4, y + 18);
+      ctx.quadraticCurveTo(
+        x + 34 + dir.x * 4 + tuskCurve,
+        y + 10 - tuskCurve,
+        x + 36 + dir.x * 4,
+        y + 4,
+      );
+      ctx.strokeStyle = tuskColor;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Tusk highlights
+      strokeLine(
+        ctx,
+        x + 26 + dir.x * 4,
+        y + 14,
+        x + 25 + dir.x * 4,
+        y + 8,
+        color(0xffffff, 0.6),
+        1,
+      );
+      strokeLine(
+        ctx,
+        x + 30 + dir.x * 4,
+        y + 14,
+        x + 33 + dir.x * 4,
+        y + 8,
+        color(0xffffff, 0.6),
+        1,
+      );
+
+      // Upper smaller tusks
+      strokeLine(
+        ctx,
+        x + 30 + dir.x * 4,
+        y + 12,
+        x + 28 + dir.x * 4,
+        y + 8,
+        tuskShadow,
+        2,
+      );
+      strokeLine(
+        ctx,
+        x + 34 + dir.x * 4,
+        y + 12,
+        x + 36 + dir.x * 4,
+        y + 8,
+        tuskShadow,
+        2,
       );
       // Snout ridge highlight
       ellipse(ctx, x + 30 + dir.x * 4, y + 10, 8, 3, color(0xffffff, 0.12));
@@ -2660,19 +2867,47 @@ function drawBeast(
     }
     case "skeleton": {
       // === Lineage Remaster Skeleton — undead warrior with soul fire ===
-      // Shadow
-      ellipse(ctx, x, y + 36, 48, 14, color(0x06080b, 0.25));
-      ellipse(ctx, x, y + 37, 42, 10, color(0x06080b, 0.12));
+      // Shadow with slight necromantic energy
+      ellipse(ctx, x, y + 36, 48, 14, color(0x06080b, 0.3));
+      ellipse(ctx, x, y + 37, 42, 10, color(0x0a041b, 0.15));
 
-      // Tattered cape remnants
+      // Ominous aura around skeleton
+      if (spec.state === "attack" || spec.frame % 2 === 0) {
+        const auraG = ctx.createRadialGradient(x, y + 8, 4, x, y + 8, 35);
+        auraG.addColorStop(0, color(spec.secondary, 0.15));
+        auraG.addColorStop(0.6, color(spec.secondary, 0.05));
+        auraG.addColorStop(1, color(spec.secondary, 0));
+        circle(ctx, x, y + 8, 35, auraG);
+      }
+
+      // Tattered cape remnants with more decay
       const capeG = ctx.createLinearGradient(x, y - 8, x, y + 30);
-      capeG.addColorStop(0, color(darken(spec.accent, 20), 0.6));
-      capeG.addColorStop(0.5, color(darken(spec.accent, 28), 0.4));
-      capeG.addColorStop(1, color(darken(spec.accent, 28), 0.1));
-      // Tattered edges
-      triangle(ctx, x - 14, y + 28, x, y - 8, x + 2, y + 32, capeG);
-      triangle(ctx, x + 14, y + 26, x, y - 8, x - 2, y + 30, capeG);
-      triangle(ctx, x - 8, y + 34, x - 4, y + 6, x + 6, y + 30, capeG);
+      capeG.addColorStop(0, color(darken(spec.accent, 20), 0.7));
+      capeG.addColorStop(0.3, color(darken(spec.accent, 26), 0.5));
+      capeG.addColorStop(0.7, color(darken(spec.accent, 32), 0.3));
+      capeG.addColorStop(1, color(darken(spec.accent, 35), 0.1));
+
+      // More ragged tattered edges
+      triangle(ctx, x - 16, y + 30, x - 2, y - 6, x + 4, y + 34, capeG);
+      triangle(ctx, x + 16, y + 28, x + 2, y - 6, x - 4, y + 32, capeG);
+      triangle(ctx, x - 10, y + 36, x - 6, y + 8, x + 8, y + 32, capeG);
+      triangle(ctx, x + 8, y + 34, x + 4, y + 10, x - 6, y + 30, capeG);
+
+      // Cape tatters - small hanging pieces
+      for (let t = 0; t < 4; t++) {
+        const tatterX = x - 8 + t * 4;
+        const tatterY = y + 28 + Math.sin(spec.frame * 0.3 + t) * 2;
+        triangle(
+          ctx,
+          tatterX,
+          tatterY,
+          tatterX + 2,
+          tatterY + 6,
+          tatterX - 1,
+          tatterY + 8,
+          color(darken(spec.accent, 30), 0.4),
+        );
+      }
 
       // Leg bones with joints
       const boneColor = color(spec.primary);
@@ -2804,67 +3039,170 @@ function drawBeast(
       circle(ctx, swordX + 2, swordY - 8, 1.5, color(0x8b4513, 0.5));
       circle(ctx, swordX + 1, swordY - 2, 1, color(0x8b4513, 0.4));
 
-      // Skull
+      // Skull with more defined structure
       const skullG = ctx.createRadialGradient(
-        x - 3,
-        y - 14,
-        4,
-        x + 2,
+        x - 4,
+        y - 15,
+        6,
+        x + 3,
         y - 8,
-        14,
+        16,
       );
-      skullG.addColorStop(0, color(lighten(spec.primary, 20)));
-      skullG.addColorStop(0.5, color(spec.primary));
-      skullG.addColorStop(1, color(darken(spec.primary, 14)));
-      circle(ctx, x, y - 10, 14, skullG);
+      skullG.addColorStop(0, color(lighten(spec.primary, 24)));
+      skullG.addColorStop(0.3, color(lighten(spec.primary, 12)));
+      skullG.addColorStop(0.7, color(spec.primary));
+      skullG.addColorStop(1, color(darken(spec.primary, 18)));
 
-      // Cranium shape — slight elongation at top
-      ellipse(ctx, x, y - 16, 22, 12, color(spec.primary, 0.5));
+      // Main skull dome
+      circle(ctx, x, y - 11, 15, skullG);
 
-      // Eye sockets — dark with soul fire
-      circle(ctx, x - 6, y - 12, 4, color(0x111111, 0.9));
-      circle(ctx, x + 6, y - 12, 4, color(0x111111, 0.9));
-      // Soul fire in eyes
+      // Forehead ridge and cranium detail
+      ellipse(ctx, x, y - 17, 24, 14, color(spec.primary, 0.6));
+      // Temporal ridges
+      strokeLine(
+        ctx,
+        x - 12,
+        y - 16,
+        x - 8,
+        y - 8,
+        color(darken(spec.primary, 20), 0.4),
+        1,
+      );
+      strokeLine(
+        ctx,
+        x + 12,
+        y - 16,
+        x + 8,
+        y - 8,
+        color(darken(spec.primary, 20), 0.4),
+        1,
+      );
+
+      // Eye sockets — deeper and more pronounced
+      ellipse(ctx, x - 7, y - 13, 8, 6, color(0x0a0a0a, 0.95));
+      ellipse(ctx, x + 7, y - 13, 8, 6, color(0x0a0a0a, 0.95));
+
+      // Eye socket depth
+      circle(ctx, x - 7, y - 13, 4.5, color(0x050505, 0.9));
+      circle(ctx, x + 7, y - 13, 4.5, color(0x050505, 0.9));
+
+      // Soul fire in eyes - more intense
       const eyeFireG = ctx.createRadialGradient(
-        x - 6,
-        y - 12,
-        0,
-        x - 6,
-        y - 12,
-        3.5,
-      );
-      eyeFireG.addColorStop(0, color(lighten(spec.accent, 40), 0.9));
-      eyeFireG.addColorStop(0.4, color(spec.accent, 0.7));
-      eyeFireG.addColorStop(1, color(spec.accent, 0.2));
-      circle(ctx, x - 6, y - 12, 3.5, eyeFireG);
-      circle(ctx, x + 6, y - 12, 3.5, eyeFireG);
-      // Eye fire flickers
-      triangle(
-        ctx,
         x - 7,
-        y - 14,
+        y - 13,
+        0.5,
+        x - 7,
+        y - 13,
+        4,
+      );
+      eyeFireG.addColorStop(0, color(0xffffff, 0.8));
+      eyeFireG.addColorStop(0.2, color(lighten(spec.accent, 35), 0.9));
+      eyeFireG.addColorStop(0.5, color(spec.accent, 0.7));
+      eyeFireG.addColorStop(1, color(spec.accent, 0.2));
+
+      circle(ctx, x - 7, y - 13, 4, eyeFireG);
+      circle(ctx, x + 7, y - 13, 4, eyeFireG);
+
+      // Soul fire flickers and sparks
+      const flicker1 = Math.sin(spec.frame * 1.2) * 3;
+      const flicker2 = Math.cos(spec.frame * 0.8) * 3;
+
+      triangle(
+        ctx,
+        x - 8,
+        y - 15,
+        x - 7,
+        y - 19 - flicker1,
         x - 6,
-        y - 18 - Math.sin(spec.frame) * 2,
-        x - 5,
-        y - 14,
-        color(spec.accent, 0.4),
+        y - 15,
+        color(spec.accent, 0.5),
       );
       triangle(
         ctx,
-        x + 5,
-        y - 14,
         x + 6,
-        y - 18 - Math.cos(spec.frame) * 2,
+        y - 15,
         x + 7,
-        y - 14,
-        color(spec.accent, 0.4),
+        y - 19 - flicker2,
+        x + 8,
+        y - 15,
+        color(spec.accent, 0.5),
       );
 
-      // Nose cavity
-      triangle(ctx, x - 2, y - 8, x + 2, y - 8, x, y - 4, color(0x111111, 0.7));
+      // Soul sparks floating around
+      if (spec.state === "attack") {
+        for (let s = 0; s < 4; s++) {
+          const sparkAngle = (s / 4) * Math.PI * 2 + spec.frame * 0.4;
+          const sparkDist = 18 + Math.sin(spec.frame * 0.5 + s) * 4;
+          const sparkX = x + Math.cos(sparkAngle) * sparkDist;
+          const sparkY = y - 10 + Math.sin(sparkAngle) * sparkDist * 0.3;
+          circle(
+            ctx,
+            sparkX,
+            sparkY,
+            1 + Math.sin(s + spec.frame * 0.6) * 0.5,
+            color(spec.accent, 0.6 + Math.sin(s) * 0.3),
+          );
+        }
+      }
 
-      // Jaw with teeth
-      roundRect(ctx, x - 8, y - 4, 16, 5, 2, color(darken(spec.primary, 6)));
+      // Cheekbones
+      triangle(
+        ctx,
+        x - 10,
+        y - 10,
+        x - 6,
+        y - 8,
+        x - 8,
+        y - 6,
+        color(lighten(spec.primary, 8)),
+      );
+      triangle(
+        ctx,
+        x + 10,
+        y - 10,
+        x + 6,
+        y - 8,
+        x + 8,
+        y - 6,
+        color(lighten(spec.primary, 8)),
+      );
+
+      // Nose cavity - more skull-like
+      triangle(ctx, x - 1, y - 9, x + 1, y - 9, x, y - 5, color(0x0a0a0a, 0.8));
+      // Nasal ridge
+      strokeLine(
+        ctx,
+        x,
+        y - 9,
+        x,
+        y - 6,
+        color(darken(spec.primary, 12), 0.5),
+        1,
+      );
+
+      // Upper jaw with more defined structure
+      const jawG = ctx.createLinearGradient(x - 10, y - 5, x + 10, y);
+      jawG.addColorStop(0, color(darken(spec.primary, 8)));
+      jawG.addColorStop(0.5, color(darken(spec.primary, 4)));
+      jawG.addColorStop(1, color(darken(spec.primary, 10)));
+
+      roundRect(ctx, x - 10, y - 5, 20, 6, 3, jawG);
+
+      // Teeth - more visible and menacing
+      for (let t = 0; t < 6; t++) {
+        const toothX = x - 7 + t * 2.5;
+        const toothHeight = t === 1 || t === 4 ? 4 : 2; // Canine teeth longer
+        triangle(
+          ctx,
+          toothX - 1,
+          y - 2,
+          toothX + 1,
+          y - 2,
+          toothX,
+          y - 2 + toothHeight,
+          color(lighten(spec.primary, 20)),
+        );
+      }
       // Upper teeth
       for (let ti = 0; ti < 5; ti++) {
         roundRect(ctx, x - 7 + ti * 3, y - 4, 2, 3, 0.5, boneHighlight);

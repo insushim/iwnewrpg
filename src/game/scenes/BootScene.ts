@@ -71,6 +71,10 @@ export class BootScene extends Phaser.Scene {
     this.createTileTexture("tile_cobble_var1", 0x626c6d, 0x323839, 0xa6b0b1);
     this.createTileTexture("tile_cobble_var2", 0x6a7475, 0x363c3d, 0xaeb8b9);
 
+    this.createTileTexture("tile_sand", 0xc19a6b, 0x8b6f42, 0xe6c299);
+    this.createTileTexture("tile_sand_var1", 0xbd9667, 0x876b3e, 0xe2be95);
+    this.createTileTexture("tile_sand_var2", 0xc59e6f, 0x8f7346, 0xeac69d);
+
     this.createTileTexture("tile_water", 0x2e7e9a, 0x124d63, 0x77d4e5);
     this.createTileTexture("tile_wet_stone", 0x506167, 0x243139, 0x8db5bb);
     this.createTileTexture("tile_marble", 0xc5c0b3, 0x676358, 0xf8f1dc);
@@ -146,6 +150,9 @@ export class BootScene extends Phaser.Scene {
       case "tile_cobble":
         this.createCobbleTexture(g, base, shadow, highlight);
         break;
+      case "tile_sand":
+        this.createSandTexture(g, base, shadow, highlight);
+        break;
       case "tile_water":
         this.createWaterTexture(g, base, shadow, highlight);
         break;
@@ -173,44 +180,80 @@ export class BootScene extends Phaser.Scene {
     shadow: number,
     highlight: number,
   ) {
-    // Multi-layer grass blades with natural variation
-    g.fillGradientStyle(highlight, highlight, base, shadow, 0.12);
+    // Enhanced Lineage Classic-style grass base
+    g.fillGradientStyle(highlight, highlight, base, shadow, 0.15);
     g.fillRect(0, 0, 96, 72);
 
-    // Grass blade patterns - multiple sizes and orientations
-    for (let layer = 0; layer < 3; layer++) {
-      const opacity = 0.08 - layer * 0.02;
-      const size = 4 + layer * 2;
+    // Detailed grass blade patterns with multiple density layers
+    for (let layer = 0; layer < 4; layer++) {
+      const opacity = 0.12 - layer * 0.025;
+      const bladeWidth = 1 + layer * 0.5;
+      const bladeHeight = 3 + layer * 2;
 
       g.fillStyle(highlight, opacity);
-      for (let x = 2 + layer * 3; x < 96; x += 12 + layer * 2) {
-        for (let y = 2 + layer * 2; y < 72; y += 8 + layer) {
-          const variation = Math.sin((x + y) * 0.1) * 2;
-          g.fillEllipse(x + variation, y, size, size * 2);
+      for (let x = 1 + layer * 2; x < 95; x += 4 + layer) {
+        for (let y = 1 + layer; y < 71; y += 3 + layer) {
+          const randomOffset = (Math.random() - 0.5) * 3;
+          const windSway = Math.sin(x * 0.1 + y * 0.05) * 1.5;
+
+          // Individual grass blade as small rectangle
+          g.fillRect(x + randomOffset + windSway, y, bladeWidth, bladeHeight);
         }
       }
     }
 
-    // Natural color variation patches
-    const patches = [
-      { x: 20, y: 15, w: 25, h: 12 },
-      { x: 65, y: 35, w: 18, h: 20 },
-      { x: 10, y: 50, w: 30, h: 15 },
-      { x: 75, y: 8, w: 15, h: 25 },
+    // Brown soil patches showing through grass
+    const soilPatches = [
+      { x: 18, y: 12, w: 8, h: 6 },
+      { x: 42, y: 28, w: 12, h: 8 },
+      { x: 68, y: 45, w: 10, h: 7 },
+      { x: 15, y: 58, w: 14, h: 9 },
+      { x: 78, y: 15, w: 6, h: 12 },
     ];
 
-    patches.forEach((patch, i) => {
-      const patchColor = i % 2 === 0 ? highlight : shadow;
-      g.fillStyle(patchColor, 0.06);
+    soilPatches.forEach((patch) => {
+      g.fillStyle(shadow, 0.25);
       g.fillEllipse(patch.x, patch.y, patch.w, patch.h);
+
+      // Small dirt clumps within patch
+      g.fillStyle(shadow, 0.4);
+      for (let i = 0; i < 3; i++) {
+        const clumpX = patch.x + (Math.random() - 0.5) * patch.w * 0.6;
+        const clumpY = patch.y + (Math.random() - 0.5) * patch.h * 0.6;
+        g.fillRect(clumpX, clumpY, 1, 1);
+      }
     });
 
-    // Subtle directional wind effect
-    g.lineStyle(1, highlight, 0.04);
+    // Tiny flower dots (classic RPG style)
+    const flowerColors = [0xffe4e1, 0xe6e6fa, 0xffb6c1, 0xf0e68c];
     for (let i = 0; i < 8; i++) {
-      const x = 10 + i * 12;
-      const y = 10 + (i % 3) * 20;
-      g.strokeLineShape(new Phaser.Geom.Line(x, y, x + 8, y - 3));
+      const x = 8 + Math.random() * 80;
+      const y = 6 + Math.random() * 60;
+      const color =
+        flowerColors[Math.floor(Math.random() * flowerColors.length)];
+
+      g.fillStyle(color, 0.8);
+      g.fillRect(x, y, 2, 2);
+      g.fillStyle(0xffffff, 0.9);
+      g.fillRect(x, y, 1, 1);
+    }
+
+    // Grass texture lines for detail
+    g.lineStyle(1, highlight, 0.08);
+    for (let i = 0; i < 15; i++) {
+      const x = 5 + Math.random() * 86;
+      const y = 5 + Math.random() * 62;
+      const length = 2 + Math.random() * 4;
+      const angle = (Math.random() - 0.5) * 0.8;
+
+      g.strokeLineShape(
+        new Phaser.Geom.Line(
+          x,
+          y,
+          x + Math.cos(angle) * length,
+          y + Math.sin(angle) * length,
+        ),
+      );
     }
   }
 
@@ -222,17 +265,79 @@ export class BootScene extends Phaser.Scene {
   ) {
     this.createGrassTexture(g, base, shadow, highlight);
 
-    // Flower accents in meadow
-    const flowerColors = [0xffe4e1, 0xe6e6fa, 0xf0e68c, 0xffc0cb];
-    for (let i = 0; i < 12; i++) {
-      const x = 8 + ((i * 17) % 88);
-      const y = 8 + ((i * 23) % 56);
-      const color = flowerColors[i % flowerColors.length];
+    // Enhanced flower accents in meadow (classic pixel style)
+    const flowers = [
+      { x: 15, y: 18, color: 0xffe4e1, type: "daisy" },
+      { x: 32, y: 12, color: 0xe6e6fa, type: "violet" },
+      { x: 48, y: 25, color: 0xf0e68c, type: "buttercup" },
+      { x: 65, y: 15, color: 0xffc0cb, type: "rose" },
+      { x: 22, y: 38, color: 0xffe4e1, type: "daisy" },
+      { x: 78, y: 35, color: 0xe6e6fa, type: "violet" },
+      { x: 35, y: 48, color: 0xffa500, type: "marigold" },
+      { x: 58, y: 42, color: 0xffc0cb, type: "rose" },
+      { x: 18, y: 58, color: 0xf0e68c, type: "buttercup" },
+      { x: 72, y: 55, color: 0xffe4e1, type: "daisy" },
+    ];
 
-      g.fillStyle(color, 0.6);
-      g.fillCircle(x, y, 2);
-      g.fillStyle(0xffffff, 0.8);
-      g.fillCircle(x, y, 1);
+    flowers.forEach((flower) => {
+      if (flower.type === "daisy") {
+        // White petals
+        g.fillStyle(flower.color, 0.8);
+        g.fillRect(flower.x - 1, flower.y, 3, 1); // Horizontal petals
+        g.fillRect(flower.x, flower.y - 1, 1, 3); // Vertical petals
+
+        // Yellow center
+        g.fillStyle(0xffd700, 0.9);
+        g.fillRect(flower.x, flower.y, 1, 1);
+      } else if (flower.type === "violet") {
+        // Purple flower
+        g.fillStyle(flower.color, 0.8);
+        g.fillRect(flower.x, flower.y, 2, 2);
+
+        // Darker center
+        g.fillStyle(0x9370db, 0.8);
+        g.fillRect(flower.x, flower.y, 1, 1);
+      } else if (flower.type === "buttercup") {
+        // Yellow flower
+        g.fillStyle(flower.color, 0.8);
+        g.fillRect(flower.x - 1, flower.y - 1, 3, 3);
+
+        // Bright center
+        g.fillStyle(0xffff00, 0.9);
+        g.fillRect(flower.x, flower.y, 1, 1);
+      } else if (flower.type === "rose") {
+        // Pink/red rose
+        g.fillStyle(flower.color, 0.8);
+        g.fillRect(flower.x, flower.y, 2, 2);
+
+        // Dark center
+        g.fillStyle(0xdc143c, 0.7);
+        g.fillRect(flower.x, flower.y, 1, 1);
+      } else if (flower.type === "marigold") {
+        // Orange flower
+        g.fillStyle(flower.color, 0.8);
+        g.fillRect(flower.x - 1, flower.y, 3, 1);
+        g.fillRect(flower.x, flower.y - 1, 1, 3);
+
+        // Bright center
+        g.fillStyle(0xff8c00, 0.9);
+        g.fillRect(flower.x, flower.y, 1, 1);
+      }
+
+      // Tiny green stem
+      g.fillStyle(base, 0.6);
+      g.fillRect(flower.x, flower.y + 2, 1, 2);
+    });
+
+    // Small butterflies (optional detail)
+    if (Math.random() < 0.4) {
+      const butterflyX = 25 + Math.random() * 46;
+      const butterflyY = 20 + Math.random() * 32;
+
+      g.fillStyle(0xffff00, 0.7);
+      g.fillRect(butterflyX, butterflyY, 2, 1);
+      g.fillStyle(0xffa500, 0.6);
+      g.fillRect(butterflyX, butterflyY + 1, 2, 1);
     }
   }
 
@@ -242,37 +347,84 @@ export class BootScene extends Phaser.Scene {
     shadow: number,
     highlight: number,
   ) {
-    // Dark forest floor with leaf litter
-    g.fillGradientStyle(shadow, shadow, base, shadow, 0.3);
+    // Darker forest grass base (similar to grass but darker)
+    g.fillGradientStyle(shadow, shadow, base, shadow, 0.4);
     g.fillRect(0, 0, 96, 72);
 
-    // Leaf litter patterns
-    const leafShapes = [];
-    for (let i = 0; i < 20; i++) {
-      const x = Math.random() * 96;
-      const y = Math.random() * 72;
-      const rotation = Math.random() * Math.PI * 2;
+    // Darker, denser grass blades
+    for (let layer = 0; layer < 3; layer++) {
+      const opacity = 0.08 - layer * 0.02;
+      const bladeWidth = 1;
+      const bladeHeight = 2 + layer;
 
-      g.fillStyle(highlight, 0.1 + Math.random() * 0.05);
-      g.fillEllipse(x, y, 6, 3);
+      g.fillStyle(base, opacity);
+      for (let x = 2 + layer; x < 94; x += 3 + layer) {
+        for (let y = 2 + layer; y < 70; y += 3 + layer) {
+          const randomOffset = (Math.random() - 0.5) * 2;
+          g.fillRect(x + randomOffset, y, bladeWidth, bladeHeight);
+        }
+      }
     }
 
-    // Decomposing organic matter
-    for (let i = 0; i < 15; i++) {
-      const x = Math.random() * 96;
-      const y = Math.random() * 72;
-      g.fillStyle(shadow, 0.15);
-      g.fillCircle(x, y, 2 + Math.random() * 3);
+    // Fallen leaf dots (orange/brown autumn colors)
+    const leafColors = [0xd2691e, 0xcd853f, 0xa0522d, 0x8b4513, 0xff8c00];
+    for (let i = 0; i < 25; i++) {
+      const x = 3 + Math.random() * 90;
+      const y = 3 + Math.random() * 66;
+      const color = leafColors[Math.floor(Math.random() * leafColors.length)];
+
+      g.fillStyle(color, 0.6 + Math.random() * 0.3);
+      g.fillRect(x, y, 2, 2);
+
+      // Small leaf detail
+      g.fillStyle(color, 0.4);
+      g.fillRect(x + 1, y + 1, 1, 1);
     }
 
-    // Subtle root patterns
-    g.lineStyle(2, shadow, 0.08);
+    // Dense vegetation clumps
+    for (let i = 0; i < 12; i++) {
+      const clumpX = 8 + Math.random() * 80;
+      const clumpY = 6 + Math.random() * 60;
+
+      g.fillStyle(shadow, 0.3);
+      g.fillEllipse(clumpX, clumpY, 6, 4);
+
+      // Small vegetation details within clump
+      g.fillStyle(highlight, 0.15);
+      for (let j = 0; j < 4; j++) {
+        const detailX = clumpX + (Math.random() - 0.5) * 4;
+        const detailY = clumpY + (Math.random() - 0.5) * 3;
+        g.fillRect(detailX, detailY, 1, 2);
+      }
+    }
+
+    // Mushroom spots (tiny brown dots)
     for (let i = 0; i < 6; i++) {
+      const x = 10 + Math.random() * 76;
+      const y = 8 + Math.random() * 56;
+
+      g.fillStyle(0x8b4513, 0.8);
+      g.fillRect(x, y, 2, 1);
+      g.fillStyle(0xf5deb3, 0.7);
+      g.fillRect(x, y - 1, 2, 1);
+    }
+
+    // Root and branch patterns
+    g.lineStyle(1, shadow, 0.2);
+    for (let i = 0; i < 8; i++) {
       const startX = Math.random() * 96;
       const startY = Math.random() * 72;
-      const endX = startX + (Math.random() - 0.5) * 30;
-      const endY = startY + (Math.random() - 0.5) * 20;
-      g.strokeLineShape(new Phaser.Geom.Line(startX, startY, endX, endY));
+      const length = 8 + Math.random() * 15;
+      const angle = Math.random() * Math.PI * 2;
+
+      g.strokeLineShape(
+        new Phaser.Geom.Line(
+          startX,
+          startY,
+          startX + Math.cos(angle) * length,
+          startY + Math.sin(angle) * length,
+        ),
+      );
     }
   }
 
@@ -326,47 +478,90 @@ export class BootScene extends Phaser.Scene {
     shadow: number,
     highlight: number,
   ) {
-    // Worn dirt path with natural variation
-    g.fillGradientStyle(base, base, shadow, highlight, 0.15);
+    // Rich brown earth base with natural variation
+    g.fillGradientStyle(base, base, shadow, highlight, 0.2);
     g.fillRect(0, 0, 96, 72);
 
-    // Pebbles and small stones
-    for (let i = 0; i < 30; i++) {
-      const x = Math.random() * 96;
-      const y = Math.random() * 72;
-      const size = 1 + Math.random() * 3;
-      const brightness = Math.random() > 0.5 ? highlight : shadow;
+    // Footprint/hoof print tracks
+    const trackPatterns = [
+      { x: 15, y: 12, w: 8, h: 6 },
+      { x: 35, y: 25, w: 7, h: 5 },
+      { x: 55, y: 18, w: 9, h: 7 },
+      { x: 25, y: 45, w: 8, h: 6 },
+      { x: 70, y: 42, w: 6, h: 5 },
+      { x: 45, y: 58, w: 7, h: 6 },
+    ];
 
-      g.fillStyle(brightness, 0.3 + Math.random() * 0.2);
-      g.fillCircle(x, y, size);
+    trackPatterns.forEach((track) => {
+      g.fillStyle(shadow, 0.4);
+      g.fillEllipse(track.x, track.y, track.w, track.h);
+
+      // Track detail (heel mark)
+      g.fillStyle(shadow, 0.6);
+      g.fillEllipse(track.x - 1, track.y + 1, track.w * 0.3, track.h * 0.4);
+    });
+
+    // Small stone details scattered around
+    for (let i = 0; i < 40; i++) {
+      const x = 2 + Math.random() * 92;
+      const y = 2 + Math.random() * 68;
+      const size = 1 + Math.random() * 2;
+      const brightness = Math.random() > 0.4 ? highlight : shadow;
+
+      g.fillStyle(brightness, 0.4 + Math.random() * 0.3);
+      g.fillRect(x, y, size, size);
+
+      // Small shadow for 3D effect
+      if (brightness === highlight) {
+        g.fillStyle(shadow, 0.3);
+        g.fillRect(x + 1, y + 1, size * 0.5, size * 0.5);
+      }
     }
 
-    // Erosion patterns and ruts
-    for (let i = 0; i < 8; i++) {
-      const startX = Math.random() * 96;
-      const startY = Math.random() * 72;
-      const length = 15 + Math.random() * 25;
-      const angle = (Math.random() - 0.5) * 0.5; // Mostly horizontal ruts
+    // Wheel ruts and erosion lines
+    for (let i = 0; i < 5; i++) {
+      const startX = 5 + Math.random() * 10;
+      const startY = 10 + i * 12;
+      const length = 60 + Math.random() * 25;
 
-      g.lineStyle(3, shadow, 0.1);
+      g.lineStyle(2, shadow, 0.15);
       g.strokeLineShape(
         new Phaser.Geom.Line(
           startX,
           startY,
-          startX + Math.cos(angle) * length,
-          startY + Math.sin(angle) * length,
+          startX + length,
+          startY + (Math.random() - 0.5) * 8,
         ),
       );
     }
 
-    // Compressed earth texture
-    for (let x = 0; x < 96; x += 8) {
-      for (let y = 0; y < 72; y += 6) {
-        if (Math.random() < 0.3) {
-          g.fillStyle(shadow, 0.05);
-          g.fillRect(x, y, 6, 4);
+    // Cracked earth texture
+    for (let x = 4; x < 92; x += 6) {
+      for (let y = 4; y < 68; y += 5) {
+        if (Math.random() < 0.4) {
+          const crackLength = 3 + Math.random() * 4;
+          const angle = Math.random() * Math.PI;
+
+          g.lineStyle(1, shadow, 0.2);
+          g.strokeLineShape(
+            new Phaser.Geom.Line(
+              x,
+              y,
+              x + Math.cos(angle) * crackLength,
+              y + Math.sin(angle) * crackLength,
+            ),
+          );
         }
       }
+    }
+
+    // Dust/loose dirt particles
+    for (let i = 0; i < 20; i++) {
+      const x = Math.random() * 96;
+      const y = Math.random() * 72;
+
+      g.fillStyle(highlight, 0.1 + Math.random() * 0.1);
+      g.fillRect(x, y, 1, 1);
     }
   }
 
@@ -432,51 +627,208 @@ export class BootScene extends Phaser.Scene {
     shadow: number,
     highlight: number,
   ) {
-    // Cobblestone base with mortar
+    // Dark mortar base (classic cobblestone look)
     g.fillStyle(shadow, 1).fillRect(0, 0, 96, 72);
 
-    // Individual cobblestones in grid pattern
-    const cobbleSize = 12;
-    const mortarWidth = 2;
+    // Individual cobblestones with irregular sizes and placement
+    const stones = [
+      { x: 2, y: 2, w: 12, h: 10 },
+      { x: 16, y: 3, w: 11, h: 12 },
+      { x: 29, y: 1, w: 13, h: 11 },
+      { x: 44, y: 2, w: 10, h: 13 },
+      { x: 56, y: 1, w: 14, h: 10 },
+      { x: 72, y: 3, w: 12, h: 11 },
+      { x: 86, y: 2, w: 8, h: 12 },
 
-    for (let x = 0; x < 96; x += cobbleSize + mortarWidth) {
-      for (let y = 0; y < 72; y += cobbleSize + mortarWidth) {
-        const offsetX =
-          (y / (cobbleSize + mortarWidth)) % 2 === 0
-            ? 0
-            : (cobbleSize + mortarWidth) / 2;
-        const cobbleX = x + offsetX;
+      { x: 1, y: 15, w: 14, h: 12 },
+      { x: 17, y: 17, w: 12, h: 10 },
+      { x: 31, y: 16, w: 11, h: 13 },
+      { x: 44, y: 17, w: 13, h: 11 },
+      { x: 59, y: 15, w: 10, h: 12 },
+      { x: 71, y: 16, w: 12, h: 13 },
+      { x: 85, y: 17, w: 9, h: 10 },
 
-        if (cobbleX + cobbleSize <= 96) {
-          // Main cobblestone
-          g.fillStyle(base, 1);
-          g.fillRoundedRect(cobbleX, y, cobbleSize, cobbleSize, 2);
+      { x: 2, y: 30, w: 13, h: 11 },
+      { x: 17, y: 32, w: 10, h: 12 },
+      { x: 29, y: 31, w: 12, h: 10 },
+      { x: 43, y: 32, w: 14, h: 13 },
+      { x: 59, y: 30, w: 11, h: 11 },
+      { x: 72, y: 31, w: 13, h: 12 },
+      { x: 87, y: 32, w: 8, h: 10 },
 
-          // Cobblestone highlight
-          g.fillStyle(highlight, 0.3);
-          g.fillRoundedRect(
-            cobbleX + 1,
-            y + 1,
-            cobbleSize - 3,
-            cobbleSize - 3,
-            1,
-          );
+      { x: 1, y: 45, w: 12, h: 13 },
+      { x: 15, y: 47, w: 13, h: 10 },
+      { x: 30, y: 46, w: 11, h: 12 },
+      { x: 43, y: 47, w: 12, h: 11 },
+      { x: 57, y: 45, w: 14, h: 13 },
+      { x: 73, y: 46, w: 10, h: 12 },
+      { x: 85, y: 47, w: 9, h: 11 },
 
-          // Wear patterns
-          g.fillStyle(shadow, 0.2);
-          g.fillCircle(
-            cobbleX + cobbleSize / 2,
-            y + cobbleSize / 2,
-            cobbleSize / 4,
-          );
+      { x: 2, y: 60, w: 11, h: 10 },
+      { x: 15, y: 62, w: 12, h: 9 },
+      { x: 29, y: 61, w: 14, h: 10 },
+      { x: 45, y: 62, w: 10, h: 9 },
+      { x: 57, y: 60, w: 13, h: 11 },
+      { x: 72, y: 61, w: 12, h: 10 },
+      { x: 86, y: 62, w: 8, h: 9 },
+    ];
 
-          // Individual stone character
-          if (Math.random() < 0.4) {
-            g.fillStyle(highlight, 0.15);
-            g.fillRect(cobbleX + 2, y + 2, 3, cobbleSize - 4);
-          }
+    stones.forEach((stone, index) => {
+      // Slight random variation in stone color
+      const stoneVariation = (index * 17) % 3; // Deterministic but varied
+      let stoneBase = base;
+      if (stoneVariation === 1) stoneBase = highlight;
+      else if (stoneVariation === 2) stoneBase = (base + shadow) / 2;
+
+      // Main stone body
+      g.fillStyle(stoneBase, 1);
+      g.fillRect(stone.x, stone.y, stone.w, stone.h);
+
+      // Top/left highlight (isometric lighting)
+      g.fillStyle(highlight, 0.6);
+      g.fillRect(stone.x, stone.y, stone.w, 1); // Top edge
+      g.fillRect(stone.x, stone.y, 1, stone.h); // Left edge
+
+      // Bottom/right shadow (isometric lighting)
+      g.fillStyle(shadow, 0.8);
+      g.fillRect(stone.x, stone.y + stone.h - 1, stone.w, 1); // Bottom edge
+      g.fillRect(stone.x + stone.w - 1, stone.y, 1, stone.h); // Right edge
+
+      // Stone texture and weathering
+      g.fillStyle(shadow, 0.15);
+      for (let i = 0; i < 3; i++) {
+        const textureX = stone.x + 2 + i * 3;
+        const textureY = stone.y + 2 + i * 2;
+        if (
+          textureX < stone.x + stone.w - 2 &&
+          textureY < stone.y + stone.h - 2
+        ) {
+          g.fillRect(textureX, textureY, 1, 1);
         }
       }
+
+      // Cracks in some stones
+      if (index % 4 === 0) {
+        g.lineStyle(1, shadow, 0.4);
+        g.strokeLineShape(
+          new Phaser.Geom.Line(
+            stone.x + 2,
+            stone.y + 3,
+            stone.x + stone.w - 3,
+            stone.y + stone.h - 4,
+          ),
+        );
+      }
+
+      // Worn smooth areas on frequently stepped stones
+      if (index % 3 === 0) {
+        g.fillStyle(highlight, 0.2);
+        g.fillEllipse(
+          stone.x + stone.w / 2,
+          stone.y + stone.h / 2,
+          stone.w * 0.4,
+          stone.h * 0.4,
+        );
+      }
+    });
+
+    // Moss in mortar joints (classic detail)
+    g.fillStyle(0x4a6b3a, 0.3);
+    for (let i = 0; i < 15; i++) {
+      const x = 1 + Math.random() * 94;
+      const y = 1 + Math.random() * 70;
+
+      // Only draw moss in mortar areas (darker pixels)
+      g.fillRect(x, y, 1, 1);
+    }
+  }
+
+  private createSandTexture(
+    g: Phaser.GameObjects.Graphics,
+    base: number,
+    shadow: number,
+    highlight: number,
+  ) {
+    // Warm golden sand base
+    g.fillGradientStyle(highlight, base, shadow, base, 0.9);
+    g.fillRect(0, 0, 96, 72);
+
+    // Sand grain texture (fine detail)
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * 96;
+      const y = Math.random() * 72;
+      const brightness = Math.random() > 0.5 ? highlight : shadow;
+      const opacity = 0.1 + Math.random() * 0.2;
+
+      g.fillStyle(brightness, opacity);
+      g.fillRect(x, y, 1, 1);
+    }
+
+    // Wave patterns (subtle ridges in sand)
+    for (let y = 10; y < 72; y += 15) {
+      const waveY = y + Math.sin(y * 0.3) * 3;
+
+      g.lineStyle(1, shadow, 0.15);
+      g.strokeLineShape(new Phaser.Geom.Line(0, waveY, 96, waveY + 2));
+
+      g.lineStyle(1, highlight, 0.1);
+      g.strokeLineShape(new Phaser.Geom.Line(0, waveY + 1, 96, waveY + 3));
+    }
+
+    // Small pebble dots scattered in sand
+    for (let i = 0; i < 25; i++) {
+      const x = 3 + Math.random() * 90;
+      const y = 3 + Math.random() * 66;
+      const size = Math.random() * 2;
+
+      // Pebble colors (darker than sand)
+      const pebbleColors = [shadow, (shadow + base) / 2, 0x8b7355, 0x967a5a];
+      const color =
+        pebbleColors[Math.floor(Math.random() * pebbleColors.length)];
+
+      g.fillStyle(color, 0.6 + Math.random() * 0.3);
+      g.fillCircle(x, y, size);
+
+      // Tiny highlight on pebble
+      g.fillStyle(highlight, 0.4);
+      g.fillRect(x - 0.5, y - 0.5, 1, 1);
+    }
+
+    // Darker border edges (where sand meets other terrain)
+    g.fillStyle(shadow, 0.2);
+    g.fillRect(0, 0, 96, 2); // Top edge
+    g.fillRect(0, 70, 96, 2); // Bottom edge
+    g.fillRect(0, 0, 2, 72); // Left edge
+    g.fillRect(94, 0, 2, 72); // Right edge
+
+    // Wind-blown sand patterns (diagonal streaks)
+    g.lineStyle(1, highlight, 0.08);
+    for (let i = 0; i < 8; i++) {
+      const startX = Math.random() * 96;
+      const startY = Math.random() * 72;
+      const length = 8 + Math.random() * 15;
+      const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5; // Mostly 45-degree angle
+
+      g.strokeLineShape(
+        new Phaser.Geom.Line(
+          startX,
+          startY,
+          startX + Math.cos(angle) * length,
+          startY + Math.sin(angle) * length,
+        ),
+      );
+    }
+
+    // Occasional larger stones partially buried
+    if (Math.random() < 0.3) {
+      const stoneX = 20 + Math.random() * 56;
+      const stoneY = 15 + Math.random() * 42;
+
+      g.fillStyle(shadow, 0.7);
+      g.fillEllipse(stoneX, stoneY, 6, 4);
+
+      g.fillStyle(highlight, 0.3);
+      g.fillEllipse(stoneX - 1, stoneY - 1, 3, 2);
     }
   }
 
@@ -486,59 +838,97 @@ export class BootScene extends Phaser.Scene {
     shadow: number,
     highlight: number,
   ) {
-    // Water base with depth gradients
-    g.fillGradientStyle(shadow, base, highlight, base, 0.8);
+    // Deep blue water base with classic RPG depth
+    g.fillGradientStyle(shadow, shadow, base, highlight, 0.9);
     g.fillRect(0, 0, 96, 72);
 
-    // Caustic light patterns
-    const causticRings = [
-      { x: 20, y: 18, r: 8, intensity: 0.3 },
-      { x: 45, y: 35, r: 12, intensity: 0.25 },
-      { x: 70, y: 20, r: 6, intensity: 0.35 },
-      { x: 25, y: 55, r: 10, intensity: 0.2 },
-      { x: 65, y: 50, r: 7, intensity: 0.4 },
+    // Wave patterns (horizontal bands)
+    for (let y = 8; y < 72; y += 12) {
+      const waveIntensity = 0.15 + Math.sin(y * 0.2) * 0.05;
+
+      g.fillStyle(highlight, waveIntensity);
+      g.fillRect(0, y, 96, 2);
+
+      g.fillStyle(base, waveIntensity * 0.8);
+      g.fillRect(0, y + 2, 96, 1);
+
+      g.fillStyle(shadow, waveIntensity * 0.6);
+      g.fillRect(0, y + 3, 96, 1);
+    }
+
+    // Shimmer reflection streaks (vertical)
+    for (let x = 12; x < 96; x += 16) {
+      const shimmerHeight = 15 + Math.random() * 20;
+      const shimmerY = Math.random() * (72 - shimmerHeight);
+
+      g.fillStyle(highlight, 0.3 + Math.random() * 0.2);
+      g.fillRect(x, shimmerY, 1, shimmerHeight);
+
+      g.fillStyle(highlight, 0.15);
+      g.fillRect(x + 1, shimmerY + 2, 1, shimmerHeight - 4);
+    }
+
+    // Water edge foam/bubbles where water meets land
+    const foamAreas = [
+      { x: 2, y: 5, w: 12, h: 4 },
+      { x: 18, y: 2, w: 8, h: 3 },
+      { x: 85, y: 8, w: 9, h: 5 },
+      { x: 3, y: 65, w: 15, h: 6 },
+      { x: 82, y: 62, w: 11, h: 8 },
     ];
 
-    causticRings.forEach((ring) => {
-      // Outer caustic ring
-      g.lineStyle(2, highlight, ring.intensity * 0.6);
-      g.strokeCircle(ring.x, ring.y, ring.r);
+    foamAreas.forEach((foam) => {
+      g.fillStyle(highlight, 0.4);
+      g.fillEllipse(foam.x, foam.y, foam.w, foam.h);
 
-      // Inner bright spot
-      g.fillStyle(highlight, ring.intensity);
-      g.fillCircle(ring.x, ring.y, ring.r * 0.3);
-
-      // Ripple effects
-      g.lineStyle(1, highlight, ring.intensity * 0.3);
-      g.strokeCircle(ring.x, ring.y, ring.r * 1.5);
+      // Small bubble details
+      g.fillStyle(highlight, 0.8);
+      for (let i = 0; i < 3; i++) {
+        const bubbleX = foam.x + Math.random() * foam.w;
+        const bubbleY = foam.y + Math.random() * foam.h;
+        g.fillCircle(bubbleX, bubbleY, 1);
+      }
     });
 
-    // Flowing water streaks
-    for (let i = 0; i < 6; i++) {
-      const startX = Math.random() * 96;
-      const startY = Math.random() * 72;
-      const flow = 20 + Math.random() * 30;
+    // Depth variation spots (darker areas)
+    for (let i = 0; i < 8; i++) {
+      const x = 15 + Math.random() * 66;
+      const y = 15 + Math.random() * 42;
+      const size = 6 + Math.random() * 10;
 
-      g.lineStyle(2, highlight, 0.1 + Math.random() * 0.1);
-      g.strokeLineShape(
-        new Phaser.Geom.Line(
-          startX,
-          startY,
-          startX + flow * 0.3,
-          startY + flow * 0.7,
-        ),
-      );
+      g.fillStyle(shadow, 0.3);
+      g.fillEllipse(x, y, size, size * 0.7);
     }
 
-    // Surface reflections
-    for (let x = 10; x < 96; x += 15) {
-      for (let y = 10; y < 72; y += 12) {
-        if (Math.random() < 0.4) {
-          g.fillStyle(highlight, 0.15);
-          g.fillEllipse(x, y, 8, 3);
-        }
+    // Light caustics (underwater light patterns)
+    const causticPatterns = [
+      { x: 25, y: 20, size: 8 },
+      { x: 50, y: 35, size: 12 },
+      { x: 70, y: 25, size: 6 },
+      { x: 30, y: 50, size: 10 },
+    ];
+
+    causticPatterns.forEach((caustic) => {
+      // Wavy caustic light
+      g.lineStyle(1, highlight, 0.4);
+      const points = [];
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+        const distance = caustic.size + Math.sin(angle * 3) * 2;
+        const x = caustic.x + Math.cos(angle) * distance;
+        const y = caustic.y + Math.sin(angle) * distance;
+        points.push(new Phaser.Geom.Point(x, y));
       }
-    }
+
+      for (let i = 0; i < points.length; i++) {
+        const next = points[(i + 1) % points.length];
+        g.strokeLineShape(
+          new Phaser.Geom.Line(points[i].x, points[i].y, next.x, next.y),
+        );
+      }
+
+      g.fillStyle(highlight, 0.2);
+      g.fillCircle(caustic.x, caustic.y, caustic.size * 0.3);
+    });
   }
 
   private createWetStoneTexture(
@@ -1475,133 +1865,259 @@ export class BootScene extends Phaser.Scene {
 
   private createTreeTexture(
     key: string,
-    _leafColor?: number,
-    _trunkColor?: number,
+    leafColor?: number,
+    trunkColor?: number,
   ) {
     if (this.textures.exists(key)) return;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
 
-    // Enhanced shadow with depth
-    g.fillGradientStyle(0x0a0f10, 0x1a1f20, 0x0a0f10, 0x0a0f10, 0.3);
-    g.fillEllipse(32, 52, 40, 12);
+    // Tree shadow (more realistic)
+    g.fillGradientStyle(0x0a0f10, 0x1a1f20, 0x0a0f10, 0x0a0f10, 0.4);
+    g.fillEllipse(32, 56, 24, 8);
 
-    // Enhanced trunk with bark texture
-    g.fillGradientStyle(0x4b2f18, 0x5c3a21, 0x3a2412, 0x4b2f18, 1);
-    g.fillRect(26, 30, 12, 24);
+    // Determine tree type and colors based on key
+    let mainTrunkColor = trunkColor || 0x4b2f18;
+    let darkTrunkColor = 0x3a2412;
+    let lightTrunkColor = 0x5c3a21;
+    let mainLeafColor = leafColor || 0x2d4a2f;
+    let leafShape = "round"; // "round", "pine", "dead"
 
-    // Bark texture details
-    for (let i = 0; i < 8; i++) {
-      const y = 32 + i * 3;
-      g.lineStyle(1, 0x3a2412, 0.8);
-      g.strokeLineShape(new Phaser.Geom.Line(27, y, 37, y + 1));
+    if (key.includes("pine")) {
+      mainLeafColor = 0x1e3220;
+      leafShape = "pine";
+    } else if (key.includes("oak")) {
+      mainLeafColor = 0x4a6b3d;
+      leafShape = "round";
+    } else if (key.includes("dead")) {
+      mainTrunkColor = 0x5d4a3a;
+      darkTrunkColor = 0x3e3225;
+      lightTrunkColor = 0x6e5b4b;
+      leafShape = "dead";
     }
 
-    // Vertical bark lines
-    g.lineStyle(1, 0x5c3a21, 0.6);
-    g.strokeLineShape(new Phaser.Geom.Line(29, 30, 29, 54));
-    g.strokeLineShape(new Phaser.Geom.Line(35, 30, 35, 54));
+    // Thick trunk with pronounced bark texture
+    g.fillGradientStyle(
+      lightTrunkColor,
+      mainTrunkColor,
+      darkTrunkColor,
+      mainTrunkColor,
+      1,
+    );
+    g.fillRect(28, 32, 8, 20);
 
-    // Tree roots
-    g.fillStyle(0x3a2412, 0.8);
-    g.fillEllipse(22, 52, 8, 4);
-    g.fillEllipse(42, 52, 8, 4);
-    g.fillEllipse(32, 54, 6, 3);
+    // Bark texture - horizontal ridges
+    for (let i = 0; i < 12; i++) {
+      const y = 34 + i * 1.5;
+      g.lineStyle(1, darkTrunkColor, 0.9);
+      g.strokeLineShape(new Phaser.Geom.Line(28, y, 36, y));
+    }
 
-    // Enhanced multi-layer canopy
-    // Base canopy layer - darkest
-    g.fillGradientStyle(0x173a25, 0x1f4a2d, 0x0f2b1a, 0x173a25, 1);
-    g.fillEllipse(32, 24, 42, 28);
+    // Vertical bark cracks
+    g.lineStyle(1, darkTrunkColor, 0.7);
+    g.strokeLineShape(new Phaser.Geom.Line(30, 32, 30, 52));
+    g.strokeLineShape(new Phaser.Geom.Line(34, 32, 34, 52));
 
-    // Secondary canopy layers with varying opacity
-    g.fillStyle(0x234b30, 0.96);
-    g.fillEllipse(20, 26, 24, 22);
-    g.fillStyle(0x295736, 0.92);
-    g.fillEllipse(42, 24, 28, 22);
+    // Bark knots and texture details
+    g.fillStyle(darkTrunkColor, 0.8);
+    g.fillEllipse(29, 38, 2, 3);
+    g.fillEllipse(34, 45, 3, 2);
 
-    // Upper canopy layers
-    g.fillStyle(0x3d704a, 0.88);
-    g.fillEllipse(28, 16, 26, 18);
-    g.fillStyle(0x4e8758, 0.78);
-    g.fillEllipse(40, 14, 18, 10);
+    // Tree roots visible above ground
+    g.fillStyle(darkTrunkColor, 0.9);
+    g.fillEllipse(24, 52, 6, 3);
+    g.fillEllipse(38, 52, 6, 3);
+    g.fillEllipse(32, 53, 4, 2);
 
-    // Highlight clusters - sunlight through leaves
-    g.fillStyle(0x6ba366, 0.35);
-    g.fillEllipse(25, 20, 8, 6);
-    g.fillEllipse(38, 18, 6, 4);
-    g.fillEllipse(32, 22, 10, 7);
+    // Branch structure
+    if (leafShape !== "dead") {
+      g.lineStyle(2, mainTrunkColor, 1);
+      // Main branches
+      g.strokeLineShape(new Phaser.Geom.Line(32, 32, 25, 26));
+      g.strokeLineShape(new Phaser.Geom.Line(32, 32, 39, 26));
+      g.strokeLineShape(new Phaser.Geom.Line(32, 34, 22, 30));
+      g.strokeLineShape(new Phaser.Geom.Line(32, 34, 42, 30));
 
-    // Bright leaf highlights
-    g.fillStyle(0x93ca91, 0.25);
-    g.fillEllipse(28, 14, 12, 6);
-    g.fillEllipse(36, 16, 8, 5);
+      // Smaller branches
+      g.lineStyle(1, mainTrunkColor, 0.8);
+      g.strokeLineShape(new Phaser.Geom.Line(25, 26, 20, 22));
+      g.strokeLineShape(new Phaser.Geom.Line(39, 26, 44, 22));
+    }
 
-    // Individual leaf details
-    for (let i = 0; i < 15; i++) {
-      const angle = (i / 15) * Math.PI * 2;
-      const distance = 12 + Math.random() * 8;
-      const x = 32 + Math.cos(angle) * distance;
-      const y = 24 + Math.sin(angle) * distance * 0.6;
+    // Canopy based on tree type
+    if (leafShape === "pine") {
+      // Pine tree - triangular canopy
+      g.fillStyle(mainLeafColor, 1);
+      g.fillTriangle(32, 12, 18, 35, 46, 35);
 
-      g.fillStyle(0x4e8758, 0.3 + Math.random() * 0.2);
-      g.fillEllipse(x, y, 3, 5);
+      g.fillStyle(mainLeafColor, 0.8);
+      g.fillTriangle(32, 16, 22, 32, 42, 32);
+
+      g.fillStyle(mainLeafColor, 0.9);
+      g.fillTriangle(32, 14, 20, 33, 44, 33);
+
+      // Pine needle texture
+      g.lineStyle(1, mainLeafColor, 0.6);
+      for (let i = 0; i < 20; i++) {
+        const x = 20 + Math.random() * 24;
+        const y = 15 + Math.random() * 18;
+        g.strokeLineShape(new Phaser.Geom.Line(x, y, x + 2, y - 1));
+      }
+    } else if (leafShape === "dead") {
+      // Dead tree - bare branches only
+      g.lineStyle(2, mainTrunkColor, 0.8);
+      // Gnarled branches
+      g.strokeLineShape(new Phaser.Geom.Line(32, 32, 20, 20));
+      g.strokeLineShape(new Phaser.Geom.Line(32, 32, 44, 18));
+      g.strokeLineShape(new Phaser.Geom.Line(32, 34, 18, 25));
+      g.strokeLineShape(new Phaser.Geom.Line(32, 34, 46, 28));
+
+      g.lineStyle(1, mainTrunkColor, 0.6);
+      // Smaller dead branches
+      g.strokeLineShape(new Phaser.Geom.Line(20, 20, 15, 15));
+      g.strokeLineShape(new Phaser.Geom.Line(44, 18, 50, 12));
+      g.strokeLineShape(new Phaser.Geom.Line(18, 25, 12, 22));
+    } else {
+      // Round canopy (oak, regular trees)
+      // Base canopy - darker layer
+      g.fillStyle(mainLeafColor, 1);
+      g.fillEllipse(32, 24, 32, 24);
+
+      // Secondary layers for depth
+      g.fillStyle(mainLeafColor, 0.85);
+      g.fillEllipse(26, 22, 20, 16);
+      g.fillEllipse(38, 26, 18, 14);
+
+      // Top layer highlights
+      g.fillStyle(mainLeafColor, 0.7);
+      g.fillEllipse(32, 20, 24, 18);
+
+      // Sunlight patches
+      const lightLeafColor = mainLeafColor + 0x202020; // Lighten the leaf color
+      g.fillStyle(lightLeafColor, 0.6);
+      g.fillEllipse(28, 18, 8, 6);
+      g.fillEllipse(36, 22, 6, 5);
+      g.fillEllipse(32, 25, 10, 8);
+
+      // Individual leaf cluster details
+      g.fillStyle(mainLeafColor, 0.4);
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const distance = 10 + Math.random() * 6;
+        const x = 32 + Math.cos(angle) * distance;
+        const y = 24 + Math.sin(angle) * distance * 0.7;
+
+        g.fillEllipse(x, y, 3 + Math.random() * 2, 2 + Math.random() * 2);
+      }
     }
 
     g.generateTexture(key, 64, 64);
     g.destroy();
   }
 
-  private createRockTexture(key: string, _scale?: number) {
+  private createRockTexture(key: string, scale?: number) {
     if (this.textures.exists(key)) return;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
 
-    // Enhanced shadow with multiple layers
-    g.fillGradientStyle(0x0a0f10, 0x1a1f20, 0x0a0f10, 0x0a0f10, 0.25);
-    g.fillEllipse(32, 42, 28, 10);
+    const rockScale = scale || 1.0;
 
-    // Main rock with layered stone appearance
-    g.fillGradientStyle(0x6d766a, 0x7e8775, 0x5c655a, 0x6d766a, 1);
-    g.fillEllipse(32, 36, 28, 18);
+    // Rock shadow (more realistic for isometric view)
+    g.fillGradientStyle(0x0a0f10, 0x1a1f20, 0x0a0f10, 0x0a0f10, 0.4);
+    g.fillEllipse(32, 48, 20 * rockScale, 8 * rockScale);
 
-    // Rock stratification layers
-    g.fillStyle(0x5c655a, 0.8);
-    g.fillEllipse(32, 38, 24, 3);
-    g.fillEllipse(32, 42, 20, 3);
+    // Main rock body with 3D isometric appearance
+    const rockBase = 0x6d766a;
+    const rockLight = 0x8a9487;
+    const rockDark = 0x5c655a;
 
-    // Weathering highlights
-    g.fillStyle(0x868f82, 0.84);
-    g.fillEllipse(28, 33, 12, 7);
-    g.fillEllipse(36, 35, 10, 5);
+    // Main rock shape (slightly irregular)
+    g.fillGradientStyle(rockLight, rockBase, rockDark, rockBase, 1);
+    g.fillEllipse(32, 38, 24 * rockScale, 16 * rockScale);
 
-    // Moss patches on rock
-    g.fillStyle(0x4a6b3a, 0.6);
-    g.fillEllipse(24, 34, 6, 4);
-    g.fillEllipse(38, 37, 4, 3);
-    g.fillEllipse(30, 40, 5, 3);
+    // Top face (brightest - isometric lighting)
+    g.fillStyle(rockLight, 0.9);
+    g.fillEllipse(32, 32, 20 * rockScale, 12 * rockScale);
 
-    // Rock texture details - cracks and weathering
-    g.lineStyle(1, 0x5c655a, 0.7);
-    g.strokeLineShape(new Phaser.Geom.Line(22, 32, 30, 38));
-    g.strokeLineShape(new Phaser.Geom.Line(34, 30, 40, 36));
-    g.strokeLineShape(new Phaser.Geom.Line(26, 40, 35, 42));
+    // Left face (medium light)
+    g.fillStyle(rockBase, 0.8);
+    g.fillEllipse(26, 36, 16 * rockScale, 10 * rockScale);
 
-    // Bright mineral veins
-    g.lineStyle(1, 0xaeb7ab, 0.4);
-    g.strokeLineShape(new Phaser.Geom.Line(25, 35, 32, 33));
-    g.strokeLineShape(new Phaser.Geom.Line(36, 34, 42, 37));
+    // Right face (darker shadow side)
+    g.fillStyle(rockDark, 0.7);
+    g.fillEllipse(38, 36, 14 * rockScale, 8 * rockScale);
 
-    // Small pebbles around base
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
-      const x = 32 + Math.cos(angle) * 18;
-      const y = 42 + Math.sin(angle) * 6;
+    // Rock texture details and cracks
+    g.lineStyle(1, rockDark, 0.8);
+    // Major crack across the rock
+    g.strokeLineShape(
+      new Phaser.Geom.Line(
+        22 * rockScale,
+        34 * rockScale,
+        42 * rockScale,
+        38 * rockScale,
+      ),
+    );
 
-      g.fillStyle(0x6d766a, 0.7);
-      g.fillCircle(x, y, 1 + Math.random() * 2);
+    // Secondary cracks
+    g.lineStyle(1, rockDark, 0.6);
+    g.strokeLineShape(
+      new Phaser.Geom.Line(
+        28 * rockScale,
+        30 * rockScale,
+        36 * rockScale,
+        34 * rockScale,
+      ),
+    );
+    g.strokeLineShape(
+      new Phaser.Geom.Line(
+        30 * rockScale,
+        40 * rockScale,
+        38 * rockScale,
+        42 * rockScale,
+      ),
+    );
+
+    // Rock surface texture (weathered areas)
+    g.fillStyle(rockDark, 0.3);
+    for (let i = 0; i < 8; i++) {
+      const x = 26 + Math.random() * 12;
+      const y = 30 + Math.random() * 12;
+      g.fillRect(x * rockScale, y * rockScale, 1, 1);
     }
 
-    // Bright highlight on top
-    g.fillStyle(0xaeb7ab, 0.3);
-    g.fillEllipse(30, 29, 8, 4);
+    // Bright mineral highlights
+    g.fillStyle(rockLight, 0.6);
+    g.fillRect(28 * rockScale, 32 * rockScale, 2, 1);
+    g.fillRect(35 * rockScale, 34 * rockScale, 2, 1);
+    g.fillRect(31 * rockScale, 36 * rockScale, 1, 2);
+
+    // Moss patches (classic RPG detail)
+    g.fillStyle(0x4a6b3a, 0.7);
+    g.fillEllipse(25 * rockScale, 35 * rockScale, 4 * rockScale, 3 * rockScale);
+    g.fillEllipse(37 * rockScale, 39 * rockScale, 3 * rockScale, 2 * rockScale);
+
+    // Small moss details
+    g.fillStyle(0x5a7a4a, 0.5);
+    g.fillRect(24 * rockScale, 36 * rockScale, 1, 1);
+    g.fillRect(38 * rockScale, 40 * rockScale, 1, 1);
+
+    // Scattered pebbles around base
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const distance = 12 + Math.random() * 8;
+      const x = 32 + Math.cos(angle) * distance * rockScale;
+      const y = 42 + Math.sin(angle) * 4 * rockScale;
+
+      g.fillStyle(rockBase, 0.6 + Math.random() * 0.3);
+      g.fillCircle(x, y, (1 + Math.random()) * rockScale);
+
+      // Pebble highlight
+      g.fillStyle(rockLight, 0.4);
+      g.fillRect(x - 0.5, y - 0.5, 1, 1);
+    }
+
+    // Top highlight (sun reflection)
+    g.fillStyle(rockLight, 0.4);
+    g.fillEllipse(30 * rockScale, 29 * rockScale, 6 * rockScale, 3 * rockScale);
 
     g.generateTexture(key, 64, 64);
     g.destroy();
