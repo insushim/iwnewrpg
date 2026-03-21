@@ -517,7 +517,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.serverName = data?.serverName ?? useGameStore.getState().serverName;
 
-    this.cameras.main.setBackgroundColor("#07101a");
+    this.cameras.main.setBackgroundColor("#4a7a3a");
     this.cameras.main.setZoom(0.72);
     this.cameras.main.roundPixels = true;
 
@@ -4265,6 +4265,21 @@ export class WorldScene extends Phaser.Scene {
 
     this.actorLayer?.add(container);
     this.monsterSprites.set(payload.id, container);
+
+    // Initialize AI for all monsters (online + offline) so they wander
+    if (!this.monsterAI.has(payload.id)) {
+      this.monsterAI.set(payload.id, {
+        state: "idle",
+        spawnX: payload.x,
+        spawnY: payload.y,
+        wanderTargetX: payload.x,
+        wanderTargetY: payload.y,
+        wanderTimer: 0,
+        lastChaseAt: 0,
+        lastAttackAt: 0,
+      });
+    }
+
     if (isBoss) {
       this.playBossEntrance(container.x, container.y);
     }
@@ -6867,7 +6882,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private updateMonsterAI() {
-    if (!this.isOfflineMode || !this.localPlayer) return;
+    if (!this.localPlayer) return;
     const now = this.time.now;
 
     this.monsterSprites.forEach((sprite, monsterId) => {
@@ -6889,6 +6904,9 @@ export class WorldScene extends Phaser.Scene {
       // Leash: monster gives up if too far from spawn
       const LEASH_DIST = 900;
 
+      // Online monsters only wander (server handles combat)
+      const isOnlineMonster = !this.offlineMonsterHp.has(monsterId);
+
       // Check if monster was recently attacked by player (fight back mechanic)
       const monsterData = this.offlineMonsterHp.get(monsterId);
       const wasRecentlyAttacked =
@@ -6901,7 +6919,10 @@ export class WorldScene extends Phaser.Scene {
         ai.spawnY,
       );
 
-      if (distToPlayer < AGGRO_RANGE || wasRecentlyAttacked) {
+      if (isOnlineMonster) {
+        // Online monsters: wander only (server manages chase/attack)
+        ai.state = "idle";
+      } else if (distToPlayer < AGGRO_RANGE || wasRecentlyAttacked) {
         ai.state = "chase";
         ai.lastChaseAt = now;
       } else if (ai.state === "chase" && now - ai.lastChaseAt > 8000) {
