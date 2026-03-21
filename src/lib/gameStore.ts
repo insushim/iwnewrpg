@@ -111,7 +111,38 @@ type UiState = {
   deathOpen: boolean;
   expLostOnDeath: number;
   minimapOpen: boolean;
+  rankingOpen: boolean;
 };
+
+type RankingEntry = {
+  id: string;
+  name: string;
+  level: number;
+  combatPower: number;
+  totalKills: number;
+  className: string;
+};
+
+type RankingState = {
+  rankings: RankingEntry[];
+  myRank: number;
+  lastUpdated: number;
+};
+
+type DailyChallenge = {
+  id: string;
+  description: string;
+  target: number;
+  progress: number;
+  reward: { gold: number; exp: number };
+  completed: boolean;
+};
+
+type AutoNavTarget = {
+  x: number;
+  y: number;
+  label: string;
+} | null;
 
 type WorldPlayer = {
   id: string;
@@ -214,6 +245,18 @@ type GameStore = {
   worldMonsters: WorldMonster[];
   quiz: QuizState;
   transform: TransformState;
+  ranking: RankingState;
+  dailyChallenges: DailyChallenge[];
+  autoNavTarget: AutoNavTarget;
+  // 콤보/연속 킬 시스템
+  comboKills: number;
+  comboTimer: number;
+  maxCombo: number;
+  comboMultiplier: number;
+  lastKillTime: number;
+  // 자동 사냥 시스템
+  autoHuntEnabled: boolean;
+  lastAutoPotion: number;
   setPlayer: (player: Partial<PlayerSnapshot>) => void;
   setServerName: (serverName: string) => void;
   setGrade: (grade: number) => void;
@@ -301,6 +344,22 @@ type GameStore = {
     exp: number;
     items?: string[];
   }) => void;
+  // 새로운 기능들
+  setRankings: (rankings: RankingEntry[], myRank: number) => void;
+  toggleRanking: () => void;
+  requestRankings: () => void;
+  generateDailyChallenges: () => void;
+  updateChallengeProgress: (challengeId: string, progress: number) => void;
+  setAutoNavTarget: (target: AutoNavTarget) => void;
+  checkMilestoneRewards: (newLevel: number) => void;
+  // 콤보/연속 킬 시스템 메서드
+  incrementCombo: () => void;
+  resetCombo: () => void;
+  tickCombo: () => void;
+  // 자동 사냥 시스템 메서드
+  toggleAutoHunt: () => void;
+  // 전투력 계산
+  getCombatPower: () => number;
 };
 
 const INITIAL_INVENTORY: InventoryItem[] = [
@@ -414,6 +473,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     deathOpen: false,
     expLostOnDeath: 0,
     minimapOpen: true,
+    rankingOpen: false,
   },
   connected: false,
   inCombat: false,
@@ -441,6 +501,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
     remaining: 0,
     cooldownUntil: 0,
   },
+  ranking: {
+    rankings: [],
+    myRank: 0,
+    lastUpdated: 0,
+  },
+  dailyChallenges: [],
+  autoNavTarget: null,
+  // 콤보/연속 킬 시스템 초기값
+  comboKills: 0,
+  comboTimer: 0,
+  maxCombo: 0,
+  comboMultiplier: 1,
+  lastKillTime: 0,
+  // 자동 사냥 시스템 초기값
+  autoHuntEnabled: false,
+  lastAutoPotion: 0,
   setPlayer: (player) =>
     set((state) => ({
       player: {
@@ -1203,6 +1279,89 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     return { str: baseStr + derived.maxAttack, dex: 4, int: 2 };
   },
+  // 콤보/연속 킬 시스템
+  incrementCombo: () =>
+    set((state) => {
+      const now = Date.now();
+      const newComboKills = state.comboKills + 1;
+      const newMaxCombo = Math.max(state.maxCombo, newComboKills);
+
+      let newMultiplier = 1;
+      if (newComboKills <= 2) newMultiplier = 1;
+      else if (newComboKills <= 5) newMultiplier = 1.5;
+      else if (newComboKills <= 10) newMultiplier = 2;
+      else if (newComboKills <= 20) newMultiplier = 3;
+      else newMultiplier = 5;
+
+      return {
+        comboKills: newComboKills,
+        comboTimer: 15000, // 15초
+        maxCombo: newMaxCombo,
+        comboMultiplier: newMultiplier,
+        lastKillTime: now,
+      };
+    }),
+  resetCombo: () =>
+    set(() => ({
+      comboKills: 0,
+      comboTimer: 0,
+      comboMultiplier: 1,
+    })),
+  tickCombo: () =>
+    set((state) => {
+      if (state.comboTimer <= 0) {
+        return {
+          comboKills: 0,
+          comboTimer: 0,
+          comboMultiplier: 1,
+        };
+      }
+      return {
+        comboTimer: Math.max(0, state.comboTimer - 100), // 100ms tick
+      };
+    }),
+  // 자동 사냥 시스템
+  toggleAutoHunt: () =>
+    set((state) => ({
+      autoHuntEnabled: !state.autoHuntEnabled,
+    })),
+  // 전투력 계산
+  getCombatPower: () => {
+    const { player, equipment } = get();
+    const derived = getDerivedStatsFromState(player, equipment);
+    const weapon = equipment.weapon ? ITEMS[equipment.weapon.id] : null;
+    const lvBonus = Math.floor(player.level / 2) * 2;
+
+    // 기본 스탯 계산 (기존 로직 기반)
+    let baseStr = 6 + lvBonus + derived.maxAttack;
+    let baseDex = 4;
+    let baseInt = 2;
+
+    if (weapon?.subtype === "staff" || player.className === "Arcanist") {
+      baseStr = 2;
+      baseDex = 2;
+      baseInt =
+        8 + derived.maxAttack + (weapon?.stats.spellPower ?? 0) + lvBonus;
+    } else if (weapon?.subtype === "bow" || player.className === "Ranger") {
+      baseStr = 3;
+      baseDex =
+        8 + derived.maxAttack + (weapon?.stats.rangedDamage ?? 0) + lvBonus;
+      baseInt = 2;
+    }
+
+    // 기본 스탯 합계 * 레벨 + 장비 보너스 + 인챈트 보너스
+    const baseStats = baseStr + baseDex + baseInt + 10 + 10; // CON, WIS 기본값
+    const equipBonus =
+      derived.maxAttack + derived.ac + derived.maxHp + derived.maxMp;
+
+    // 인챈트 보너스 계산
+    const enchantBonus = Object.values(equipment).reduce((sum, item) => {
+      if (!item?.enchantLevel) return sum;
+      return sum + item.enchantLevel * 100; // +1당 100 전투력
+    }, 0);
+
+    return baseStats * player.level + equipBonus + enchantBonus;
+  },
   getDerivedStats: () => {
     const { player, equipment } = get();
     return getDerivedStatsFromState(player, equipment);
@@ -1509,6 +1668,142 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pendingLevelUp: leveled,
         achievements: updatedMapAchievements,
         chat: [...state.chat.slice(-(50 - messages.length)), ...messages],
+      };
+    });
+  },
+
+  // 새로운 기능들
+  setRankings: (rankings, myRank) =>
+    set(() => ({
+      ranking: {
+        rankings,
+        myRank,
+        lastUpdated: Date.now(),
+      },
+    })),
+
+  toggleRanking: () =>
+    set((state) => ({
+      ui: {
+        ...state.ui,
+        rankingOpen: !state.ui.rankingOpen,
+      },
+    })),
+
+  requestRankings: () => {
+    // Socket event to request rankings from server
+    const socket = (globalThis as any).__socket;
+    if (socket?.connected) {
+      socket.emit("ranking:request");
+    }
+  },
+
+  generateDailyChallenges: () =>
+    set((state) => {
+      const challenges: DailyChallenge[] = [
+        {
+          id: "daily_kills",
+          description: "몬스터 20마리 처치",
+          target: 20,
+          progress: 0,
+          reward: { gold: 1000, exp: 500 },
+          completed: false,
+        },
+        {
+          id: "daily_combos",
+          description: "콤보 10회 달성",
+          target: 10,
+          progress: 0,
+          reward: { gold: 800, exp: 300 },
+          completed: false,
+        },
+        {
+          id: "daily_boss",
+          description: "보스 1마리 처치",
+          target: 1,
+          progress: 0,
+          reward: { gold: 2000, exp: 1000 },
+          completed: false,
+        },
+      ];
+
+      return {
+        dailyChallenges: challenges,
+      };
+    }),
+
+  updateChallengeProgress: (challengeId, progress) =>
+    set((state) => ({
+      dailyChallenges: state.dailyChallenges.map((challenge) =>
+        challenge.id === challengeId
+          ? {
+              ...challenge,
+              progress: Math.min(progress, challenge.target),
+              completed: progress >= challenge.target,
+            }
+          : challenge,
+      ),
+    })),
+
+  setAutoNavTarget: (target) =>
+    set(() => ({
+      autoNavTarget: target,
+    })),
+
+  checkMilestoneRewards: (newLevel) => {
+    const MILESTONE_REWARDS: Record<
+      number,
+      { gold: number; items: string[]; title?: string }
+    > = {
+      5: { gold: 500, items: ["red_potion"], title: "초보 모험가" },
+      10: { gold: 2000, items: ["iron_sword"], title: "숙련 전사" },
+      15: { gold: 5000, items: ["weapon_enchant_scroll"], title: "베테랑" },
+      20: { gold: 10000, items: ["blue_potion"], title: "영웅의 자질" },
+      25: { gold: 20000, items: ["haste_potion"], title: "전설의 시작" },
+      30: { gold: 50000, items: ["mystery_box"], title: "마스터" },
+    };
+
+    const milestone = MILESTONE_REWARDS[newLevel];
+    if (!milestone) return;
+
+    set((state) => {
+      const nextInventory = [...state.inventory];
+
+      // Add milestone items
+      milestone.items.forEach((itemId) => {
+        const existing = nextInventory.find((item) => item.id === itemId);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          const itemData = ITEMS[itemId];
+          if (itemData) {
+            nextInventory.push({
+              id: itemId,
+              name: itemData.name,
+              quantity: 1,
+              rarity: itemData.rarity,
+              type: itemData.type,
+            });
+          }
+        }
+      });
+
+      const milestoneMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "시스템",
+        message: `🎉 레벨 ${newLevel} 달성! 마일스톤 보상: +${milestone.gold} Gold${milestone.title ? `, 칭호 '${milestone.title}' 획득!` : ""}`,
+        timestamp: Date.now() + 2,
+      };
+
+      return {
+        player: {
+          ...state.player,
+          gold: state.player.gold + milestone.gold,
+        },
+        inventory: nextInventory,
+        activeTitle: milestone.title || state.activeTitle,
+        chat: [...state.chat, milestoneMessage],
       };
     });
   },

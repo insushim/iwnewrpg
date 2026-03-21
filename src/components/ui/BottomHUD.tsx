@@ -48,6 +48,11 @@ export function BottomHUD() {
   const inCombat = useGameStore((state) => state.inCombat);
   const toggleAchievements = useGameStore((state) => state.toggleAchievements);
   const toggleEnchant = useGameStore((state) => state.toggleEnchant);
+  const comboKills = useGameStore((state) => state.comboKills);
+  const comboMultiplier = useGameStore((state) => state.comboMultiplier);
+  const comboTimer = useGameStore((state) => state.comboTimer);
+  const getCombatPower = useGameStore((state) => state.getCombatPower);
+  const autoHuntEnabled = useGameStore((state) => state.autoHuntEnabled);
   const achievements = useGameStore((state) => state.achievements);
   const claimableAchievements = achievements.filter(
     (a) => a.completed && !a.claimed,
@@ -85,6 +90,8 @@ export function BottomHUD() {
     Math.min(100, (player.exp / Math.max(1, player.expToNext)) * 100),
   );
 
+  const toggleRanking = useGameStore((state) => state.toggleRanking);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (
@@ -97,6 +104,10 @@ export function BottomHUD() {
       if (e.key === "q" || e.key === "Q") toggleQuestWindow();
       if (e.key === "a" || e.key === "A") toggleAchievements();
       if (e.key === "e" || e.key === "E") toggleEnchant();
+      if (e.key === "r" || e.key === "R") toggleRanking();
+      if (e.key === "z" || e.key === "Z") {
+        useGameStore.getState().toggleAutoHunt();
+      }
       if (e.key === "1") {
         const hp = inventory?.find((it) => it.id === "red_potion");
         if (hp && hp.quantity > 0) consumeItem("red_potion");
@@ -117,6 +128,7 @@ export function BottomHUD() {
       toggleQuestWindow,
       toggleAchievements,
       toggleEnchant,
+      toggleRanking,
     ],
   );
 
@@ -212,8 +224,21 @@ export function BottomHUD() {
                     classLabel
                   )}
                 </div>
+                <div className="text-[11px] font-semibold text-[#ffd700] mt-0.5">
+                  전투력: {getCombatPower().toLocaleString()}
+                </div>
               </div>
               <div className="flex items-center gap-1.5">
+                {comboKills > 0 && comboTimer > 0 && (
+                  <div className="rounded-full border border-yellow-500/60 bg-yellow-900/50 px-2 py-0.5 text-[9px] tracking-[0.2em] text-yellow-300">
+                    {comboKills}x 콤보 ({comboMultiplier.toFixed(1)}x)
+                  </div>
+                )}
+                {autoHuntEnabled && (
+                  <div className="rounded-full border border-purple-500/60 bg-purple-900/50 px-2 py-0.5 text-[9px] tracking-[0.2em] text-purple-300 animate-pulse">
+                    자동사냥
+                  </div>
+                )}
                 {inCombat && (
                   <div className="rounded-full border border-red-500/60 bg-red-900/50 px-2 py-0.5 text-[9px] tracking-[0.2em] text-red-300 animate-pulse">
                     전투 중
@@ -386,6 +411,20 @@ export function BottomHUD() {
               active={ui.enchantOpen}
               label="[E] 강화"
               onClick={toggleEnchant}
+            />
+          </div>
+          <div className="hidden md:block">
+            <HudButton
+              active={autoHuntEnabled}
+              label="[Z] 자동사냥"
+              onClick={() => useGameStore.getState().toggleAutoHunt()}
+            />
+          </div>
+          <div className="hidden md:block">
+            <HudButton
+              active={ui.rankingOpen}
+              label="[R] 랭킹"
+              onClick={toggleRanking}
             />
           </div>
         </div>

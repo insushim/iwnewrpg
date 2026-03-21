@@ -74,6 +74,8 @@ type SessionPlayer = {
   lastAttackAt: number;
   alignment: number;
   pkCount: number;
+  totalKills: number;
+  combatPower: number;
 };
 
 type GroundLoot = SessionInventoryItem & {
@@ -123,6 +125,8 @@ function createStarterState(payload: ConnectPayload): SessionPlayer {
     inventory: starterInventory,
     alignment: 0,
     pkCount: 0,
+    totalKills: 0,
+    combatPower: 100, // Base combat power
   };
 }
 
@@ -576,6 +580,10 @@ export function createGameServer(server: HttpServer) {
       if (session.alignment < 0) {
         session.alignment = Math.min(0, session.alignment + 1);
       }
+
+      // Track kills for ranking system
+      session.totalKills = (session.totalKills || 0) + 1;
+
       socket.emit("player:state", serializePlayerState(session));
 
       const question = quizzes.generate(result.monster.level);
@@ -754,6 +762,16 @@ export function createGameServer(server: HttpServer) {
               x: loot.x,
               y: loot.y,
             })),
+          });
+
+          // Check for rare drops and emit alerts
+          spawnedLoot.forEach((loot) => {
+            if (loot.rarity && loot.rarity !== "common") {
+              socket.emit("rare_drop", {
+                itemName: loot.name,
+                rarity: loot.rarity,
+              });
+            }
           });
         }
       },
@@ -996,6 +1014,45 @@ export function createGameServer(server: HttpServer) {
           io.to(member.id).emit("chat:message", chatMessage);
         });
       }
+    });
+
+    socket.on("ranking:request", () => {
+      const allSessions = Array.from(sessions.values());
+
+      // Calculate combat power for each session
+      allSessions.forEach((session) => {
+        // Simple combat power calculation: level * 100 + gold/10 + total kills * 5
+        session.combatPower =
+          session.level * 100 +
+          Math.floor(session.gold / 10) +
+          session.totalKills * 5;
+      });
+
+      const rankings = allSessions
+        .filter((s) => s.level > 1) // Only include players who have gained at least 1 level
+        .map((session) => ({
+          id: session.id,
+          name: session.name,
+          level: session.level,
+          combatPower: session.combatPower,
+          totalKills: session.totalKills,
+          className: session.className,
+        }))
+        .sort((a, b) => b.level - a.level) // Sort by level by default
+        .slice(0, 20); // Top 20 only
+
+      // Find current player's rank
+      const currentSession = sessions.get(playerId);
+      let myRank = 0;
+      if (currentSession) {
+        const sortedByLevel = allSessions.sort((a, b) => b.level - a.level);
+        myRank = sortedByLevel.findIndex((s) => s.id === playerId) + 1;
+      }
+
+      socket.emit("ranking:data", {
+        rankings,
+        myRank,
+      });
     });
 
     socket.on("disconnect", async () => {

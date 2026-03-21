@@ -22,6 +22,10 @@ export function GameSocketBridge() {
   const removeDroppedLoot = useGameStore((state) => state.removeDroppedLoot);
   const openDeath = useGameStore((state) => state.openDeath);
   const tickTransform = useGameStore((state) => state.tickTransform);
+  const setRankings = useGameStore((state) => state.setRankings);
+  const checkMilestoneRewards = useGameStore(
+    (state) => state.checkMilestoneRewards,
+  );
 
   useEffect(() => {
     const socket = getSocket();
@@ -82,6 +86,9 @@ export function GameSocketBridge() {
         quests: import("@/lib/gameStore").QuestProgress[];
         mapId: string;
       }) => {
+        const currentLevel = useGameStore.getState().player.level;
+        const newLevel = payload.level;
+
         setPlayer({
           ...(payload.name ? { name: payload.name } : {}),
           ...(payload.className ? { className: payload.className } : {}),
@@ -98,6 +105,11 @@ export function GameSocketBridge() {
         setEquipment(payload.equipment);
         setQuests(payload.quests);
         setCurrentMapId(payload.mapId);
+
+        // Check for milestone rewards if level increased
+        if (newLevel > currentLevel) {
+          checkMilestoneRewards(newLevel);
+        }
       },
     );
     socket.on("player:joined", (payload: { id: string; name: string }) => {
@@ -274,6 +286,28 @@ export function GameSocketBridge() {
       },
     );
 
+    socket.on(
+      "ranking:data",
+      (payload: {
+        rankings: Array<{
+          id: string;
+          name: string;
+          level: number;
+          combatPower: number;
+          totalKills: number;
+          className: string;
+        }>;
+        myRank: number;
+      }) => {
+        setRankings(payload.rankings, payload.myRank);
+        EventBus.emit("ranking_data", payload);
+      },
+    );
+
+    socket.on("rare_drop", (payload: { itemName: string; rarity: string }) => {
+      EventBus.emit("rare_drop", payload);
+    });
+
     if (!socket.connected) {
       socket.connect();
     }
@@ -295,6 +329,8 @@ export function GameSocketBridge() {
       socket.off("player:death");
       socket.off("player:transformed");
       socket.off("chat:message");
+      socket.off("ranking:data");
+      socket.off("rare_drop");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

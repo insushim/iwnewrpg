@@ -376,6 +376,9 @@ export class WorldScene extends Phaser.Scene {
   private lastAttackAt = 0;
   private combatEndTimer?: Phaser.Time.TimerEvent;
   private unsubscribe: Array<() => void> = [];
+  // Auto-hunt system
+  private autoHuntTarget: string | null = null;
+  private lastAutoPotion = 0;
 
   private groundLayer?: Phaser.GameObjects.Container;
   private propLayer?: Phaser.GameObjects.Container;
@@ -472,6 +475,11 @@ export class WorldScene extends Phaser.Scene {
   private summonHudText?: Phaser.GameObjects.Text;
   private summonHudBg?: Phaser.GameObjects.Graphics;
 
+  // 자동 이동 시스템
+  private autoNavTarget: { x: number; y: number } | null = null;
+  private autoNavLabel: Phaser.GameObjects.Text | null = null;
+  private autoNavSpeed = 120; // pixels per second
+
   // 테이밍 시스템
   private tamedMonsters: Array<{
     sprite: Phaser.GameObjects.Container & {
@@ -559,6 +567,9 @@ export class WorldScene extends Phaser.Scene {
     this.updateTamedMonsters();
     this.checkPortalTransitions();
     this.checkAutoPickup();
+    this.processAutoHunt();
+    this.updateComboTimer();
+    this.updateAutoNavigation();
 
     if (this.targetMarker.visible) {
       const target = this.selectedMonsterId
@@ -1302,6 +1313,9 @@ export class WorldScene extends Phaser.Scene {
       ),
       EventBus.on("mobile_stop", () => this.handleMobileStop()),
       EventBus.on("mobile_attack", () => this.handleMobileAttack()),
+      EventBus.on("auto_hunt_toggle", () => {
+        useGameStore.getState().toggleAutoHunt();
+      }),
     );
   }
 
@@ -4567,11 +4581,14 @@ export class WorldScene extends Phaser.Scene {
           isCrit,
           classTone.slashTint,
         );
-        this.showDamageNumber(
+        const store = useGameStore.getState();
+        this.showEnhancedDamageNumber(
           monsterSprite.x,
           monsterSprite.y,
           finalDamage,
           isCrit,
+          store.comboKills,
+          store.comboMultiplier,
         );
       }
 
@@ -4591,12 +4608,37 @@ export class WorldScene extends Phaser.Scene {
 
       // 몬스터 사망 처리
       if (newHp <= 0) {
-        const goldReward =
-          monsterData.goldMin +
-          Math.floor(
-            Math.random() * (monsterData.goldMax - monsterData.goldMin + 1),
-          );
-        const expReward = monsterData.exp;
+        // 콤보 킬 증가
+        const store = useGameStore.getState();
+        store.incrementCombo();
+
+        // 총 킬 수 증가
+        const monsterName = monsterSprite?.label.text ?? "";
+        const isBoss = monsterName.includes("보스");
+        store.registerKill(monsterSprite?.monsterId ?? "", isBoss);
+
+        // 콤보 보너스 적용
+        const goldReward = Math.floor(
+          (monsterData.goldMin +
+            Math.floor(
+              Math.random() * (monsterData.goldMax - monsterData.goldMin + 1),
+            )) *
+            store.comboMultiplier,
+        );
+        const expReward = Math.floor(monsterData.exp * store.comboMultiplier);
+
+        // 콤보 킬 이벤트 발생
+        EventBus.emit("combo_kill", {
+          comboCount: store.comboKills,
+          multiplier: store.comboMultiplier,
+        });
+
+        // 자동 사냥 대상이었다면 클리어
+        if (this.autoHuntTarget === monsterId) {
+          this.autoHuntTarget = null;
+          this.selectedMonsterId = null;
+          this.targetMarker?.setVisible(false);
+        }
 
         // 랜덤 드랍 처리
         const mBase2 = monsterId.split("-offline-")[0];
@@ -4626,6 +4668,12 @@ export class WorldScene extends Phaser.Scene {
                   author: "드랍",
                   message: `✨ [${rarityLabel[itemData.rarity] ?? itemData.rarity}] ${itemData.name} 획득!`,
                   timestamp: Date.now(),
+                });
+
+                // 레어 드랍 이벤트 발생
+                EventBus.emit("rare_drop", {
+                  itemName: itemData.name,
+                  rarity: itemData.rarity,
                 });
               }
             }
@@ -4975,9 +5023,16 @@ export class WorldScene extends Phaser.Scene {
 
   private selectMonster(monsterId: string | null) {
     this.selectedMonsterId = monsterId;
+
+    // Reset auto-hunt when manually selecting a target
+    if (monsterId && this.autoHuntTarget !== monsterId) {
+      this.autoHuntTarget = null;
+    }
+
     if (!monsterId) {
       this.stopAutoAttack();
       this.targetMarker?.setVisible(false);
+      this.autoHuntTarget = null;
       return;
     }
 
@@ -6962,6 +7017,146 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
+  // Auto-hunt system
+  private processAutoHunt() {
+    const store = useGameStore.getState();
+    if (!store.autoHuntEnabled || !this.localPlayer || !this.isOfflineMode) {
+      return;
+    }
+
+    // Auto potion use if HP < 30%
+    const now = this.time.now;
+    if (
+      store.player.hp < store.player.maxHp * 0.3 &&
+      now - this.lastAutoPotion > 3000
+    ) {
+      // 3초 쿨다운
+
+      const potionItem = store.inventory.find(
+        (item) => item.id === "red_potion" && item.quantity > 0,
+      );
+      if (potionItem) {
+        store.consumeItem("red_potion");
+        this.lastAutoPotion = now;
+
+        store.addChat({
+          id: crypto.randomUUID(),
+          channel: "system",
+          author: "자동사냥",
+          message: "자동으로 빨간 물약을 사용했습니다.",
+          timestamp: now,
+        });
+      }
+    }
+
+    // Find target if none
+    if (!this.autoHuntTarget || !this.monsterSprites.has(this.autoHuntTarget)) {
+      this.autoHuntTarget = this.findNearestMonster();
+    }
+
+    // Move to target and attack
+    if (this.autoHuntTarget) {
+      const target = this.monsterSprites.get(this.autoHuntTarget);
+      if (target && target.visible) {
+        const distance = Phaser.Math.Distance.Between(
+          this.localPlayer.x,
+          this.localPlayer.y,
+          target.x,
+          target.y,
+        );
+
+        // Move toward target
+        if (distance > MELEE_RANGE) {
+          const angle = Phaser.Math.Angle.Between(
+            this.localPlayer.x,
+            this.localPlayer.y,
+            target.x,
+            target.y,
+          );
+          const speed = MOVE_SPEED;
+
+          this.localPlayer.setPosition(
+            this.localPlayer.x + Math.cos(angle) * speed * (1 / 60),
+            this.localPlayer.y + Math.sin(angle) * speed * (1 / 60),
+          );
+
+          this.updatePlayerDirection(angle);
+          this.localPlayer.animState = "walk";
+        } else {
+          // In range, attack
+          this.localPlayer.animState = "attack";
+          if (!this.selectedMonsterId) {
+            this.selectedMonsterId = this.autoHuntTarget;
+            this.targetMarker?.setVisible(true);
+          }
+
+          if (now - this.lastAttackAt > 1500) {
+            // 1.5초 공격 쿨다운
+            if (this.autoHuntTarget) this.performAttack(this.autoHuntTarget);
+            this.lastAttackAt = now;
+          }
+        }
+      } else {
+        this.autoHuntTarget = null;
+      }
+    } else {
+      // No target found, idle
+      this.localPlayer.animState = "idle";
+    }
+  }
+
+  private findNearestMonster(): string | null {
+    if (!this.localPlayer) return null;
+
+    let nearest: string | null = null;
+    let minDistance = 600; // Max auto-hunt range
+
+    this.monsterSprites.forEach((sprite, monsterId) => {
+      if (!sprite.visible) return;
+
+      const monsterData = useGameStore
+        .getState()
+        .worldMonsters.find((m) => m.id === monsterId);
+      if (!monsterData || monsterData.hp <= 0) return;
+
+      const distance = Phaser.Math.Distance.Between(
+        this.localPlayer!.x,
+        this.localPlayer!.y,
+        sprite.x,
+        sprite.y,
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = monsterId;
+      }
+    });
+
+    return nearest;
+  }
+
+  private updatePlayerDirection(angle: number) {
+    // Update facing direction based on movement angle
+    const degrees = Phaser.Math.RadToDeg(angle);
+    if (degrees >= -45 && degrees < 45) {
+      this.localPlayer!.facing = "e";
+    } else if (degrees >= 45 && degrees < 135) {
+      this.localPlayer!.facing = "s";
+    } else if (degrees >= 135 || degrees < -135) {
+      this.localPlayer!.facing = "w";
+    } else {
+      this.localPlayer!.facing = "n";
+    }
+  }
+
+  // Combo timer update
+  private updateComboTimer() {
+    const store = useGameStore.getState();
+    if (store.comboTimer > 0) {
+      store.tickCombo();
+    }
+  }
+
   private showChatBubble(playerId: string, message: string) {
     const sprite = this.playerSprites.get(playerId);
     if (!sprite) return;
@@ -7150,6 +7345,72 @@ export class WorldScene extends Phaser.Scene {
         shadow.destroy();
       },
     });
+  }
+
+  // Enhanced damage numbers with combo support
+  private showEnhancedDamageNumber(
+    x: number,
+    y: number,
+    damage: number,
+    isCrit: boolean,
+    comboCount: number = 0,
+    multiplier: number = 1,
+  ) {
+    // 기본 데미지 숫자 표시
+    this.showDamageNumber(x, y, damage, isCrit);
+
+    // 콤보 표시
+    if (comboCount > 1) {
+      const comboText = this.add
+        .text(x, y + 20, `x${comboCount} 콤보!`, {
+          fontSize: "16px",
+          color: "#ffd700",
+          fontFamily: "serif",
+          fontStyle: "bold",
+          stroke: "#8b4513",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5)
+        .setDepth(9999);
+
+      this.effectLayer?.add(comboText);
+
+      this.tweens.add({
+        targets: comboText,
+        y: y - 20,
+        alpha: 0,
+        scale: 1.5,
+        duration: 1200,
+        ease: "Quad.Out",
+        onComplete: () => comboText.destroy(),
+      });
+    }
+
+    // 멀티플라이어 표시
+    if (multiplier > 1) {
+      const multText = this.add
+        .text(x + 30, y - 10, `${multiplier.toFixed(1)}x`, {
+          fontSize: "14px",
+          color: "#ff6b35",
+          fontFamily: "serif",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 2,
+        })
+        .setOrigin(0.5)
+        .setDepth(9999);
+
+      this.effectLayer?.add(multText);
+
+      this.tweens.add({
+        targets: multText,
+        y: y - 40,
+        alpha: 0,
+        duration: 1000,
+        ease: "Quad.Out",
+        onComplete: () => multText.destroy(),
+      });
+    }
   }
 
   private showHitEffect(x: number, y: number) {
@@ -8595,6 +8856,151 @@ export class WorldScene extends Phaser.Scene {
       message: "순간이동 스크롤을 사용했습니다!",
       timestamp: Date.now(),
     });
+  }
+
+  private updateAutoNavigation() {
+    // Check for new auto-nav targets from the store
+    const storeTarget = useGameStore.getState().autoNavTarget;
+    if (storeTarget && !this.autoNavTarget) {
+      this.setAutoNavTarget(storeTarget.x, storeTarget.y, storeTarget.label);
+    }
+
+    if (!this.localPlayer || !this.autoNavTarget) {
+      return;
+    }
+
+    const targetX = this.autoNavTarget.x;
+    const targetY = this.autoNavTarget.y;
+    const playerX = this.localPlayer.x;
+    const playerY = this.localPlayer.y;
+
+    const distance = Phaser.Math.Distance.Between(
+      playerX,
+      playerY,
+      targetX,
+      targetY,
+    );
+
+    // Arrived at target
+    if (distance < 20) {
+      this.clearAutoNavigation();
+      return;
+    }
+
+    // Move toward target
+    const deltaTime = this.game.loop.delta / 1000; // Convert to seconds
+    const moveDistance = this.autoNavSpeed * deltaTime;
+
+    if (moveDistance >= distance) {
+      // Will reach target this frame
+      this.localPlayer.setPosition(targetX, targetY);
+      this.clearAutoNavigation();
+    } else {
+      // Move a step toward target
+      const angle = Phaser.Math.Angle.Between(
+        playerX,
+        playerY,
+        targetX,
+        targetY,
+      );
+      const newX = playerX + Math.cos(angle) * moveDistance;
+      const newY = playerY + Math.sin(angle) * moveDistance;
+
+      // Check for collision before moving
+      if (true) {
+        // Auto-nav movement
+        this.localPlayer.setPosition(newX, newY);
+
+        // Update player facing direction
+        if (Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle))) {
+          this.localPlayer.facing = Math.cos(angle) > 0 ? "e" : "w";
+        } else {
+          this.localPlayer.facing = Math.sin(angle) > 0 ? "s" : "n";
+        }
+
+        this.localPlayer.animState = "walk";
+
+        // Send movement to server if online
+        const socket = getSocket();
+        if (socket?.connected) {
+          socket.emit("player:move", { x: newX, y: newY });
+        }
+
+        // Update store
+        useGameStore.getState().upsertWorldPlayer({
+          id: "localPlayer",
+          name: "Player",
+          mapId: this.mapId,
+          x: newX,
+          y: newY,
+        });
+      } else {
+        // Hit an obstacle, cancel auto-navigation
+        this.clearAutoNavigation();
+        useGameStore.getState().addChat({
+          id: crypto.randomUUID(),
+          channel: "system",
+          author: "시스템",
+          message: "경로가 막혀있어 이동을 중단합니다.",
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    // Update label position if exists
+    if (this.autoNavLabel) {
+      this.autoNavLabel.setPosition(
+        this.localPlayer.x,
+        this.localPlayer.y - 60,
+      );
+    }
+  }
+
+  private setAutoNavTarget(x: number, y: number, label?: string) {
+    this.autoNavTarget = { x, y };
+
+    // Show navigation indicator
+    if (this.autoNavLabel) {
+      this.autoNavLabel.destroy();
+    }
+
+    this.autoNavLabel = this.add
+      .text(
+        this.localPlayer?.x || x,
+        (this.localPlayer?.y || y) - 60,
+        label || "이동 중...",
+        {
+          fontSize: "12px",
+          color: "#00ff00",
+          backgroundColor: "#000000",
+          padding: { x: 4, y: 2 },
+        },
+      )
+      .setOrigin(0.5)
+      .setDepth(2000);
+
+    useGameStore.getState().addChat({
+      id: crypto.randomUUID(),
+      channel: "system",
+      author: "시스템",
+      message: `${label || "목적지"}로 이동합니다.`,
+      timestamp: Date.now(),
+    });
+  }
+
+  private clearAutoNavigation() {
+    this.autoNavTarget = null;
+    useGameStore.getState().setAutoNavTarget(null);
+
+    if (this.autoNavLabel) {
+      this.autoNavLabel.destroy();
+      this.autoNavLabel = null;
+    }
+
+    // Stop walking animation
+    if (this.localPlayer) {
+      this.localPlayer.animState = "idle";
+    }
   }
 
   private handleReturnToTown() {

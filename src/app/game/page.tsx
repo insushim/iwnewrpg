@@ -19,6 +19,11 @@ import { LevelUpEffect } from "@/components/ui/LevelUpEffect";
 import { WorldBossAlert } from "@/components/ui/WorldBossAlert";
 import { TransformPanel } from "@/components/ui/TransformPanel";
 import { MobileControls } from "@/components/ui/MobileControls";
+import { RankingPanel } from "@/components/ui/RankingPanel";
+import { RareDropAlert } from "@/components/ui/RareDropAlert";
+import { ComboAlert } from "@/components/ui/ComboAlert";
+import { DailyChallengePanel } from "@/components/ui/DailyChallengePanel";
+import { AutoNavDemo } from "@/components/ui/AutoNavDemo";
 import { useGameStore } from "@/lib/gameStore";
 
 const PhaserGame = dynamic(
@@ -80,6 +85,9 @@ export default function GamePage() {
         <InventoryPanel />
       </div>
 
+      <DailyChallengePanel />
+      <AutoNavDemo />
+
       <BottomHUD />
       <DialogueWindow />
       <QuestWindow />
@@ -93,6 +101,9 @@ export default function GamePage() {
       <WorldBossAlert />
       <TransformPanel />
       <MobileControls />
+      <RankingPanel />
+      <RareDropAlert />
+      <ComboAlert />
     </main>
   );
 }

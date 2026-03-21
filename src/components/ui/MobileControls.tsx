@@ -32,6 +32,7 @@ export function MobileControls() {
 
   const consumeItem = useGameStore((state) => state.consumeItem);
   const inventory = useGameStore((state) => state.inventory);
+  const autoHuntEnabled = useGameStore((state) => state.autoHuntEnabled);
 
   // Check if device supports touch
   useEffect(() => {
@@ -205,6 +206,10 @@ export function MobileControls() {
     }
   }, [inventory, consumeItem]);
 
+  const handleToggleAutoHunt = useCallback(() => {
+    EventBus.emit("auto_hunt_toggle", {});
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -276,6 +281,20 @@ export function MobileControls() {
           style={{ touchAction: "manipulation" }}
         >
           <div className="text-sm font-bold">🧪</div>
+        </button>
+
+        {/* Auto Hunt Toggle Button */}
+        <button
+          onTouchStart={handleToggleAutoHunt}
+          onClick={handleToggleAutoHunt}
+          className={`h-14 w-14 rounded-full border-2 transition-all duration-200 active:scale-95 ${
+            autoHuntEnabled
+              ? "border-yellow-400/60 bg-yellow-600/60 text-yellow-100 shadow-lg shadow-yellow-400/20"
+              : "border-purple-400/60 bg-purple-600/40 text-white backdrop-blur-sm"
+          }`}
+          style={{ touchAction: "manipulation" }}
+        >
+          <div className="text-sm font-bold">🤖</div>
         </button>
       </div>
 

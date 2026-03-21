@@ -112,6 +112,20 @@ type EventPayloadMap = {
   mobile_stop: Record<string, never>;
   mobile_attack: Record<string, never>;
   mobile_use_potion: Record<string, never>;
+  auto_hunt_toggle: Record<string, never>;
+  combo_kill: { comboCount: number; multiplier: number };
+  rare_drop: { itemName: string; rarity: string };
+  ranking_data: {
+    rankings: Array<{
+      id: string;
+      name: string;
+      level: number;
+      combatPower: number;
+      totalKills: number;
+      className: string;
+    }>;
+    myRank: number;
+  };
 };
 
 type EventKey = keyof EventPayloadMap;
