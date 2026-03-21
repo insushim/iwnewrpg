@@ -39,36 +39,36 @@ export class BootScene extends Phaser.Scene {
 
   private createSpriteTextures() {
     // Enhanced tile system with variations
-    this.createTileTexture("tile_grass_a", 0x335f39, 0x15301a, 0x5b9a56);
-    this.createTileTexture("tile_grass_a_var1", 0x2f5435, 0x132c18, 0x578f52);
-    this.createTileTexture("tile_grass_a_var2", 0x37653d, 0x17321c, 0x5fa35a);
+    this.createTileTexture("tile_grass_a", 0x5da65e, 0x3a7a3a, 0x8cd88c);
+    this.createTileTexture("tile_grass_a_var1", 0x58a058, 0x377637, 0x88d288);
+    this.createTileTexture("tile_grass_a_var2", 0x62ac62, 0x3d7e3d, 0x90de90);
 
-    this.createTileTexture("tile_grass_b", 0x2b5130, 0x142a17, 0x4d8649);
-    this.createTileTexture("tile_grass_b_var1", 0x27492c, 0x122617, 0x497a45);
-    this.createTileTexture("tile_grass_b_var2", 0x2f5934, 0x162e19, 0x51924d);
+    this.createTileTexture("tile_grass_b", 0x4e9050, 0x357035, 0x7cc87c);
+    this.createTileTexture("tile_grass_b_var1", 0x4a8a4c, 0x336c33, 0x78c278);
+    this.createTileTexture("tile_grass_b_var2", 0x529654, 0x377437, 0x80ce80);
 
-    this.createTileTexture("tile_meadow", 0x5b7d3f, 0x2e421d, 0x8fbe62);
-    this.createTileTexture("tile_meadow_var1", 0x57773b, 0x2c3e1b, 0x8bb25e);
-    this.createTileTexture("tile_meadow_var2", 0x5f8343, 0x304621, 0x93ca66);
+    this.createTileTexture("tile_meadow", 0x7aa855, 0x4e7a30, 0xb0e880);
+    this.createTileTexture("tile_meadow_var1", 0x76a451, 0x4c782e, 0xace47c);
+    this.createTileTexture("tile_meadow_var2", 0x7eac59, 0x507c32, 0xb4ec84);
 
-    this.createTileTexture("tile_forest", 0x28462d, 0x102118, 0x52704d);
-    this.createTileTexture("tile_forest_var1", 0x244029, 0x0e1d16, 0x4e6849);
-    this.createTileTexture("tile_forest_var2", 0x2c4e31, 0x122519, 0x567851);
+    this.createTileTexture("tile_forest", 0x468a4e, 0x2a5e30, 0x72b870);
+    this.createTileTexture("tile_forest_var1", 0x42864a, 0x285c2e, 0x6eb46c);
+    this.createTileTexture("tile_forest_var2", 0x4a8e52, 0x2c6032, 0x76bc74);
 
-    this.createTileTexture("tile_moss", 0x42583a, 0x1f2d1e, 0x779566);
-    this.createTileTexture("tile_moss_var1", 0x3e5236, 0x1d2b1c, 0x738962);
-    this.createTileTexture("tile_moss_var2", 0x465e3e, 0x21311f, 0x7ba16a);
+    this.createTileTexture("tile_moss", 0x629070, 0x3a6040, 0x90c898);
+    this.createTileTexture("tile_moss_var1", 0x5e8c6c, 0x385e3e, 0x8cc494);
+    this.createTileTexture("tile_moss_var2", 0x669474, 0x3c6242, 0x94cc9c);
 
-    this.createTileTexture("tile_dirt", 0x69533a, 0x342518, 0xa48761);
-    this.createTileTexture("tile_dirt_var1", 0x654f36, 0x322318, 0xa0835d);
-    this.createTileTexture("tile_dirt_var2", 0x6d573e, 0x36271a, 0xa88b65);
+    this.createTileTexture("tile_dirt", 0x9a7e55, 0x6a5030, 0xccb488);
+    this.createTileTexture("tile_dirt_var1", 0x967a51, 0x684e2e, 0xc8b084);
+    this.createTileTexture("tile_dirt_var2", 0x9e8259, 0x6c5232, 0xd0b88c);
 
-    this.createTileTexture("tile_path", 0x8f7c58, 0x463622, 0xb8a27c);
-    this.createTileTexture("tile_path_var1", 0x8b7854, 0x443420, 0xb49e78);
-    this.createTileTexture("tile_path_var2", 0x93805c, 0x483824, 0xbca680);
+    this.createTileTexture("tile_path", 0xb8a270, 0x786040, 0xe0cc9a);
+    this.createTileTexture("tile_path_var1", 0xb49e6c, 0x765e3e, 0xdcc896);
+    this.createTileTexture("tile_path_var2", 0xbca674, 0x7a6242, 0xe4d09e);
 
-    this.createTileTexture("tile_cobble", 0x667071, 0x343a3b, 0xaab4b5);
-    this.createTileTexture("tile_cobble_var1", 0x626c6d, 0x323839, 0xa6b0b1);
+    this.createTileTexture("tile_cobble", 0x8a9495, 0x5a6465, 0xc4ced0);
+    this.createTileTexture("tile_cobble_var1", 0x869091, 0x586263, 0xc0cacc);
     this.createTileTexture("tile_cobble_var2", 0x6a7475, 0x363c3d, 0xaeb8b9);
 
     this.createTileTexture("tile_sand", 0xc19a6b, 0x8b6f42, 0xe6c299);

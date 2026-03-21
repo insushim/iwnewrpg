@@ -5627,14 +5627,14 @@ export class WorldScene extends Phaser.Scene {
     } else if (timeRatio < 0.65) {
       // Dusk (50-65%)
       newPhase = "dusk";
-      phaseAlpha = 0.15;
+      phaseAlpha = 0.08;
       phaseColor = 0xd2691e; // Saddle brown
       timeIcon = "🌇";
       timeLabel = "저녁";
     } else {
       // Night (65-100%)
       newPhase = "night";
-      phaseAlpha = 0.4;
+      phaseAlpha = 0.2;
       phaseColor = 0x1a1a2e; // Dark blue
       timeIcon = "🌙";
       timeLabel = "밤";
