@@ -6,6 +6,7 @@ import { ACHIEVEMENTS } from "@/game/data/achievements";
 import { rollEnchant } from "@/game/systems/enchant";
 import { QUESTS, type QuestData } from "@/game/data/quests";
 import { getSocket } from "@/lib/socket";
+import { EventBus } from "@/components/game/EventBus";
 import { ArmorSubType, ItemType } from "@/types/item";
 import type { QuizQuestion, QuizReward } from "@/types/quiz";
 
@@ -875,7 +876,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         expLostOnDeath: expLost,
       },
     })),
-  closeDeath: () =>
+  closeDeath: () => {
     set((state) => {
       const derived = getDerivedStatsFromState(state.player, state.equipment);
       // Teleport player to village on respawn
@@ -895,7 +896,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           expLostOnDeath: 0,
         },
       };
-    }),
+    });
+    // Emit respawn event so WorldScene teleports player to town (offline mode)
+    EventBus.emit("player_respawn", {});
+  },
   acceptQuest: (questId) => {
     const socket = getSocket();
     if (socket.connected) {

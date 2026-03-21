@@ -109,6 +109,7 @@ type EventPayloadMap = {
     active: boolean;
   };
   mobile_move: { dx: number; dy: number };
+  player_respawn: Record<string, never>;
   mobile_stop: Record<string, never>;
   mobile_attack: Record<string, never>;
   mobile_use_potion: Record<string, never>;

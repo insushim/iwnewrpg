@@ -415,6 +415,7 @@ export class WorldScene extends Phaser.Scene {
   };
   private lootSprites = new Map<string, LootSprite>();
 
+  private frameCount = 0;
   private isOfflineMode = false;
   private offlineMonsterHp = new Map<
     string,
@@ -528,7 +529,7 @@ export class WorldScene extends Phaser.Scene {
     this.overlayLayer = this.add.container(0, 0);
     this.weatherLayer = this.add.container(0, 0);
     this.createAtmosphere();
-    this.createDayNightCycle();
+    // Day/night cycle disabled
 
     this.destinationMarker = this.add
       .ellipse(0, 0, 30, 18, 0xf6df95, 0.14)
@@ -555,13 +556,17 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
+    this.frameCount += 1;
     this.updateMobileMovement();
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
-    this.updateDayNightCycle();
-    this.updateAmbientLighting();
+    // Day/night removed for brightness
     this.updateAnimatedUnits();
-    this.sortActorLayer();
-    this.updateNpcProximity();
+    if (this.frameCount % 4 === 0) {
+      this.sortActorLayer();
+    }
+    if (this.frameCount % 3 === 0) {
+      this.updateNpcProximity();
+    }
     this.updateMonsterAI();
     this.updateSummonedAllies();
     this.updateTamedMonsters();
@@ -1316,7 +1321,17 @@ export class WorldScene extends Phaser.Scene {
       EventBus.on("auto_hunt_toggle", () => {
         useGameStore.getState().toggleAutoHunt();
       }),
+      EventBus.on("player_respawn", () => this.handleRespawn()),
     );
+  }
+
+  private handleRespawn() {
+    if (!this.localPlayer) return;
+    const townX = 530;
+    const townY = 400;
+    this.localPlayer.setPosition(townX, townY);
+    this.stopAutoAttack();
+    this.clearSelection();
   }
 
   private attachInput() {
@@ -5727,14 +5742,10 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const sorted = [...layer.list].sort((a, b) => {
-      const ay = (a as Phaser.GameObjects.Container).y ?? 0;
-      const by = (b as Phaser.GameObjects.Container).y ?? 0;
-      return ay - by;
-    });
-    sorted.forEach((child, index) => {
-      (child as Phaser.GameObjects.Container).setDepth(index);
-    });
+    const list = layer.list as Phaser.GameObjects.Container[];
+    for (let i = 0; i < list.length; i++) {
+      list[i].setDepth(list[i].y);
+    }
   }
 
   private findMonsterAt(x: number, y: number): MonsterSprite | null {

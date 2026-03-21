@@ -33,8 +33,19 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    this.createSpriteTextures();
-    this.scene.start("PreloadScene");
+    const { width, height } = this.scale;
+    this.add
+      .text(width / 2, height / 2 + 40, "텍스처 생성 중...", {
+        fontFamily: "serif",
+        fontSize: "16px",
+        color: "#f6e7b0",
+      })
+      .setOrigin(0.5);
+
+    this.time.delayedCall(50, () => {
+      this.createSpriteTextures();
+      this.scene.start("PreloadScene");
+    });
   }
 
   private createSpriteTextures() {
