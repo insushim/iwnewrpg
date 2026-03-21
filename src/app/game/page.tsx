@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { GameSocketBridge } from "@/components/game/GameSocketBridge";
 import { BottomHUD } from "@/components/ui/BottomHUD";
-import { ChatWindow } from "@/components/ui/ChatWindow";
+
 import { DeathScreen } from "@/components/ui/DeathScreen";
 import { DialogueWindow } from "@/components/ui/DialogueWindow";
 import { InventoryPanel } from "@/components/ui/InventoryPanel";
@@ -17,13 +17,12 @@ import { EnchantModal } from "@/components/ui/EnchantModal";
 import { LoginBonus } from "@/components/ui/LoginBonus";
 import { LevelUpEffect } from "@/components/ui/LevelUpEffect";
 import { WorldBossAlert } from "@/components/ui/WorldBossAlert";
-import { TransformPanel } from "@/components/ui/TransformPanel";
+
 import { MobileControls } from "@/components/ui/MobileControls";
 import { RankingPanel } from "@/components/ui/RankingPanel";
 import { RareDropAlert } from "@/components/ui/RareDropAlert";
 import { ComboAlert } from "@/components/ui/ComboAlert";
-import { DailyChallengePanel } from "@/components/ui/DailyChallengePanel";
-import { AutoNavDemo } from "@/components/ui/AutoNavDemo";
+
 import { useGameStore } from "@/lib/gameStore";
 
 const PhaserGame = dynamic(
@@ -43,10 +42,7 @@ export default function GamePage() {
   }, [checkDailyLogin]);
 
   return (
-    <main className="relative h-screen overflow-hidden bg-[#040608]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_5%,rgba(180,138,70,0.1),transparent_35%),radial-gradient(ellipse_at_85%_95%,rgba(40,20,60,0.12),transparent_35%),linear-gradient(180deg,#060810_0%,#040608_100%)]" />
-      <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(180,138,70,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(180,138,70,0.06)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div className="absolute inset-x-0 top-0 h-[20vh] bg-[linear-gradient(180deg,rgba(180,138,70,0.03),transparent)]" />
+    <main className="relative h-screen overflow-hidden bg-[#1a2a1a]">
       <GameSocketBridge />
 
       <div className="pointer-events-none absolute inset-3 bottom-[98px] rounded-[30px] border border-[#b48a46]/24 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_32px_80px_rgba(0,0,0,0.42)]">
@@ -85,9 +81,6 @@ export default function GamePage() {
         <InventoryPanel />
       </div>
 
-      <DailyChallengePanel />
-      <AutoNavDemo />
-
       <BottomHUD />
       <DialogueWindow />
       <QuestWindow />
@@ -99,7 +92,6 @@ export default function GamePage() {
       <LoginBonus />
       <LevelUpEffect />
       <WorldBossAlert />
-      <TransformPanel />
       <MobileControls />
       <RankingPanel />
       <RareDropAlert />

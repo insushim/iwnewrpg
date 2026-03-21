@@ -436,8 +436,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentMapId: "speakingIsland",
   pendingLevelUp: false,
   pendingDailyBonus: false,
-  loginStreak: 0,
-  lastLoginDate: null,
+  loginStreak:
+    typeof window !== "undefined"
+      ? Number(localStorage.getItem("loginStreak") ?? "0")
+      : 0,
+  lastLoginDate:
+    typeof window !== "undefined"
+      ? localStorage.getItem("lastLoginDate")
+      : null,
   achievements: INITIAL_ACHIEVEMENTS,
   totalKills: 0,
   bossKills: 0,
@@ -584,6 +590,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const yesterday = new Date(Date.now() - 86400000).toDateString();
       const newStreak =
         state.lastLoginDate === yesterday ? state.loginStreak + 1 : 1;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("lastLoginDate", today);
+        localStorage.setItem("loginStreak", String(newStreak));
+      }
       return {
         lastLoginDate: today,
         loginStreak: newStreak,
