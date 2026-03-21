@@ -13,53 +13,159 @@ type AttackProfile = {
   spellPower?: number;
 };
 
+type DefenderProfile = {
+  level: number;
+  ac: number; // Armor Class - lower is better
+  mr: number; // Magic Resistance 0-100
+  hp: number;
+  maxHp: number;
+};
+
+type AttackResult = {
+  monster: any;
+  defeated: boolean;
+  missed?: boolean;
+  damage?: number;
+  isCrit?: boolean;
+};
+
+type PvPResult = {
+  damage: number;
+  missed: boolean;
+  isCrit: boolean;
+  remainingHp: number;
+};
+
 export class CombatHandler {
   constructor(private monsterManager: MonsterManager) {}
 
-  attack(monsterId: string, stats: AttackProfile) {
+  attack(monsterId: string, stats: AttackProfile): AttackResult | null {
     const monster = this.monsterManager.get(monsterId);
     if (!monster) return null;
 
-    // Base damage calculation (Lineage-style)
-    const weaponDamage =
+    // Hit calculation (Lineage style - lower AC = harder to hit)
+    const hitChance = Math.min(
+      95,
+      Math.max(
+        5,
+        80 +
+          ((stats.level ?? 1) - monster.level) * 2 +
+          Math.floor((stats.dex ?? 0) * 0.4),
+      ),
+    );
+
+    if (Math.random() * 100 > hitChance) {
+      return {
+        monster: this.monsterManager.get(monsterId)!,
+        defeated: false,
+        missed: true,
+        damage: 0,
+      };
+    }
+
+    // Damage calc
+    const weaponDmg =
       stats.minAttack && stats.maxAttack
         ? randomBetween(stats.minAttack, stats.maxAttack)
         : 0;
-
-    const physical =
-      Math.floor((stats.str ?? 0) * 0.5 + (stats.dex ?? 0) * 0.25) +
-      weaponDamage;
-    const magical = Math.floor(
-      (stats.int ?? 0) * 0.7 + (stats.spellPower ?? 0) * 1.0,
+    const strBonus = Math.floor((stats.str ?? 0) * 0.5);
+    const physical = strBonus + weaponDmg;
+    const magicDmg = Math.floor(
+      (stats.int ?? 0) * 0.7 + (stats.spellPower ?? 0),
     );
 
-    const baseDamage = Math.max(physical, magical);
+    const baseDmg = Math.max(physical + weaponDmg, magicDmg);
+    const defReduction = Math.floor(monster.atk * 0.15); // monster def
 
-    // Level difference modifier
-    const levelDiff = (stats.level ?? 1) - monster.level;
-    const levelMod = 1 + Math.max(-0.3, Math.min(0.3, levelDiff * 0.02));
-
-    // Defense reduction (Lineage AC system - lower AC = better defense)
-    const defReduction = Math.max(0.15, 1 - (monster.atk > 0 ? 0 : 0)); // monsters don't have AC currently
-
-    // Critical hit
+    // Critical
     const critChance = Math.min(
-      0.35,
-      (stats.critRate ?? 0) / 100 + (stats.dex ?? 0) * 0.003,
+      35,
+      (stats.critRate ?? 0) + Math.floor((stats.dex ?? 0) * 0.3),
     );
-    const isCrit = Math.random() < critChance;
-    const critMul = isCrit ? 1.3 + Math.random() * 0.3 : 1;
+    const isCrit = Math.random() * 100 < critChance;
+    const critMul = isCrit ? 1.5 : 1;
 
-    // Variance (Lineage has ±15% variance)
-    const variance = 0.85 + Math.random() * 0.3;
+    // Variance ±10%
+    const variance = 0.9 + Math.random() * 0.2;
 
-    // Final damage
     const damage = Math.max(
       1,
-      Math.floor(baseDamage * levelMod * defReduction * critMul * variance),
+      Math.floor((baseDmg - defReduction) * critMul * variance),
     );
 
-    return this.monsterManager.applyDamage(monsterId, damage);
+    const result = this.monsterManager.applyDamage(monsterId, damage);
+    return result
+      ? {
+          ...result,
+          missed: false,
+          damage,
+          isCrit,
+        }
+      : null;
+  }
+
+  attackPlayer(
+    attackerStats: AttackProfile,
+    defenderStats: DefenderProfile,
+  ): PvPResult {
+    // Hit calculation with AC
+    const hitChance = Math.min(
+      95,
+      Math.max(
+        5,
+        80 +
+          ((attackerStats.level ?? 1) - defenderStats.level) * 2 +
+          Math.floor((attackerStats.dex ?? 0) * 0.4) -
+          defenderStats.ac,
+      ),
+    );
+
+    if (Math.random() * 100 > hitChance) {
+      return {
+        damage: 0,
+        missed: true,
+        isCrit: false,
+        remainingHp: defenderStats.hp,
+      };
+    }
+
+    // Physical damage
+    const weaponDmg =
+      attackerStats.minAttack && attackerStats.maxAttack
+        ? randomBetween(attackerStats.minAttack, attackerStats.maxAttack)
+        : 0;
+    const strBonus = Math.floor((attackerStats.str ?? 0) * 0.5);
+    const physicalDmg = strBonus + weaponDmg;
+
+    // Magic damage (reduced by MR)
+    const magicDmg = Math.floor(
+      ((attackerStats.int ?? 0) * 0.7 + (attackerStats.spellPower ?? 0)) *
+        (1 - Math.min(0.8, defenderStats.mr / 100)),
+    );
+
+    const baseDmg = Math.max(physicalDmg, magicDmg);
+
+    // Critical
+    const critChance = Math.min(
+      35,
+      (attackerStats.critRate ?? 0) +
+        Math.floor((attackerStats.dex ?? 0) * 0.3),
+    );
+    const isCrit = Math.random() * 100 < critChance;
+    const critMul = isCrit ? 1.5 : 1;
+
+    // Variance ±10%
+    const variance = 0.9 + Math.random() * 0.2;
+
+    const damage = Math.max(1, Math.floor(baseDmg * critMul * variance));
+    const remainingHp = Math.max(0, defenderStats.hp - damage);
+
+    return {
+      damage,
+      missed: false,
+      isCrit,
+      remainingHp,
+    };
   }
 }
 

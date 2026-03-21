@@ -13,6 +13,11 @@ import { MONSTERS } from "@/game/data/monsters";
 import { ITEMS } from "@/game/data/items";
 import { WeaponSubType } from "@/types/item";
 
+// World time constants
+const DAY_CYCLE_DURATION = 600; // 10 minutes = 1 in-game day
+const PHASES = ["dawn", "day", "dusk", "night"] as const;
+type TimePhase = (typeof PHASES)[number];
+
 type WorldInitPayload = {
   selfId: string;
   players: Array<{
@@ -385,9 +390,26 @@ export class WorldScene extends Phaser.Scene {
   private ambientBloom?: Phaser.GameObjects.Ellipse;
   private ambientMoon?: Phaser.GameObjects.Ellipse;
 
+  // Day/Night Cycle
+  private worldTime = 0; // 0-600 seconds
+  private timePhase: TimePhase = "day";
+  private timeText?: Phaser.GameObjects.Text;
+  private nightOverlay?: Phaser.GameObjects.Rectangle;
+  private visionMask?: Phaser.GameObjects.Graphics;
+
   private playerSprites = new Map<string, PlayerSprite>();
   private monsterSprites = new Map<string, MonsterSprite>();
   private npcSprites = new Map<string, NpcSprite>();
+
+  // Enhanced minimap system
+  private minimapPlayerDot?: Phaser.GameObjects.Graphics;
+  private minimapBounds?: {
+    x: number;
+    y: number;
+    size: number;
+    mapWidthTiles: number;
+    mapHeightTiles: number;
+  };
   private lootSprites = new Map<string, LootSprite>();
 
   private isOfflineMode = false;
@@ -498,6 +520,7 @@ export class WorldScene extends Phaser.Scene {
     this.overlayLayer = this.add.container(0, 0);
     this.weatherLayer = this.add.container(0, 0);
     this.createAtmosphere();
+    this.createDayNightCycle();
 
     this.destinationMarker = this.add
       .ellipse(0, 0, 30, 18, 0xf6df95, 0.14)
@@ -525,6 +548,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
+    this.updateDayNightCycle();
     this.updateAmbientLighting();
     this.updateAnimatedUnits();
     this.sortActorLayer();
@@ -1400,11 +1424,14 @@ export class WorldScene extends Phaser.Scene {
     this.drawWaterBodies(map.id);
     this.drawMapStructures(map.id, mapWidth, mapHeight);
     this.scatterProps(map.id, map.width, map.height);
+    this.scatterTileDecorations(map.id, map.width, map.height); // New enhanced decorations
     this.drawTownFence(map.id);
     this.drawMapLandmarks(map.id, mapWidth, mapHeight);
     this.drawGroundShade(mapWidth, mapHeight);
     this.drawAtmosphere(mapWidth, mapHeight);
     this.drawWeatherEffects(map.id, mapWidth, mapHeight);
+    this.createEnhancedAtmospherics(map.id, mapWidth, mapHeight); // Enhanced Lineage Classic effects
+    this.createMiniMap(map.id, map.width, map.height);
   }
 
   private getMapVisualTheme(mapId: string) {
@@ -2860,24 +2887,47 @@ export class WorldScene extends Phaser.Scene {
       }
 
       const roll = this.noise(index * 0.47 + seedOffset, 1.7);
+      const treeVariation = this.noise(index * 0.89 + seedOffset, 3.1);
       let texture = "prop_tree";
+
       if (mapId === "dragonValley" || mapId === "ancientCave") {
-        if (roll < 0.34) texture = "prop_rock";
+        if (roll < 0.25)
+          texture = treeVariation > 0.5 ? "prop_rock_large" : "prop_rock";
+        else if (roll < 0.35) texture = "prop_rock_small";
         else if (roll < 0.48) texture = "prop_ruin";
         else if (roll < 0.56) texture = "prop_crystal";
         else if (roll < 0.62) texture = "prop_banner";
+        else if (roll < 0.75) texture = "prop_tree_dead";
       } else if (mapId === "silverKnightTown" || mapId === "giranTown") {
-        if (roll < 0.18) texture = "prop_rock";
+        if (roll < 0.18)
+          texture = treeVariation > 0.7 ? "prop_rock_large" : "prop_rock";
         else if (roll < 0.36) texture = "prop_banner";
         else if (roll < 0.48) texture = "prop_fence";
         else if (roll < 0.56) texture = "prop_ruin";
+        else if (roll < 0.8) texture = "prop_tree_oak";
+      } else if (mapId === "windwoodForest") {
+        if (roll < 0.12) texture = "prop_rock";
+        else if (roll < 0.2) texture = "prop_ruin";
+        else if (roll < 0.25) texture = "prop_crystal";
+        else if (roll < 0.35)
+          texture = treeVariation > 0.6 ? "prop_tree_pine" : "prop_tree_oak";
+        else if (roll < 0.8)
+          texture = treeVariation > 0.3 ? "prop_tree" : "prop_tree_pine";
       } else {
-        if (roll < 0.16) texture = "prop_rock";
+        if (roll < 0.16)
+          texture = treeVariation > 0.6 ? "prop_rock_large" : "prop_rock";
+        else if (roll < 0.2) texture = "prop_rock_small";
         else if (roll < 0.24) texture = "prop_ruin";
         else if (roll < 0.28 && mapId !== "speakingIsland")
           texture = "prop_crystal";
         else if (roll < 0.32) texture = "prop_banner";
         else if (roll < 0.34) texture = "prop_fence";
+        else if (roll < 0.7) {
+          // Enhanced tree variety
+          if (treeVariation > 0.7) texture = "prop_tree_pine";
+          else if (treeVariation > 0.4) texture = "prop_tree_oak";
+          else texture = "prop_tree";
+        }
       }
       const image = this.add.image(x, y, texture).setOrigin(0.5, 0.85);
       const propShadow = this.add
@@ -5327,6 +5377,138 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private createDayNightCycle() {
+    // Create night overlay
+    this.nightOverlay = this.add
+      .rectangle(
+        this.scale.width / 2,
+        this.scale.height / 2,
+        this.scale.width,
+        this.scale.height,
+        0x1a1a2e,
+        0,
+      )
+      .setScrollFactor(0)
+      .setDepth(1500);
+
+    // Create time display
+    this.timeText = this.add
+      .text(this.scale.width - 10, 10, "🌅 낮", {
+        fontSize: "14px",
+        fontFamily: "Arial",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 2,
+      })
+      .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(2000);
+
+    // Create night vision mask for reduced visibility
+    this.visionMask = this.add
+      .graphics()
+      .setScrollFactor(0)
+      .setDepth(1501)
+      .setVisible(false);
+  }
+
+  private updateDayNightCycle() {
+    if (!this.timeText || !this.nightOverlay) return;
+
+    // Update world time (delta time in seconds)
+    this.worldTime =
+      (this.worldTime + this.game.loop.delta / 1000) % DAY_CYCLE_DURATION;
+
+    // Calculate time phase
+    const timeRatio = this.worldTime / DAY_CYCLE_DURATION;
+    let newPhase: TimePhase;
+    let phaseAlpha = 0;
+    let phaseColor = 0x1a1a2e;
+    let timeIcon = "🌅";
+    let timeLabel = "낮";
+
+    if (timeRatio < 0.15) {
+      // Dawn (0-15%)
+      newPhase = "dawn";
+      phaseAlpha = 0.1;
+      phaseColor = 0xff8c00; // Orange
+      timeIcon = "🌅";
+      timeLabel = "새벽";
+    } else if (timeRatio < 0.5) {
+      // Day (15-50%)
+      newPhase = "day";
+      phaseAlpha = 0;
+      phaseColor = 0x1a1a2e;
+      timeIcon = "☀️";
+      timeLabel = "낮";
+    } else if (timeRatio < 0.65) {
+      // Dusk (50-65%)
+      newPhase = "dusk";
+      phaseAlpha = 0.15;
+      phaseColor = 0xd2691e; // Saddle brown
+      timeIcon = "🌇";
+      timeLabel = "저녁";
+    } else {
+      // Night (65-100%)
+      newPhase = "night";
+      phaseAlpha = 0.4;
+      phaseColor = 0x1a1a2e; // Dark blue
+      timeIcon = "🌙";
+      timeLabel = "밤";
+    }
+
+    this.timePhase = newPhase;
+
+    // Update overlay
+    this.nightOverlay.setFillStyle(phaseColor, phaseAlpha);
+
+    // Update time display
+    const hours = Math.floor((timeRatio * 24) % 24);
+    const minutes = Math.floor(((timeRatio * 24) % 1) * 60);
+    const timeString = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+    this.timeText.setText(`${timeIcon} ${timeLabel} ${timeString}`);
+
+    // Night vision effect - reduce visibility
+    if (this.visionMask && this.localPlayer) {
+      this.visionMask.setVisible(newPhase === "night");
+
+      if (newPhase === "night") {
+        this.visionMask.clear();
+
+        // Create dark overlay with circular cutout around player
+        const visionRadius = 150;
+        const playerScreenX = this.localPlayer.x - this.cameras.main.scrollX;
+        const playerScreenY = this.localPlayer.y - this.cameras.main.scrollY;
+
+        // Fill entire screen with dark
+        this.visionMask.fillStyle(0x000000, 0.6);
+        this.visionMask.fillRect(0, 0, this.scale.width, this.scale.height);
+
+        // Cut out vision circle around player
+        this.visionMask.beginPath();
+        this.visionMask.arc(
+          playerScreenX,
+          playerScreenY,
+          visionRadius,
+          0,
+          Math.PI * 2,
+        );
+        this.visionMask.closePath();
+        this.visionMask.fillStyle(0x000000, 0);
+        this.visionMask.fillPath();
+      }
+    }
+
+    // Apply night bonuses to undead monsters
+    if (newPhase === "night") {
+      // This would be handled by the monster AI system
+      // For now, just emit an event that can be handled elsewhere
+      EventBus.emit("night:undead_bonus", { active: true });
+    } else {
+      EventBus.emit("night:undead_bonus", { active: false });
+    }
+  }
+
   private createUnitBacklight(
     textureKey: string,
     tint: number,
@@ -5622,13 +5804,23 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "silverKnightTown") {
+      let baseTexture =
+        seed > 0.72
+          ? "tile_cobble"
+          : seed > 0.34
+            ? "tile_marble"
+            : "tile_meadow";
+
+      // Add variation for town tiles
+      const variation = this.noise(x * 0.61 + 7, y * 0.67 + 11);
+      if (baseTexture !== "tile_marble" && variation > 0.66) {
+        baseTexture += "_var1";
+      } else if (baseTexture !== "tile_marble" && variation > 0.33) {
+        baseTexture += "_var2";
+      }
+
       return {
-        texture:
-          seed > 0.72
-            ? "tile_cobble"
-            : seed > 0.34
-              ? "tile_marble"
-              : "tile_meadow",
+        texture: baseTexture,
         alpha: 0.92,
         tint: 0xffffff,
         rotation: 0,
@@ -5654,13 +5846,23 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "windwoodForest") {
+      let baseTexture =
+        moisture > 0.62
+          ? "tile_moss"
+          : seed > 0.48
+            ? "tile_forest"
+            : "tile_dirt";
+
+      // Add variation for forest tiles
+      const variation = this.noise(x * 0.47 + 17, y * 0.41 + 29);
+      if (variation > 0.66) {
+        baseTexture += "_var1";
+      } else if (variation > 0.33) {
+        baseTexture += "_var2";
+      }
+
       return {
-        texture:
-          moisture > 0.62
-            ? "tile_moss"
-            : seed > 0.48
-              ? "tile_forest"
-              : "tile_dirt",
+        texture: baseTexture,
         alpha: 0.88,
         tint: 0xffffff,
         rotation: 0,
@@ -5670,13 +5872,23 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "orcForest") {
+      let baseTexture =
+        seed > 0.62
+          ? "tile_dirt"
+          : ridge > 0.64
+            ? "tile_volcanic"
+            : "tile_moss";
+
+      // Add variation for orc forest
+      const variation = this.noise(x * 0.51 + 19, y * 0.43 + 27);
+      if (baseTexture !== "tile_volcanic" && variation > 0.66) {
+        baseTexture += "_var1";
+      } else if (baseTexture !== "tile_volcanic" && variation > 0.33) {
+        baseTexture += "_var2";
+      }
+
       return {
-        texture:
-          seed > 0.62
-            ? "tile_dirt"
-            : ridge > 0.64
-              ? "tile_volcanic"
-              : "tile_moss",
+        texture: baseTexture,
         alpha: 0.88,
         tint: 0xffffff,
         rotation: 0,
@@ -5686,13 +5898,23 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (mapId === "gludioPlain") {
+      let baseTexture =
+        moisture > 0.58
+          ? "tile_meadow"
+          : seed > 0.48
+            ? "tile_grass_a"
+            : "tile_dirt";
+
+      // Add variation
+      const variation = this.noise(x * 0.43 + 23, y * 0.37 + 31);
+      if (variation > 0.66) {
+        baseTexture += "_var1";
+      } else if (variation > 0.33) {
+        baseTexture += "_var2";
+      }
+
       return {
-        texture:
-          moisture > 0.58
-            ? "tile_meadow"
-            : seed > 0.48
-              ? "tile_grass_a"
-              : "tile_dirt",
+        texture: baseTexture,
         alpha: 0.9,
         tint: 0xffffff,
         rotation: 0,
@@ -5722,13 +5944,24 @@ export class WorldScene extends Phaser.Scene {
       };
     }
 
+    // Default for other areas with variation
+    let baseTexture =
+      moisture > 0.6
+        ? "tile_meadow"
+        : seed > 0.54
+          ? "tile_grass_a"
+          : "tile_grass_b";
+
+    // Add variation for default areas
+    const variation = this.noise(x * 0.53 + 13, y * 0.47 + 37);
+    if (variation > 0.66) {
+      baseTexture += "_var1";
+    } else if (variation > 0.33) {
+      baseTexture += "_var2";
+    }
+
     return {
-      texture:
-        moisture > 0.6
-          ? "tile_meadow"
-          : seed > 0.54
-            ? "tile_grass_a"
-            : "tile_grass_b",
+      texture: baseTexture,
       alpha: 0.92,
       tint: 0xffffff,
       rotation: 0,
@@ -5737,9 +5970,379 @@ export class WorldScene extends Phaser.Scene {
     };
   }
 
+  // Enhanced minimap system for Lineage Classic-style navigation
+  private createMiniMap(
+    mapId: string,
+    mapWidthTiles: number,
+    mapHeightTiles: number,
+  ) {
+    const minimapSize = 200;
+    const minimapX = this.scale.width - minimapSize - 20;
+    const minimapY = 20;
+
+    // Create minimap background
+    const minimapBg = this.add.graphics();
+    minimapBg.fillStyle(0x000000, 0.7);
+    minimapBg.fillRoundedRect(
+      minimapX - 5,
+      minimapY - 5,
+      minimapSize + 10,
+      minimapSize + 10,
+      8,
+    );
+    minimapBg.lineStyle(2, 0x8b7355, 1);
+    minimapBg.strokeRoundedRect(
+      minimapX - 5,
+      minimapY - 5,
+      minimapSize + 10,
+      minimapSize + 10,
+      8,
+    );
+    minimapBg.setScrollFactor(0); // Fixed to camera
+
+    // Create minimap terrain representation
+    const pixelsPerTile = minimapSize / Math.max(mapWidthTiles, mapHeightTiles);
+
+    for (let y = 0; y < mapHeightTiles; y++) {
+      for (let x = 0; x < mapWidthTiles; x++) {
+        const patch = this.createGroundPatch(x, y, mapId);
+        let minimapColor = this.getTileMinimapColor(patch.texture);
+
+        const pixelX = minimapX + x * pixelsPerTile;
+        const pixelY = minimapY + y * pixelsPerTile;
+
+        const tilePixel = this.add.graphics();
+        tilePixel.fillStyle(minimapColor, 0.8);
+        tilePixel.fillRect(
+          pixelX,
+          pixelY,
+          Math.max(1, pixelsPerTile),
+          Math.max(1, pixelsPerTile),
+        );
+        tilePixel.setScrollFactor(0);
+      }
+    }
+
+    // Add current player position indicator
+    this.minimapPlayerDot = this.add.graphics();
+    this.minimapPlayerDot.fillStyle(0x00ff00, 1);
+    this.minimapPlayerDot.fillCircle(0, 0, 3);
+    this.minimapPlayerDot.setScrollFactor(0);
+    this.updateMinimapPlayerPosition(
+      minimapX,
+      minimapY,
+      minimapSize,
+      mapWidthTiles,
+      mapHeightTiles,
+    );
+
+    // Store minimap bounds for updates
+    this.minimapBounds = {
+      x: minimapX,
+      y: minimapY,
+      size: minimapSize,
+      mapWidthTiles,
+      mapHeightTiles,
+    };
+  }
+
+  private getTileMinimapColor(texture: string): number {
+    if (texture.includes("grass")) return 0x2d5016;
+    if (texture.includes("meadow")) return 0x4a7c26;
+    if (texture.includes("forest")) return 0x1a3d1a;
+    if (texture.includes("moss")) return 0x3d5c2a;
+    if (texture.includes("dirt")) return 0x8b6f2e;
+    if (texture.includes("path")) return 0xb8a27c;
+    if (texture.includes("cobble")) return 0x707070;
+    if (texture.includes("water")) return 0x2e7e9a;
+    if (texture.includes("marble")) return 0xc5c0b3;
+    if (texture.includes("volcanic")) return 0x4f4746;
+    if (texture.includes("lava")) return 0x9b3319;
+    if (texture.includes("wet_stone")) return 0x506167;
+    return 0x4a5c3a; // Default
+  }
+
+  private updateMinimapPlayerPosition(
+    minimapX: number,
+    minimapY: number,
+    minimapSize: number,
+    mapWidthTiles: number,
+    mapHeightTiles: number,
+  ) {
+    if (!this.minimapPlayerDot || !this.localPlayer) return;
+
+    const pixelsPerTile = minimapSize / Math.max(mapWidthTiles, mapHeightTiles);
+    const playerTileX = (this.localPlayer.x - 120) / TILE_WIDTH;
+    const playerTileY = (this.localPlayer.y - 120) / TILE_HEIGHT;
+
+    const dotX = minimapX + playerTileX * pixelsPerTile;
+    const dotY = minimapY + playerTileY * pixelsPerTile;
+
+    this.minimapPlayerDot.setPosition(dotX, dotY);
+  }
+
+  // Enhanced tile decoration system for Lineage Classic-style detail
+  private scatterTileDecorations(
+    mapId: string,
+    mapWidthTiles: number,
+    mapHeightTiles: number,
+  ) {
+    const decorationDensity = 0.3; // 30% of tiles get decorations
+    const totalTiles = mapWidthTiles * mapHeightTiles;
+    const decorationCount = Math.floor(totalTiles * decorationDensity);
+
+    for (let i = 0; i < decorationCount; i++) {
+      const tileX = Math.floor(
+        this.noise(i * 0.71 + mapId.length, 7.3) * mapWidthTiles,
+      );
+      const tileY = Math.floor(
+        this.noise(i * 0.83 + mapId.length, 11.7) * mapHeightTiles,
+      );
+
+      const worldX = 120 + tileX * TILE_WIDTH + this.noise(i, 3.1) * 48;
+      const worldY = 120 + tileY * TILE_HEIGHT + this.noise(i, 5.7) * 36;
+
+      // Skip if in roads or town areas
+      if (
+        mapId === "speakingIsland" &&
+        STARTER_TOWN_RECT.contains(worldX, worldY)
+      ) {
+        continue;
+      }
+
+      // Choose decoration based on map biome
+      let decorationTexture = "deco_pebble";
+      const roll = this.noise(i * 0.97 + mapId.length * 3, 13.1);
+
+      if (mapId === "windwoodForest" || mapId === "orcForest") {
+        if (roll < 0.3) decorationTexture = "deco_leaf";
+        else if (roll < 0.5) decorationTexture = "deco_mushroom";
+        else if (roll < 0.7) decorationTexture = "deco_twig";
+        else decorationTexture = "deco_pebble";
+      } else if (mapId === "gludioPlain" || mapId === "speakingIsland") {
+        if (roll < 0.4) decorationTexture = "deco_flower";
+        else if (roll < 0.6) decorationTexture = "deco_pebble";
+        else if (roll < 0.8) decorationTexture = "deco_mushroom";
+        else decorationTexture = "deco_leaf";
+      } else if (mapId === "moonlitWetland") {
+        if (roll < 0.3) decorationTexture = "deco_shell";
+        else if (roll < 0.6) decorationTexture = "deco_pebble";
+        else decorationTexture = "deco_mushroom";
+      } else {
+        // Default mix for other maps
+        if (roll < 0.5) decorationTexture = "deco_pebble";
+        else if (roll < 0.75) decorationTexture = "deco_flower";
+        else decorationTexture = "deco_mushroom";
+      }
+
+      const decoration = this.add
+        .image(worldX, worldY, decorationTexture)
+        .setOrigin(0.5, 0.5)
+        .setScale(0.8 + this.noise(i, 7.9) * 0.4)
+        .setAlpha(0.6 + this.noise(i, 9.3) * 0.3)
+        .setRotation(this.noise(i, 11.7) * Math.PI * 2);
+
+      this.propLayer?.add(decoration);
+    }
+  }
+
   private noise(x: number, y: number) {
     const value = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
     return value - Math.floor(value);
+  }
+
+  // Enhanced atmospheric effects for Lineage Classic immersion
+  private createEnhancedAtmospherics(
+    mapId: string,
+    mapWidth: number,
+    mapHeight: number,
+  ) {
+    // Fog of war for explored/unexplored areas
+    this.createFogOfWar(mapWidth, mapHeight);
+
+    // Dynamic water reflections
+    if (mapId === "moonlitWetland" || mapId === "speakingIsland") {
+      this.animateWaterReflections(mapId);
+    }
+
+    // Torch glow effects near NPCs
+    this.createTorchGlow(mapId);
+
+    // Floating particles based on environment
+    this.createEnvironmentParticles(mapId, mapWidth, mapHeight);
+
+    // Portal effects
+    this.createPortalEffects(mapId);
+  }
+
+  private createFogOfWar(mapWidth: number, mapHeight: number) {
+    // Simple fog of war - areas beyond vision range
+    const fogOfWar = this.add.graphics();
+    fogOfWar.fillStyle(0x000000, 0.6);
+
+    // Create a radial gradient effect around player
+    if (this.localPlayer) {
+      const visionRadius = 400;
+      fogOfWar.fillRect(0, 0, mapWidth, mapHeight);
+
+      // Clear circle around player for vision
+      fogOfWar.beginPath();
+      fogOfWar.fillStyle(0x000000, 0);
+      fogOfWar.fillCircle(this.localPlayer.x, this.localPlayer.y, visionRadius);
+    }
+
+    this.overlayLayer?.add(fogOfWar);
+  }
+
+  private animateWaterReflections(mapId: string) {
+    // Create shimmering water effect
+    const waterShimmer = this.add.graphics();
+    waterShimmer.lineStyle(1, 0x77d4e5, 0.3);
+
+    const shimmerLines = 20;
+    for (let i = 0; i < shimmerLines; i++) {
+      const x1 = Math.random() * this.scale.width;
+      const y1 = Math.random() * this.scale.height;
+      const x2 = x1 + (Math.random() - 0.5) * 50;
+      const y2 = y1 + (Math.random() - 0.5) * 20;
+
+      waterShimmer.strokeLineShape(new Phaser.Geom.Line(x1, y1, x2, y2));
+    }
+
+    this.waterLayer?.add(waterShimmer);
+
+    // Animate the shimmer
+    this.tweens.add({
+      targets: waterShimmer,
+      alpha: { from: 0.3, to: 0.1 },
+      duration: 2000,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+  }
+
+  private createTorchGlow(mapId: string) {
+    // Add torch glow effects near town areas
+    if (
+      mapId === "silverKnightTown" ||
+      mapId === "giranTown" ||
+      mapId === "speakingIsland"
+    ) {
+      const torchPositions = [
+        { x: 400, y: 300 },
+        { x: 600, y: 300 },
+        { x: 500, y: 400 },
+        { x: 700, y: 350 },
+      ];
+
+      torchPositions.forEach((pos, index) => {
+        const torchGlow = this.add.graphics();
+        torchGlow.fillStyle(0xffa500, 0.2);
+        torchGlow.fillCircle(pos.x, pos.y, 80);
+        torchGlow.fillStyle(0xffff00, 0.1);
+        torchGlow.fillCircle(pos.x, pos.y, 120);
+
+        this.overlayLayer?.add(torchGlow);
+
+        // Animate flickering
+        this.tweens.add({
+          targets: torchGlow,
+          scaleX: { from: 1, to: 1.1 },
+          scaleY: { from: 1, to: 1.1 },
+          alpha: { from: 0.3, to: 0.1 },
+          duration: 1500 + index * 300,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.easeInOut",
+        });
+      });
+    }
+  }
+
+  private createEnvironmentParticles(
+    mapId: string,
+    mapWidth: number,
+    mapHeight: number,
+  ) {
+    const particleCount = 15;
+
+    for (let i = 0; i < particleCount; i++) {
+      const x = Math.random() * mapWidth;
+      const y = Math.random() * mapHeight;
+
+      let particleColor = 0xffffff;
+      let particleSize = 2;
+
+      if (mapId === "windwoodForest" || mapId === "orcForest") {
+        // Forest: falling leaves
+        particleColor = Math.random() > 0.5 ? 0x228b22 : 0xdaa520;
+        particleSize = 3;
+      } else if (mapId === "dragonValley" || mapId === "ancientCave") {
+        // Volcanic: ash particles
+        particleColor = 0x696969;
+        particleSize = 1;
+      } else if (mapId === "moonlitWetland") {
+        // Wetland: fireflies at night
+        particleColor = 0x9aff9a;
+        particleSize = 2;
+      } else {
+        // Default: dust motes
+        particleColor = 0xf5f5dc;
+        particleSize = 1;
+      }
+
+      const particle = this.add.graphics();
+      particle.fillStyle(particleColor, 0.6);
+      particle.fillCircle(0, 0, particleSize);
+      particle.setPosition(x, y);
+
+      this.weatherLayer?.add(particle);
+
+      // Animate floating movement
+      this.tweens.add({
+        targets: particle,
+        x: x + (Math.random() - 0.5) * 200,
+        y: y - 100 - Math.random() * 200,
+        alpha: { from: 0.6, to: 0 },
+        duration: 8000 + Math.random() * 4000,
+        repeat: -1,
+        ease: "Linear",
+      });
+    }
+  }
+
+  private createPortalEffects(mapId: string) {
+    // Add portal effects at certain locations
+    const portalLocations = [
+      { x: 2800, y: 155, mapId: "speakingIsland" }, // Ancient Cave entrance
+      { x: 2700, y: 500, mapId: "speakingIsland" }, // Ruins entrance
+    ];
+
+    portalLocations.forEach((portal) => {
+      if (portal.mapId === mapId) {
+        const portalEffect = this.add
+          .image(portal.x, portal.y, "portal_effect")
+          .setOrigin(0.5, 0.5)
+          .setScale(0.8)
+          .setAlpha(0.7);
+
+        this.effectLayer?.add(portalEffect);
+
+        // Animate portal swirling
+        this.tweens.add({
+          targets: portalEffect,
+          rotation: Math.PI * 2,
+          scaleX: { from: 0.8, to: 1.2 },
+          scaleY: { from: 0.8, to: 1.2 },
+          alpha: { from: 0.7, to: 0.3 },
+          duration: 4000,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.easeInOut",
+        });
+      }
+    });
   }
 
   private getFullGradeVocabulary(): VocabularyEntry[] {
@@ -7832,6 +8435,17 @@ export class WorldScene extends Phaser.Scene {
     this.showTeleportEffect(this.localPlayer.x, this.localPlayer.y);
     this.localPlayer.setPosition(clampedX, clampedY);
     this.showTeleportEffect(clampedX, clampedY);
+
+    // Update minimap player position
+    if (this.minimapBounds) {
+      this.updateMinimapPlayerPosition(
+        this.minimapBounds.x,
+        this.minimapBounds.y,
+        this.minimapBounds.size,
+        this.minimapBounds.mapWidthTiles,
+        this.minimapBounds.mapHeightTiles,
+      );
+    }
 
     // Update game store with new position
     useGameStore.getState().upsertWorldPlayer({

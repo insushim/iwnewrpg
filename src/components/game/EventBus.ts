@@ -100,6 +100,14 @@ type EventPayloadMap = {
     playerId: string;
     message: string;
   };
+  player_transformed: {
+    playerId: string;
+    transformId: string;
+    form: string;
+  };
+  "night:undead_bonus": {
+    active: boolean;
+  };
 };
 
 type EventKey = keyof EventPayloadMap;

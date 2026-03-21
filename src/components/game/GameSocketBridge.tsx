@@ -21,6 +21,7 @@ export function GameSocketBridge() {
   const addDroppedLoot = useGameStore((state) => state.addDroppedLoot);
   const removeDroppedLoot = useGameStore((state) => state.removeDroppedLoot);
   const openDeath = useGameStore((state) => state.openDeath);
+  const tickTransform = useGameStore((state) => state.tickTransform);
 
   useEffect(() => {
     const socket = getSocket();
@@ -212,6 +213,42 @@ export function GameSocketBridge() {
       openDeath(payload.expLost);
       EventBus.emit("player_death", payload);
     });
+
+    socket.on(
+      "player:transformed",
+      (payload: {
+        transformId: string;
+        form: string;
+        duration: number;
+        cooldown: number;
+        bonuses: any;
+      }) => {
+        // Update transform state in store
+        useGameStore.setState({
+          transform: {
+            active: true,
+            transformId: payload.transformId,
+            remaining: payload.duration,
+            cooldownUntil: Date.now() + payload.cooldown * 1000,
+          },
+        });
+
+        // Add chat message
+        addChat({
+          id: crypto.randomUUID(),
+          channel: "system",
+          author: "시스템",
+          message: `${payload.form}으로 변신했습니다!`,
+          timestamp: Date.now(),
+        });
+
+        EventBus.emit("player_transformed", {
+          playerId: useGameStore.getState().selfId ?? "",
+          transformId: payload.transformId,
+          form: payload.form,
+        });
+      },
+    );
     socket.on(
       "chat:message",
       (payload: {
@@ -244,10 +281,20 @@ export function GameSocketBridge() {
       socket.off("loot:spawn");
       socket.off("loot:picked");
       socket.off("player:death");
+      socket.off("player:transformed");
       socket.off("chat:message");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Transform timer
+  useEffect(() => {
+    const transformTimer = setInterval(() => {
+      tickTransform();
+    }, 1000);
+
+    return () => clearInterval(transformTimer);
+  }, [tickTransform]);
 
   return null;
 }

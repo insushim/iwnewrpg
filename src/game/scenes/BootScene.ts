@@ -38,27 +38,75 @@ export class BootScene extends Phaser.Scene {
   }
 
   private createSpriteTextures() {
+    // Enhanced tile system with variations
     this.createTileTexture("tile_grass_a", 0x335f39, 0x15301a, 0x5b9a56);
+    this.createTileTexture("tile_grass_a_var1", 0x2f5435, 0x132c18, 0x578f52);
+    this.createTileTexture("tile_grass_a_var2", 0x37653d, 0x17321c, 0x5fa35a);
+
     this.createTileTexture("tile_grass_b", 0x2b5130, 0x142a17, 0x4d8649);
+    this.createTileTexture("tile_grass_b_var1", 0x27492c, 0x122617, 0x497a45);
+    this.createTileTexture("tile_grass_b_var2", 0x2f5934, 0x162e19, 0x51924d);
+
     this.createTileTexture("tile_meadow", 0x5b7d3f, 0x2e421d, 0x8fbe62);
+    this.createTileTexture("tile_meadow_var1", 0x57773b, 0x2c3e1b, 0x8bb25e);
+    this.createTileTexture("tile_meadow_var2", 0x5f8343, 0x304621, 0x93ca66);
+
     this.createTileTexture("tile_forest", 0x28462d, 0x102118, 0x52704d);
+    this.createTileTexture("tile_forest_var1", 0x244029, 0x0e1d16, 0x4e6849);
+    this.createTileTexture("tile_forest_var2", 0x2c4e31, 0x122519, 0x567851);
+
     this.createTileTexture("tile_moss", 0x42583a, 0x1f2d1e, 0x779566);
+    this.createTileTexture("tile_moss_var1", 0x3e5236, 0x1d2b1c, 0x738962);
+    this.createTileTexture("tile_moss_var2", 0x465e3e, 0x21311f, 0x7ba16a);
+
     this.createTileTexture("tile_dirt", 0x69533a, 0x342518, 0xa48761);
+    this.createTileTexture("tile_dirt_var1", 0x654f36, 0x322318, 0xa0835d);
+    this.createTileTexture("tile_dirt_var2", 0x6d573e, 0x36271a, 0xa88b65);
+
     this.createTileTexture("tile_path", 0x8f7c58, 0x463622, 0xb8a27c);
+    this.createTileTexture("tile_path_var1", 0x8b7854, 0x443420, 0xb49e78);
+    this.createTileTexture("tile_path_var2", 0x93805c, 0x483824, 0xbca680);
+
     this.createTileTexture("tile_cobble", 0x667071, 0x343a3b, 0xaab4b5);
+    this.createTileTexture("tile_cobble_var1", 0x626c6d, 0x323839, 0xa6b0b1);
+    this.createTileTexture("tile_cobble_var2", 0x6a7475, 0x363c3d, 0xaeb8b9);
+
     this.createTileTexture("tile_water", 0x2e7e9a, 0x124d63, 0x77d4e5);
     this.createTileTexture("tile_wet_stone", 0x506167, 0x243139, 0x8db5bb);
     this.createTileTexture("tile_marble", 0xc5c0b3, 0x676358, 0xf8f1dc);
     this.createTileTexture("tile_volcanic", 0x4f4746, 0x241a19, 0x88766b);
     this.createTileTexture("tile_lava", 0x9b3319, 0x3e0c07, 0xffb35a);
+
+    // Enhanced decorations
     this.createArrowTexture("projectile_arrow");
     this.createGemTexture("loot_gem");
+
+    // Enhanced environment props
     this.createTreeTexture("prop_tree");
+    this.createTreeTexture("prop_tree_pine", 0x2d4a2f, 0x1e3220);
+    this.createTreeTexture("prop_tree_oak", 0x4a6b3d, 0x32472a);
+    this.createTreeTexture("prop_tree_dead", 0x5d4a3a, 0x3e3225);
+
     this.createRockTexture("prop_rock");
+    this.createRockTexture("prop_rock_small", 0.6);
+    this.createRockTexture("prop_rock_large", 1.4);
+
     this.createFenceTexture("prop_fence");
     this.createBannerTexture("prop_banner");
     this.createRuinTexture("prop_ruin");
     this.createCrystalTexture("prop_crystal");
+
+    // New decorative elements
+    this.createSmallDecoTexture("deco_flower", 0xffc0e0, 0xffffe0);
+    this.createSmallDecoTexture("deco_mushroom", 0x8b4513, 0xffffff);
+    this.createSmallDecoTexture("deco_pebble", 0x888888, 0xcccccc);
+    this.createSmallDecoTexture("deco_shell", 0xffefd5, 0xffffff);
+    this.createSmallDecoTexture("deco_leaf", 0x228b22, 0x90ee90);
+    this.createSmallDecoTexture("deco_twig", 0x8b4513, 0xdaa520);
+
+    // Portal effect
+    this.createPortalTexture("portal_effect");
+
     this.createParticleTextures();
   }
 
@@ -1425,7 +1473,11 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 
-  private createTreeTexture(key: string) {
+  private createTreeTexture(
+    key: string,
+    _leafColor?: number,
+    _trunkColor?: number,
+  ) {
     if (this.textures.exists(key)) return;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
 
@@ -1498,7 +1550,7 @@ export class BootScene extends Phaser.Scene {
     g.destroy();
   }
 
-  private createRockTexture(key: string) {
+  private createRockTexture(key: string, _scale?: number) {
     if (this.textures.exists(key)) return;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
 
@@ -2036,6 +2088,105 @@ export class BootScene extends Phaser.Scene {
     // Highlight
     g.fillStyle(0xffffff, 1);
     g.fillCircle(center - 1, center - 1, center * 0.2);
+
+    g.generateTexture(key, size, size);
+    g.destroy();
+  }
+
+  // Enhanced texture creation methods for Lineage Classic-style visuals
+
+  private createSmallDecoTexture(
+    key: string,
+    primary: number,
+    secondary: number,
+  ) {
+    if (this.textures.exists(key)) return;
+    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const size = 8;
+
+    if (key.includes("flower")) {
+      // Small flower decoration
+      g.fillStyle(0x228b22, 1);
+      g.fillCircle(4, 6, 1); // stem
+      g.fillRect(3.5, 5, 1, 2);
+
+      g.fillStyle(primary, 1);
+      g.fillCircle(4, 4, 2); // petals
+      g.fillStyle(secondary, 1);
+      g.fillCircle(4, 4, 1); // center
+    } else if (key.includes("mushroom")) {
+      // Small mushroom
+      g.fillStyle(0xf5deb3, 1);
+      g.fillRect(3.5, 4, 1, 3); // stem
+      g.fillStyle(primary, 1);
+      g.fillEllipse(4, 3, 4, 3); // cap
+      g.fillStyle(secondary, 0.8);
+      g.fillCircle(3, 2.5, 0.5); // spots
+      g.fillCircle(5, 2.5, 0.5);
+    } else if (key.includes("pebble")) {
+      // Small stone
+      g.fillStyle(primary, 1);
+      g.fillCircle(4, 4, 2);
+      g.fillStyle(secondary, 0.6);
+      g.fillCircle(3.5, 3.5, 1);
+    } else if (key.includes("shell")) {
+      // Seashell
+      g.fillStyle(primary, 1);
+      g.fillEllipse(4, 4, 3, 2);
+      g.lineStyle(0.5, secondary);
+      g.strokeEllipse(4, 4, 3, 2);
+      g.strokeLineShape(new Phaser.Geom.Line(4, 3, 4, 5));
+    } else if (key.includes("leaf")) {
+      // Fallen leaf
+      g.fillStyle(primary, 1);
+      g.fillEllipse(4, 4, 3, 5);
+      g.lineStyle(0.5, secondary);
+      g.strokeLineShape(new Phaser.Geom.Line(4, 1.5, 4, 6.5));
+    } else if (key.includes("twig")) {
+      // Small twig
+      g.lineStyle(1, primary);
+      g.strokeLineShape(new Phaser.Geom.Line(1, 5, 6, 3));
+      g.strokeLineShape(new Phaser.Geom.Line(3, 4, 2, 2));
+    }
+
+    g.generateTexture(key, size, size);
+    g.destroy();
+  }
+
+  private createPortalTexture(key: string) {
+    if (this.textures.exists(key)) return;
+    const size = 64;
+    const center = size / 2;
+    const g = this.make.graphics({ x: 0, y: 0 }, false);
+
+    // Outer swirl
+    g.fillStyle(0x4b0082, 0.3);
+    g.fillCircle(center, center, center * 0.9);
+
+    // Middle swirl with gradient effect
+    g.fillStyle(0x8a2be2, 0.6);
+    g.fillCircle(center, center, center * 0.7);
+
+    // Inner core
+    g.fillStyle(0xda70d6, 0.8);
+    g.fillCircle(center, center, center * 0.5);
+
+    // Bright center
+    g.fillStyle(0xffffff, 0.9);
+    g.fillCircle(center, center, center * 0.2);
+
+    // Sparkle effects
+    const sparkles = [
+      { x: center - 10, y: center - 8, size: 2 },
+      { x: center + 8, y: center - 12, size: 1.5 },
+      { x: center - 6, y: center + 10, size: 1 },
+      { x: center + 12, y: center + 6, size: 2.5 },
+    ];
+
+    sparkles.forEach((sparkle) => {
+      g.fillStyle(0xffffff, 0.8);
+      g.fillCircle(sparkle.x, sparkle.y, sparkle.size);
+    });
 
     g.generateTexture(key, size, size);
     g.destroy();

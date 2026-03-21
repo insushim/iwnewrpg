@@ -17,6 +17,7 @@ import { EnchantModal } from "@/components/ui/EnchantModal";
 import { LoginBonus } from "@/components/ui/LoginBonus";
 import { LevelUpEffect } from "@/components/ui/LevelUpEffect";
 import { WorldBossAlert } from "@/components/ui/WorldBossAlert";
+import { TransformPanel } from "@/components/ui/TransformPanel";
 import { useGameStore } from "@/lib/gameStore";
 
 const PhaserGame = dynamic(
@@ -68,7 +69,7 @@ export default function GamePage() {
         <PhaserGame />
       </div>
 
-{/* ChatWindow is now integrated into BottomHUD */}
+      {/* ChatWindow is now integrated into BottomHUD */}
 
       <div className="pointer-events-auto absolute right-1 top-1 z-10">
         <MiniMap />
@@ -89,6 +90,7 @@ export default function GamePage() {
       <LoginBonus />
       <LevelUpEffect />
       <WorldBossAlert />
+      <TransformPanel />
     </main>
   );
 }

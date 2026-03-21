@@ -23,6 +23,13 @@ type BuffState = {
   remaining: number;
 };
 
+type TransformState = {
+  active: boolean;
+  transformId: string | null;
+  remaining: number; // seconds
+  cooldownUntil: number; // timestamp
+};
+
 type PlayerSnapshot = {
   name: string;
   className: string;
@@ -35,6 +42,7 @@ type PlayerSnapshot = {
   expToNext: number;
   gold: number;
   alignment: number;
+  pkCount: number;
   buffs: BuffState[];
 };
 
@@ -205,6 +213,7 @@ type GameStore = {
   worldPlayers: WorldPlayer[];
   worldMonsters: WorldMonster[];
   quiz: QuizState;
+  transform: TransformState;
   setPlayer: (player: Partial<PlayerSnapshot>) => void;
   setServerName: (serverName: string) => void;
   setGrade: (grade: number) => void;
@@ -264,6 +273,9 @@ type GameStore = {
   upsertWorldPlayer: (player: WorldPlayer) => void;
   removeWorldPlayer: (playerId: string) => void;
   upsertMonster: (monster: WorldMonster) => void;
+  activateTransform: (transformId: string) => void;
+  tickTransform: () => void;
+  cancelTransform: () => void;
   openQuiz: (payload: {
     question: QuizQuestion;
     choices: string[];
@@ -346,6 +358,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     expToNext: 100,
     gold: 75,
     alignment: 0,
+    pkCount: 0,
     buffs: [{ id: "starter-blessing", name: "초심자의 축복", remaining: 1200 }],
   },
   serverName: "아스카론 01",
@@ -420,6 +433,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     bossStep: 1,
     bossTotal: 1,
     feedback: null,
+  },
+  transform: {
+    active: false,
+    transformId: null,
+    remaining: 0,
+    cooldownUntil: 0,
   },
   setPlayer: (player) =>
     set((state) => ({
@@ -1320,6 +1339,39 @@ export const useGameStore = create<GameStore>((set, get) => ({
           )
         : [...state.worldMonsters, monster],
     })),
+  activateTransform: (transformId) => {
+    const socket = getSocket();
+    if (!socket.connected) return;
+    socket.emit("player:transform", { transformId });
+  },
+  tickTransform: () =>
+    set((state) => {
+      if (!state.transform.active || state.transform.remaining <= 0) {
+        return {
+          transform: {
+            ...state.transform,
+            active: false,
+            transformId: null,
+            remaining: 0,
+          },
+        };
+      }
+      return {
+        transform: {
+          ...state.transform,
+          remaining: state.transform.remaining - 1,
+        },
+      };
+    }),
+  cancelTransform: () =>
+    set(() => ({
+      transform: {
+        active: false,
+        transformId: null,
+        remaining: 0,
+        cooldownUntil: 0,
+      },
+    })),
   openQuiz: (payload) =>
     set(() => ({
       quiz: {
@@ -1525,4 +1577,5 @@ export type {
   QuestProgress,
   QuestStatus,
   RandomOption,
+  TransformState,
 };

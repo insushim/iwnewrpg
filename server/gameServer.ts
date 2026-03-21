@@ -3,12 +3,14 @@ import { ITEMS } from "@/game/data/items";
 import { NPCS } from "@/game/data/npcs";
 import { MAPS } from "@/game/data/maps";
 import { QUESTS } from "@/game/data/quests";
+import { TRANSFORMS } from "@/game/data/transforms";
 import { ArmorSubType, ItemType, WeaponSubType } from "@/types/item";
 import { Server } from "socket.io";
 import { CombatHandler } from "./combatHandler";
 import { MonsterManager, type MonsterState } from "./monsterManager";
 import { QuizHandler } from "./quizHandler";
 import { RoomManager } from "./roomManager";
+import { ClanManager } from "./clanManager";
 import { loadPlayer, savePlayer } from "./firestore";
 
 type ConnectPayload = {
@@ -70,6 +72,8 @@ type SessionPlayer = {
   quests: SessionQuestProgress[];
   quizCorrectStreak: number;
   lastAttackAt: number;
+  alignment: number;
+  pkCount: number;
 };
 
 type GroundLoot = SessionInventoryItem & {
@@ -117,6 +121,8 @@ function createStarterState(payload: ConnectPayload): SessionPlayer {
     quizCorrectStreak: 0,
     lastAttackAt: 0,
     inventory: starterInventory,
+    alignment: 0,
+    pkCount: 0,
   };
 }
 
@@ -131,6 +137,7 @@ export function createGameServer(server: HttpServer) {
   const monsters = new MonsterManager();
   const combat = new CombatHandler(monsters);
   const quizzes = new QuizHandler();
+  const clans = new ClanManager();
   const sessions = new Map<string, SessionPlayer>();
   const groundLoot = new Map<string, GroundLoot>();
 
@@ -317,6 +324,8 @@ export function createGameServer(server: HttpServer) {
             quests: saved.quests as SessionQuestProgress[],
             quizCorrectStreak: saved.quizCorrectStreak,
             lastAttackAt: 0,
+            alignment: saved.alignment ?? 0,
+            pkCount: saved.pkCount ?? 0,
           };
           currentMapId = saved.mapId;
         } else {
@@ -344,6 +353,15 @@ export function createGameServer(server: HttpServer) {
       socket
         .to(currentMapId)
         .emit("player:joined", { id: playerId, name: playerName });
+
+      // Update clan member online status
+      clans.updateMemberOnline(playerId);
+
+      // Send current clan info to player
+      const currentClan = clans.getClan(playerId);
+      if (currentClan) {
+        socket.emit("clan:current", currentClan);
+      }
     });
 
     socket.on("player:move", (payload: { x: number; y: number }) => {
@@ -351,6 +369,45 @@ export function createGameServer(server: HttpServer) {
       if (player) {
         socket.to(currentMapId).emit("player:moved", player);
       }
+    });
+
+    socket.on("player:transform", (payload: { transformId: string }) => {
+      const session = sessions.get(playerId);
+      if (!session) {
+        return;
+      }
+
+      const transform = TRANSFORMS.find((t) => t.id === payload.transformId);
+      if (!transform) {
+        return;
+      }
+
+      // Check level requirement
+      if (session.level < transform.requiredLevel) {
+        socket.emit("system:message", {
+          channel: "system",
+          author: "시스템",
+          message: `${transform.form} 변신은 레벨 ${transform.requiredLevel} 이상부터 사용 가능합니다.`,
+        });
+        return;
+      }
+
+      // Apply transformation
+      socket.emit("player:transformed", {
+        transformId: transform.id,
+        form: transform.form,
+        duration: transform.duration,
+        cooldown: transform.cooldown,
+        bonuses: transform.bonuses,
+      });
+
+      // Broadcast to other players
+      socket.to(currentMapId).emit("player:transformed", {
+        playerId,
+        transformId: transform.id,
+        form: transform.form,
+        bonuses: transform.bonuses,
+      });
     });
 
     socket.on("map:travel", (payload: { to: string }) => {
@@ -492,6 +549,21 @@ export function createGameServer(server: HttpServer) {
 
       io.to(currentMapId).emit("monster:updated", result.monster);
 
+      // Emit combat result for visual feedback
+      if (result.missed) {
+        socket.emit("combat:miss", { monsterId: payload.monsterId });
+      } else if (result.isCrit) {
+        socket.emit("combat:crit", {
+          monsterId: payload.monsterId,
+          damage: result.damage,
+        });
+      } else {
+        socket.emit("combat:hit", {
+          monsterId: payload.monsterId,
+          damage: result.damage,
+        });
+      }
+
       if (!result.defeated) {
         if (usesBow) {
           socket.emit("player:state", serializePlayerState(session));
@@ -500,6 +572,10 @@ export function createGameServer(server: HttpServer) {
       }
 
       progressKillQuests(session, result.monster);
+      // Alignment recovery: +1 per monster kill
+      if (session.alignment < 0) {
+        session.alignment = Math.min(0, session.alignment + 1);
+      }
       socket.emit("player:state", serializePlayerState(session));
 
       const question = quizzes.generate(result.monster.level);
@@ -517,6 +593,104 @@ export function createGameServer(server: HttpServer) {
           io.to(respawned.mapId).emit("monster:updated", respawned);
         }
       }, monsters.getRespawnDelay(result.monster.id));
+    });
+
+    socket.on("pvp:attack", (payload: { targetPlayerId: string }) => {
+      const attackerSession = sessions.get(playerId);
+      const targetSession = sessions.get(payload.targetPlayerId);
+
+      if (!attackerSession || !targetSession) {
+        return;
+      }
+
+      // Check if attacker is in safe zone
+      if (isPlayerSafeZone(attackerSession.mapId)) {
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "시스템",
+          channel: "system",
+          message: "안전지역에서는 PvP를 할 수 없습니다.",
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      // Check if target is in safe zone
+      if (isPlayerSafeZone(targetSession.mapId)) {
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "시스템",
+          channel: "system",
+          message: "상대방이 안전지역에 있습니다.",
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      // Check attack cooldown
+      const now = Date.now();
+      const attackCooldown = getAttackCooldown(attackerSession);
+      if (now - attackerSession.lastAttackAt < attackCooldown) {
+        return;
+      }
+      attackerSession.lastAttackAt = now;
+
+      // Calculate damage using same formula as monster combat
+      const attackerProfile = getCombatProfile(attackerSession);
+      const attackerDamage = Math.max(
+        1,
+        Math.floor(
+          (attackerProfile.str + attackerProfile.dex + attackerProfile.int) / 3,
+        ) - Math.floor(getDerivedAc(targetSession) / 3),
+      );
+
+      const previousHp = targetSession.hp;
+      targetSession.hp = Math.max(0, targetSession.hp - attackerDamage);
+
+      // Emit damage to both players
+      io.to(attackerSession.mapId).emit("pvp:damage", {
+        attackerId: playerId,
+        targetId: payload.targetPlayerId,
+        damage: attackerDamage,
+        targetHp: targetSession.hp,
+      });
+
+      if (targetSession.hp === 0) {
+        // PK penalty for attacker
+        attackerSession.alignment -= 200;
+        attackerSession.pkCount += 1;
+
+        // Death penalty for victim: lose 3% exp
+        const expLost = Math.floor(getExpToNext(targetSession.level) * 0.03);
+        targetSession.exp = Math.max(0, targetSession.exp - expLost);
+
+        // Respawn victim in speakingIsland
+        targetSession.hp = getDerivedMaxHp(targetSession);
+        targetSession.mp = getDerivedMaxMp(targetSession);
+        targetSession.mapId = "speakingIsland";
+
+        io.to(payload.targetPlayerId).emit("player:death", {
+          expLost,
+          respawnMapId: "speakingIsland",
+          killedByPlayer: playerId,
+        });
+
+        // Notify attacker of PK penalty
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "시스템",
+          channel: "system",
+          message: `${targetSession.name}를 살해했습니다. 성향이 악화되었습니다. (${attackerSession.alignment})`,
+          timestamp: Date.now(),
+        });
+      }
+
+      // Update both players' states
+      socket.emit("player:state", serializePlayerState(attackerSession));
+      io.to(payload.targetPlayerId).emit(
+        "player:state",
+        serializePlayerState(targetSession),
+      );
     });
 
     socket.on(
@@ -744,6 +918,86 @@ export function createGameServer(server: HttpServer) {
       });
     });
 
+    // Clan system socket events
+    socket.on("clan:create", (payload: { name: string }) => {
+      const session = sessions.get(playerId);
+      if (!session) return;
+
+      if (session.gold < 15000) {
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "시스템",
+          channel: "system",
+          message: "혈맹 창설에 필요한 골드가 부족합니다. (15,000 Gold 필요)",
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      if (session.level < 10) {
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "시스템",
+          channel: "system",
+          message: "혈맹을 창설하려면 레벨 10 이상이어야 합니다.",
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      const clan = clans.create(playerId, playerName, payload.name);
+      if (!clan) {
+        socket.emit("chat:message", {
+          id: crypto.randomUUID(),
+          author: "시스템",
+          channel: "system",
+          message:
+            "이미 혈맹에 소속되어 있거나 동일한 이름의 혈맹이 존재합니다.",
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      session.gold -= 15000;
+      socket.emit("clan:created", clan);
+      socket.emit("player:state", serializePlayerState(session));
+    });
+
+    socket.on("clan:join", (payload: { clanId: string }) => {
+      const joined = clans.join(playerId, playerName, payload.clanId);
+      if (joined) {
+        const clan = clans.getClanById(payload.clanId);
+        socket.emit("clan:joined", clan);
+      }
+    });
+
+    socket.on("clan:leave", () => {
+      const left = clans.leave(playerId);
+      if (left) {
+        socket.emit("clan:left");
+      }
+    });
+
+    socket.on("clan:list", () => {
+      socket.emit("clan:list", clans.listAll());
+    });
+
+    socket.on("clan:chat", (payload: { message: string }) => {
+      const clan = clans.getClan(playerId);
+      if (clan) {
+        const chatMessage = {
+          id: crypto.randomUUID(),
+          author: playerName,
+          channel: "clan",
+          message: payload.message,
+          timestamp: Date.now(),
+        };
+        clan.members.forEach((member) => {
+          io.to(member.id).emit("chat:message", chatMessage);
+        });
+      }
+    });
+
     socket.on("disconnect", async () => {
       const session = sessions.get(playerId);
       if (session) {
@@ -762,6 +1016,8 @@ export function createGameServer(server: HttpServer) {
           equipment: session.equipment as Record<string, unknown>,
           quests: session.quests,
           quizCorrectStreak: session.quizCorrectStreak,
+          alignment: session.alignment,
+          pkCount: session.pkCount,
           updatedAt: Date.now(),
         });
         sessions.delete(playerId);
@@ -797,6 +1053,8 @@ export function createGameServer(server: HttpServer) {
         equipment: session.equipment as Record<string, unknown>,
         quests: session.quests,
         quizCorrectStreak: session.quizCorrectStreak,
+        alignment: session.alignment,
+        pkCount: session.pkCount,
         updatedAt: Date.now(),
       });
     });
@@ -968,6 +1226,8 @@ function serializePlayerState(session: SessionPlayer) {
     equipment: session.equipment,
     quests: session.quests,
     mapId: session.mapId,
+    alignment: session.alignment,
+    pkCount: session.pkCount,
   };
 }
 
@@ -1115,4 +1375,9 @@ function isInsideMonsterSafeZone(mapId: string, x: number, y: number) {
   }
 
   return x >= 220 && x <= 980 && y >= 180 && y <= 610;
+}
+
+function isPlayerSafeZone(mapId: string) {
+  const mapData = MAPS[mapId];
+  return mapData?.safeZone === true;
 }
