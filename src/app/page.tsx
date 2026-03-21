@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ResetGameButton } from "@/components/ui/ResetGameButton";
 
 const classes = [
   {
@@ -86,9 +87,9 @@ export default function HomePage() {
               단어의 힘으로 세계를 구하라
             </p>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/72 md:text-base">
-              문제 기반 전투와 멀티플레이 필드를 결합한 2D MMORPG 프로토타입입니다.
-              지금 빌드는 유닛 atlas, 맵 재질, HUD, 상점과 인벤토리, 전투 이펙트까지
-              리마스터 방향으로 재정비된 상태입니다.
+              문제 기반 전투와 멀티플레이 필드를 결합한 2D MMORPG
+              프로토타입입니다. 지금 빌드는 유닛 atlas, 맵 재질, HUD, 상점과
+              인벤토리, 전투 이펙트까지 리마스터 방향으로 재정비된 상태입니다.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -104,6 +105,7 @@ export default function HomePage() {
               >
                 아트 파이프라인 보기
               </Link>
+              <ResetGameButton />
             </div>
 
             <div className="mt-8 grid gap-3 md:grid-cols-3">
@@ -112,8 +114,12 @@ export default function HomePage() {
                   key={item.title}
                   className="rounded-[22px] border border-[#b48a46]/25 bg-[linear-gradient(180deg,rgba(18,23,32,0.92),rgba(7,9,15,0.96))] p-4 shadow-[0_20px_36px_rgba(0,0,0,0.32)]"
                 >
-                  <div className="text-sm font-semibold text-[#f2e4c2]">{item.title}</div>
-                  <p className="mt-2 text-sm leading-6 text-white/66">{item.body}</p>
+                  <div className="text-sm font-semibold text-[#f2e4c2]">
+                    {item.title}
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-white/66">
+                    {item.body}
+                  </p>
                 </div>
               ))}
             </div>

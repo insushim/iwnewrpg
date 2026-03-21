@@ -16,8 +16,20 @@ type QuickSlot = {
 
 const QUICK_SLOTS: QuickSlot[] = [
   { key: "1", itemId: "red_potion", label: "HP", color: "#d84a5a", glyph: "+" },
-  { key: "2", itemId: "blue_potion", label: "MP", color: "#4f7cff", glyph: "M" },
-  { key: "3", itemId: "teleport_scroll", label: "TP", color: "#b27cff", glyph: "T" },
+  {
+    key: "2",
+    itemId: "blue_potion",
+    label: "MP",
+    color: "#4f7cff",
+    glyph: "M",
+  },
+  {
+    key: "3",
+    itemId: "teleport_scroll",
+    label: "TP",
+    color: "#b27cff",
+    glyph: "T",
+  },
   { key: "4", itemId: null, label: "EMPTY", color: "#4b5563", glyph: "-" },
 ];
 
@@ -37,7 +49,9 @@ export function BottomHUD() {
   const toggleAchievements = useGameStore((state) => state.toggleAchievements);
   const toggleEnchant = useGameStore((state) => state.toggleEnchant);
   const achievements = useGameStore((state) => state.achievements);
-  const claimableAchievements = achievements.filter((a) => a.completed && !a.claimed).length;
+  const claimableAchievements = achievements.filter(
+    (a) => a.completed && !a.claimed,
+  ).length;
   const activeTitle = useGameStore((state) => state.activeTitle);
   const sp = useGameStore((state) => state.sp);
 
@@ -58,13 +72,25 @@ export function BottomHUD() {
     setEditingName(false);
   };
 
-  const hpRatio = Math.max(0, Math.min(100, (player.hp / Math.max(1, derived.maxHp)) * 100));
-  const mpRatio = Math.max(0, Math.min(100, (player.mp / Math.max(1, derived.maxMp)) * 100));
-  const expRatio = Math.max(0, Math.min(100, (player.exp / Math.max(1, player.expToNext)) * 100));
+  const hpRatio = Math.max(
+    0,
+    Math.min(100, (player.hp / Math.max(1, derived.maxHp)) * 100),
+  );
+  const mpRatio = Math.max(
+    0,
+    Math.min(100, (player.mp / Math.max(1, derived.maxMp)) * 100),
+  );
+  const expRatio = Math.max(
+    0,
+    Math.min(100, (player.exp / Math.max(1, player.expToNext)) * 100),
+  );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
         return;
       }
       if (e.key === "i" || e.key === "I") toggleInventory();
@@ -84,7 +110,14 @@ export function BottomHUD() {
         if (sc && sc.quantity > 0) consumeItem("teleport_scroll");
       }
     },
-    [consumeItem, inventory, toggleInventory, toggleQuestWindow, toggleAchievements, toggleEnchant],
+    [
+      consumeItem,
+      inventory,
+      toggleInventory,
+      toggleQuestWindow,
+      toggleAchievements,
+      toggleEnchant,
+    ],
   );
 
   useEffect(() => {
@@ -122,16 +155,14 @@ export function BottomHUD() {
             : player.className;
 
   return (
-    <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-20 px-3 pb-2">
-      <div
-        className="relative flex min-h-[104px] items-center gap-4 overflow-hidden rounded-[28px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(14,18,28,0.96),rgba(4,6,12,0.98))] px-4 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,228,168,0.05)]"
-      >
+    <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-20 px-2 pb-2 md:px-3">
+      <div className="relative flex min-h-[80px] items-center gap-2 overflow-hidden rounded-[20px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(14,18,28,0.96),rgba(4,6,12,0.98))] px-2 py-2 shadow-[0_-10px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,228,168,0.05)] md:min-h-[104px] md:gap-4 md:rounded-[28px] md:px-4 md:py-3">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,128,0.09),transparent_28%),linear-gradient(90deg,transparent,rgba(119,168,255,0.04),transparent)]" />
         <div className="absolute inset-[10px] rounded-[22px] border border-white/5" />
 
-        <div className="relative flex shrink-0 items-center gap-3">
+        <div className="relative flex shrink-0 items-center gap-2 md:gap-3">
           <div
-            className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full border text-[22px] font-bold"
+            className="relative flex h-[54px] w-[54px] items-center justify-center rounded-full border text-[18px] font-bold md:h-[72px] md:w-[72px] md:text-[22px]"
             style={{
               borderColor: `${classColor}99`,
               color: classColor,
@@ -142,11 +173,13 @@ export function BottomHUD() {
             <div className="absolute inset-[5px] rounded-full border border-white/8" />
             <div className="text-center leading-none">
               <div>{player.className.charAt(0).toUpperCase()}</div>
-              <div className="mt-1 text-[9px] font-medium text-[#d4b37b]">Lv {player.level}</div>
+              <div className="mt-1 text-[9px] font-medium text-[#d4b37b]">
+                Lv {player.level}
+              </div>
             </div>
           </div>
 
-          <div className="w-[252px]">
+          <div className="w-[180px] md:w-[252px]">
             <div className="mb-1 flex items-end justify-between">
               <div>
                 {editingName ? (
@@ -186,23 +219,47 @@ export function BottomHUD() {
                     전투 중
                   </div>
                 )}
-                <div className="rounded-full border border-white/8 bg-white/4 px-2 py-0.5 text-[9px] tracking-[0.2em] text-[#cbb38b]">
-                  {connected ? "온라인" : "오프라인"}
+                <div
+                  className={`rounded-full border px-2 py-0.5 text-[9px] tracking-[0.2em] ${
+                    connected
+                      ? "border-green-400/30 bg-green-400/10 text-green-300"
+                      : "border-orange-400/30 bg-orange-400/10 text-orange-300"
+                  }`}
+                >
+                  {connected ? "🟢 온라인" : "🟡 오프라인"}
                 </div>
               </div>
             </div>
 
-            <Gauge label="HP" ratio={hpRatio} color="linear-gradient(90deg,#ff6b6b,#c2263e)" text={`${player.hp}/${derived.maxHp}`} />
-            <Gauge label="MP" ratio={mpRatio} color="linear-gradient(90deg,#68a6ff,#2b58d8)" text={`${player.mp}/${derived.maxMp}`} />
-            <Gauge label="EXP" ratio={expRatio} color="linear-gradient(90deg,#c9a13d,#f0d16c)" text={`${player.exp}/${player.expToNext}`} small />
+            <Gauge
+              label="HP"
+              ratio={hpRatio}
+              color="linear-gradient(90deg,#ff6b6b,#c2263e)"
+              text={`${player.hp}/${derived.maxHp}`}
+            />
+            <Gauge
+              label="MP"
+              ratio={mpRatio}
+              color="linear-gradient(90deg,#68a6ff,#2b58d8)"
+              text={`${player.mp}/${derived.maxMp}`}
+            />
+            <Gauge
+              label="EXP"
+              ratio={expRatio}
+              color="linear-gradient(90deg,#c9a13d,#f0d16c)"
+              text={`${player.exp}/${player.expToNext}`}
+              small
+            />
           </div>
         </div>
 
         <Divider />
 
-        <div className="relative flex shrink-0 gap-2">
+        <div className="relative hidden shrink-0 gap-2 md:flex">
           {QUICK_SLOTS.map((slot) => {
-            const invItem = slot.itemId ? inventory?.find((it) => it.id === slot.itemId) : null;
+            const invItem = slot.itemId
+              ? inventory?.find((it) => it.id === slot.itemId)
+              : null;
             const count = invItem?.quantity ?? 0;
             const active = !!slot.itemId && count > 0;
             return (
@@ -215,25 +272,35 @@ export function BottomHUD() {
                 className="group relative flex h-[66px] w-[56px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[16px] border px-1 py-1.5 text-[9px] transition"
                 style={{
                   cursor: active ? "pointer" : "default",
-                  borderColor: active ? `${slot.color}77` : "rgba(120,120,140,0.24)",
+                  borderColor: active
+                    ? `${slot.color}77`
+                    : "rgba(120,120,140,0.24)",
                   background: active
                     ? `linear-gradient(180deg, ${slot.color}26, rgba(10,10,18,0.92))`
                     : "linear-gradient(180deg, rgba(26,28,34,0.88), rgba(10,10,16,0.94))",
-                  boxShadow: active ? `inset 0 1px 0 rgba(255,255,255,0.08), 0 0 18px ${slot.color}18` : "none",
+                  boxShadow: active
+                    ? `inset 0 1px 0 rgba(255,255,255,0.08), 0 0 18px ${slot.color}18`
+                    : "none",
                 }}
               >
                 <span className="text-[#af9166]">{slot.key}</span>
                 <div
                   className="flex h-[24px] w-[24px] items-center justify-center rounded-[8px] border text-[12px] font-bold"
                   style={{
-                    background: active ? `${slot.color}40` : "rgba(255,255,255,0.04)",
-                    borderColor: active ? `${slot.color}88` : "rgba(255,255,255,0.06)",
+                    background: active
+                      ? `${slot.color}40`
+                      : "rgba(255,255,255,0.04)",
+                    borderColor: active
+                      ? `${slot.color}88`
+                      : "rgba(255,255,255,0.06)",
                     color: active ? "#fff3d6" : "#6b7280",
                   }}
                 >
                   {slot.glyph}
                 </div>
-                <span className="text-[8px] tracking-[0.12em] text-[#e9dcc0]/75">{active ? `x${count}` : slot.label}</span>
+                <span className="text-[8px] tracking-[0.12em] text-[#e9dcc0]/75">
+                  {active ? `x${count}` : slot.label}
+                </span>
               </button>
             );
           })}
@@ -241,16 +308,22 @@ export function BottomHUD() {
 
         <Divider />
 
-        <div className="relative flex shrink-0 items-center">
+        <div className="relative hidden shrink-0 items-center md:flex">
           <SkillBar />
         </div>
 
         <Divider />
 
-        <div className="relative min-w-[148px] shrink-0 rounded-[18px] border border-white/6 bg-white/[0.03] px-3 py-2.5">
-          <div className="text-[10px] uppercase tracking-[0.26em] text-[#af9166]">지역</div>
-          <div className="mt-1 text-[13px] font-semibold text-[#f5e8c3]">{MAPS[currentMapId]?.name ?? currentMapId}</div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#9f8560]">{serverName}</div>
+        <div className="relative min-w-[120px] shrink-0 rounded-[14px] border border-white/6 bg-white/[0.03] px-2 py-2 md:min-w-[148px] md:rounded-[18px] md:px-3 md:py-2.5">
+          <div className="text-[10px] uppercase tracking-[0.26em] text-[#af9166]">
+            지역
+          </div>
+          <div className="mt-1 text-[13px] font-semibold text-[#f5e8c3]">
+            {MAPS[currentMapId]?.name ?? currentMapId}
+          </div>
+          <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#9f8560]">
+            {serverName}
+          </div>
           <div className="mt-2 flex items-center gap-1.5">
             <span className="text-[14px] text-[#f2c45d]">G</span>
             <span className="font-mono text-[15px] font-semibold text-[#f7db86]">
@@ -269,12 +342,12 @@ export function BottomHUD() {
         <Divider />
 
         {/* Chat Window - integrated */}
-        <div className="relative flex-1 min-w-[200px] max-w-[360px] self-stretch rounded-[14px] border border-white/6 bg-black/30 px-2 py-1.5">
+        <div className="relative hidden min-w-[200px] max-w-[360px] flex-1 self-stretch rounded-[14px] border border-white/6 bg-black/30 px-2 py-1.5 md:block">
           <ChatWindow />
         </div>
 
-        <div className="relative ml-auto flex shrink-0 items-center gap-2">
-          {player.buffs.slice(0, 4).map((buff) => (
+        <div className="relative ml-auto flex shrink-0 items-center gap-1 md:gap-2">
+          {player.buffs.slice(0, 2).map((buff) => (
             <div
               key={buff.id}
               title={`${buff.name} (${buff.remaining}s)`}
@@ -284,17 +357,37 @@ export function BottomHUD() {
             </div>
           ))}
 
-          <HudButton active={ui.inventoryOpen} label="[I] 인벤" onClick={toggleInventory} />
-          <HudButton active={ui.questWindowOpen} label="[Q] 퀘스트" onClick={toggleQuestWindow} />
-          <div className="relative">
-            <HudButton active={ui.achievementsOpen} label="[A] 업적" onClick={toggleAchievements} />
+          <HudButton
+            active={ui.inventoryOpen}
+            label="인벤"
+            onClick={toggleInventory}
+          />
+          <div className="relative hidden md:block">
+            <HudButton
+              active={ui.questWindowOpen}
+              label="[Q] 퀘스트"
+              onClick={toggleQuestWindow}
+            />
+          </div>
+          <div className="relative hidden md:block">
+            <HudButton
+              active={ui.achievementsOpen}
+              label="[A] 업적"
+              onClick={toggleAchievements}
+            />
             {claimableAchievements > 0 && (
               <div className="pointer-events-none absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#f0c040] text-[8px] font-bold text-[#1a0f00]">
                 {claimableAchievements}
               </div>
             )}
           </div>
-          <HudButton active={ui.enchantOpen} label="[E] 강화" onClick={toggleEnchant} />
+          <div className="hidden md:block">
+            <HudButton
+              active={ui.enchantOpen}
+              label="[E] 강화"
+              onClick={toggleEnchant}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -316,20 +409,30 @@ function Gauge({
 }) {
   return (
     <div className={`flex items-center gap-2 ${small ? "mt-1" : "mt-1.5"}`}>
-      <span className={`w-7 text-right font-semibold ${small ? "text-[8px]" : "text-[9px]"} text-[#bea277]`}>
+      <span
+        className={`w-7 text-right font-semibold ${small ? "text-[8px]" : "text-[9px]"} text-[#bea277]`}
+      >
         {label}
       </span>
-      <div className={`relative flex-1 overflow-hidden rounded-full border border-white/6 bg-black/50 ${small ? "h-[6px]" : "h-[10px]"}`}>
+      <div
+        className={`relative flex-1 overflow-hidden rounded-full border border-white/6 bg-black/50 ${small ? "h-[6px]" : "h-[10px]"}`}
+      >
         <div
           className="absolute inset-y-0 left-0 rounded-full"
-          style={{ width: `${ratio}%`, background: color, transition: "width 220ms ease" }}
+          style={{
+            width: `${ratio}%`,
+            background: color,
+            transition: "width 220ms ease",
+          }}
         />
         <div
           className="absolute left-1 right-1 top-[1px] h-[2px] rounded-full bg-white/20"
           style={{ clipPath: `inset(0 ${100 - ratio}% 0 0)` }}
         />
       </div>
-      <span className={`w-[58px] text-right font-mono ${small ? "text-[8px]" : "text-[9px]"} text-[#d8c3a1]/70`}>
+      <span
+        className={`w-[58px] text-right font-mono ${small ? "text-[8px]" : "text-[9px]"} text-[#d8c3a1]/70`}
+      >
         {text}
       </span>
     </div>
@@ -337,7 +440,9 @@ function Gauge({
 }
 
 function Divider() {
-  return <div className="h-[58px] w-px shrink-0 bg-[linear-gradient(180deg,transparent,rgba(201,160,95,0.4),transparent)]" />;
+  return (
+    <div className="h-[58px] w-px shrink-0 bg-[linear-gradient(180deg,transparent,rgba(201,160,95,0.4),transparent)]" />
+  );
 }
 
 function HudButton({
@@ -359,7 +464,9 @@ function HudButton({
           ? "linear-gradient(180deg, rgba(226,193,120,0.95), rgba(165,121,49,0.95))"
           : "linear-gradient(180deg, rgba(26,30,38,0.92), rgba(10,12,18,0.96))",
         color: active ? "#120b03" : "#efdfc0",
-        borderColor: active ? "rgba(255,232,179,0.6)" : "rgba(210,171,106,0.22)",
+        borderColor: active
+          ? "rgba(255,232,179,0.6)"
+          : "rgba(210,171,106,0.22)",
         boxShadow: active ? "0 0 18px rgba(232,191,97,0.22)" : "none",
       }}
     >

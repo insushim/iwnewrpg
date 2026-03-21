@@ -43,7 +43,19 @@ export function GameSocketBridge() {
     };
 
     const onConnectError = () => {
-      // offline fallback — no action required
+      // Set to offline mode
+      setConnected(false);
+      EventBus.emit("socket_connected", { connected: false });
+
+      // Add a helpful system message
+      addChat({
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "시스템",
+        message:
+          "서버에 연결할 수 없습니다. 오프라인 모드로 게임을 계속하세요!",
+        timestamp: Date.now(),
+      });
     };
 
     socket.on("connect", onConnect);

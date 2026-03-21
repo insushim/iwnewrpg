@@ -108,6 +108,10 @@ type EventPayloadMap = {
   "night:undead_bonus": {
     active: boolean;
   };
+  mobile_move: { dx: number; dy: number };
+  mobile_stop: Record<string, never>;
+  mobile_attack: Record<string, never>;
+  mobile_use_potion: Record<string, never>;
 };
 
 type EventKey = keyof EventPayloadMap;

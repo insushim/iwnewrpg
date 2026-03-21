@@ -547,6 +547,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
+    this.updateMobileMovement();
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
     this.updateDayNightCycle();
     this.updateAmbientLighting();
@@ -744,9 +745,21 @@ export class WorldScene extends Phaser.Scene {
       channel: "system",
       author: "시스템",
       message:
-        "오프라인 모드로 플레이 중입니다. 우클릭으로 이동, 몬스터 우클릭으로 공격하세요!",
+        "🎮 오프라인 모드로 플레이 중입니다. 우클릭으로 이동, 몬스터 우클릭으로 공격하세요!",
       timestamp: Date.now(),
     });
+
+    // Add tutorial tip for new players
+    setTimeout(() => {
+      useGameStore.getState().addChat({
+        id: crypto.randomUUID(),
+        channel: "system",
+        author: "시스템",
+        message:
+          "💡 몬스터를 처치하면 단어 퀴즈가 나타납니다. 정답을 맞춰 경험치와 골드를 획득하세요!",
+        timestamp: Date.now(),
+      });
+    }, 2000);
   }
 
   private generateOfflineMonsters(): Array<{
@@ -1284,6 +1297,11 @@ export class WorldScene extends Phaser.Scene {
       EventBus.on("chat_bubble", (payload) =>
         this.showChatBubble(payload.playerId, payload.message),
       ),
+      EventBus.on("mobile_move", (payload) =>
+        this.handleMobileMove(payload.dx, payload.dy),
+      ),
+      EventBus.on("mobile_stop", () => this.handleMobileStop()),
+      EventBus.on("mobile_attack", () => this.handleMobileAttack()),
     );
   }
 
@@ -4826,6 +4844,116 @@ export class WorldScene extends Phaser.Scene {
 
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
   }
+
+  // Mobile movement handling
+  private mobileMovementActive = false;
+  private mobileDirection = { dx: 0, dy: 0 };
+
+  private handleMobileMove(dx: number, dy: number) {
+    if (!this.localPlayer) return;
+
+    this.mobileMovementActive = true;
+    this.mobileDirection.dx = dx;
+    this.mobileDirection.dy = dy;
+
+    // Clear any existing movement tweens when mobile input starts
+    this.tweens.killTweensOf(this.localPlayer);
+    this.destinationMarker?.setVisible(false);
+  }
+
+  private handleMobileStop() {
+    this.mobileMovementActive = false;
+    this.mobileDirection.dx = 0;
+    this.mobileDirection.dy = 0;
+  }
+
+  private handleMobileAttack() {
+    if (!this.localPlayer) return;
+
+    // Find nearest monster to attack
+    let nearestMonster: string | null = null;
+    let nearestDistance = Infinity;
+
+    this.monsterSprites.forEach((sprite, monsterId) => {
+      if (!sprite.visible) return;
+
+      const distance = Phaser.Math.Distance.Between(
+        this.localPlayer!.x,
+        this.localPlayer!.y,
+        sprite.x,
+        sprite.y,
+      );
+
+      if (distance < nearestDistance && distance <= 120) {
+        // Attack range
+        nearestDistance = distance;
+        nearestMonster = monsterId;
+      }
+    });
+
+    if (nearestMonster) {
+      this.beginAttack(nearestMonster);
+    }
+  }
+
+  private updateMobileMovement() {
+    if (!this.mobileMovementActive || !this.localPlayer) return;
+
+    const moveSpeed = 180; // pixels per second
+    const deltaTime = this.game.loop.delta / 1000; // convert to seconds
+
+    // Calculate movement vector
+    const moveX = this.mobileDirection.dx * moveSpeed * deltaTime;
+    const moveY = this.mobileDirection.dy * moveSpeed * deltaTime;
+
+    // Calculate new position
+    const newX = this.localPlayer.x + moveX;
+    const newY = this.localPlayer.y + moveY;
+
+    // Get map bounds
+    const map = MAPS[this.mapId] ?? MAPS.speakingIsland;
+    const maxX = map.width * TILE_WIDTH + 220;
+    const maxY = map.height * TILE_HEIGHT + 180;
+
+    // Clamp to bounds
+    const clampedX = Phaser.Math.Clamp(newX, 110, maxX);
+    const clampedY = Phaser.Math.Clamp(newY, 120, maxY);
+
+    // Check for collisions at new position
+    if (!this.isBlocked(clampedX, clampedY)) {
+      // Update player position
+      this.localPlayer.setPosition(clampedX, clampedY);
+
+      // Update player facing direction
+      if (
+        Math.abs(this.mobileDirection.dx) > Math.abs(this.mobileDirection.dy)
+      ) {
+        this.localPlayer.facing = this.mobileDirection.dx > 0 ? "e" : "w";
+      } else if (this.mobileDirection.dy !== 0) {
+        this.localPlayer.facing = this.mobileDirection.dy > 0 ? "s" : "n";
+      }
+
+      // Update game store and server
+      useGameStore.getState().upsertWorldPlayer({
+        id: this.selfId ?? "self",
+        name: useGameStore.getState().player.name,
+        mapId: this.mapId,
+        x: clampedX,
+        y: clampedY,
+      });
+
+      // Throttle server updates to avoid spam
+      if (
+        !this.lastMobileUpdateTime ||
+        this.time.now - this.lastMobileUpdateTime > 100
+      ) {
+        getSocket().emit("player:move", { x: clampedX, y: clampedY });
+        this.lastMobileUpdateTime = this.time.now;
+      }
+    }
+  }
+
+  private lastMobileUpdateTime = 0;
 
   private tweenActor(
     target: Phaser.GameObjects.Container,

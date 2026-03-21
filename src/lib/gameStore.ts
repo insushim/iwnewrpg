@@ -218,6 +218,7 @@ type GameStore = {
   setServerName: (serverName: string) => void;
   setGrade: (grade: number) => void;
   resetUsedWords: () => void;
+  resetGame: () => void;
   markWordUsed: (wordId: string) => void;
   markWordWrong: (wordId: string) => void;
   setInventory: (items: InventoryItem[]) => void;
@@ -453,6 +454,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resetUsedWords: () => {
     if (typeof window !== "undefined") localStorage.removeItem("usedWordIds");
     return set({ usedWordIds: new Set<string>() });
+  },
+  resetGame: () => {
+    if (typeof window !== "undefined") {
+      // Clear all game data from localStorage
+      const keysToRemove = [
+        "game-storage", // Zustand persist key
+        "usedWordIds",
+        "achievements",
+        "inventory",
+        "equipment",
+        "quests",
+      ];
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+      // Reload the page to completely reset the game state
+      window.location.reload();
+    }
   },
   markWordUsed: (wordId) =>
     set((state) => {

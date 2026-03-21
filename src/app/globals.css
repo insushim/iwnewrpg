@@ -417,3 +417,30 @@ a {
 .animate-slide-in-up { animation: slide-in-up 0.3s ease-out; }
 .animate-damage-float { animation: damage-float 1s ease-out forwards; }
 .animate-border-shimmer { animation: border-shimmer 3s ease-in-out infinite; }
+
+/* ══════════════════════════════════════════════
+   Mobile Touch Optimizations
+   ══════════════════════════════════════════════ */
+
+/* Prevent default touch behaviors on the game area */
+.game-canvas {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Prevent pull-to-refresh on mobile */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Optimize button touches for mobile */
+@media (pointer: coarse) {
+  button, .btn-lineage, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

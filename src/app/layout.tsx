@@ -30,6 +30,12 @@ export const metadata: Metadata = {
     description: "MMORPG x Word Quiz — Fantasy Web Game",
     images: ["/og-image.svg"],
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({
@@ -39,7 +45,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${fantasyFont.variable} ${uiFont.variable} antialiased`}>{children}</body>
+      <body
+        className={`${fantasyFont.variable} ${uiFont.variable} antialiased`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
