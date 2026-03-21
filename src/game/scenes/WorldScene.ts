@@ -4010,7 +4010,7 @@ export class WorldScene extends Phaser.Scene {
       .setScale(isSelf ? 0.9 : 0.82)
       .setOrigin(0.5, 0.94);
     const label = this.add
-      .text(0, -56, payload.name, {
+      .text(0, -80, payload.name, {
         fontSize: "11px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
@@ -4182,7 +4182,7 @@ export class WorldScene extends Phaser.Scene {
       .rectangle(-25, -68, 50, 5, 0xfb7260, 0.95)
       .setOrigin(0, 0.5);
     const label = this.add
-      .text(0, -86, payload.name, {
+      .text(0, -96, payload.name, {
         fontSize: isBoss ? "14px" : "13px",
         color: isBoss ? "#ffe7b4" : "#ffd9d1",
         stroke: "#07101a",
@@ -7033,7 +7033,7 @@ export class WorldScene extends Phaser.Scene {
           ai.wanderTargetY,
         );
         if (distToWander > 5) {
-          const speed = 30;
+          const speed = 60;
           const angle = Phaser.Math.Angle.Between(
             sprite.x,
             sprite.y,

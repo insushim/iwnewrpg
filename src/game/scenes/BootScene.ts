@@ -50,21 +50,21 @@ export class BootScene extends Phaser.Scene {
 
   private createSpriteTextures() {
     // Enhanced tile system with variations
-    this.createTileTexture("tile_grass_a", 0x5da65e, 0x3a7a3a, 0x8cd88c);
-    this.createTileTexture("tile_grass_a_var1", 0x58a058, 0x377637, 0x88d288);
-    this.createTileTexture("tile_grass_a_var2", 0x62ac62, 0x3d7e3d, 0x90de90);
+    this.createTileTexture("tile_grass_a", 0x7cc87c, 0x5da65e, 0xaaeaaa);
+    this.createTileTexture("tile_grass_a_var1", 0x78c278, 0x58a058, 0xa6e6a6);
+    this.createTileTexture("tile_grass_a_var2", 0x82ce82, 0x62ac62, 0xb0f0b0);
 
-    this.createTileTexture("tile_grass_b", 0x4e9050, 0x357035, 0x7cc87c);
-    this.createTileTexture("tile_grass_b_var1", 0x4a8a4c, 0x336c33, 0x78c278);
-    this.createTileTexture("tile_grass_b_var2", 0x529654, 0x377437, 0x80ce80);
+    this.createTileTexture("tile_grass_b", 0x6eb86e, 0x4e9050, 0x9ce09c);
+    this.createTileTexture("tile_grass_b_var1", 0x6ab26a, 0x4a8a4c, 0x98da98);
+    this.createTileTexture("tile_grass_b_var2", 0x72be72, 0x529654, 0xa0e4a0);
 
-    this.createTileTexture("tile_meadow", 0x7aa855, 0x4e7a30, 0xb0e880);
-    this.createTileTexture("tile_meadow_var1", 0x76a451, 0x4c782e, 0xace47c);
-    this.createTileTexture("tile_meadow_var2", 0x7eac59, 0x507c32, 0xb4ec84);
+    this.createTileTexture("tile_meadow", 0x9acc78, 0x7aa855, 0xc8f8a0);
+    this.createTileTexture("tile_meadow_var1", 0x96c874, 0x76a451, 0xc4f49c);
+    this.createTileTexture("tile_meadow_var2", 0x9ed07c, 0x7eac59, 0xccfca4);
 
-    this.createTileTexture("tile_forest", 0x468a4e, 0x2a5e30, 0x72b870);
-    this.createTileTexture("tile_forest_var1", 0x42864a, 0x285c2e, 0x6eb46c);
-    this.createTileTexture("tile_forest_var2", 0x4a8e52, 0x2c6032, 0x76bc74);
+    this.createTileTexture("tile_forest", 0x66aa6e, 0x468a4e, 0x92d890);
+    this.createTileTexture("tile_forest_var1", 0x62a66a, 0x42864a, 0x8ed48c);
+    this.createTileTexture("tile_forest_var2", 0x6aae72, 0x4a8e52, 0x96dc94);
 
     this.createTileTexture("tile_moss", 0x629070, 0x3a6040, 0x90c898);
     this.createTileTexture("tile_moss_var1", 0x5e8c6c, 0x385e3e, 0x8cc494);
