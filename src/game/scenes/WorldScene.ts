@@ -1485,84 +1485,84 @@ export class WorldScene extends Phaser.Scene {
     switch (mapId) {
       case "silverKnightTown":
         return {
-          skyTop: 0x243547,
-          skyBottom: 0x0b141d,
-          hazePrimary: 0xaebed0,
-          hazeSecondary: 0x46525b,
+          skyTop: 0x5a8aaa,
+          skyBottom: 0x3a6a8a,
+          hazePrimary: 0xc8d8e8,
+          hazeSecondary: 0x8898a8,
           sunTint: 0xf4dfae,
-          ambient: 0x11181f,
+          ambient: 0x4a6878,
         };
       case "windwoodForest":
         return {
-          skyTop: 0x143126,
-          skyBottom: 0x07110d,
-          hazePrimary: 0x35684d,
-          hazeSecondary: 0x0e2419,
+          skyTop: 0x3a7a5a,
+          skyBottom: 0x2a5a3a,
+          hazePrimary: 0x68b088,
+          hazeSecondary: 0x3a6a4a,
           sunTint: 0xcaefa6,
-          ambient: 0x08130d,
+          ambient: 0x2a5a3a,
         };
       case "orcForest":
         return {
-          skyTop: 0x2e281d,
-          skyBottom: 0x120f0a,
-          hazePrimary: 0x66503a,
-          hazeSecondary: 0x231912,
+          skyTop: 0x6a5a40,
+          skyBottom: 0x4a3a28,
+          hazePrimary: 0xa08868,
+          hazeSecondary: 0x5a4a38,
           sunTint: 0xe7b06b,
-          ambient: 0x110d0a,
+          ambient: 0x4a3a28,
         };
       case "gludioPlain":
         return {
-          skyTop: 0x30402b,
-          skyBottom: 0x0d130c,
-          hazePrimary: 0x7aa06a,
-          hazeSecondary: 0x31422c,
+          skyTop: 0x5a8a50,
+          skyBottom: 0x3a6a30,
+          hazePrimary: 0x8ac87a,
+          hazeSecondary: 0x5a8a50,
           sunTint: 0xf4de9a,
-          ambient: 0x12170d,
+          ambient: 0x3a6a30,
         };
       case "moonlitWetland":
         return {
-          skyTop: 0x112330,
-          skyBottom: 0x060d12,
-          hazePrimary: 0x4c8c86,
-          hazeSecondary: 0x18362f,
+          skyTop: 0x3a6a80,
+          skyBottom: 0x2a4a60,
+          hazePrimary: 0x6abaaa,
+          hazeSecondary: 0x3a7a6a,
           sunTint: 0xcff5ff,
-          ambient: 0x091011,
+          ambient: 0x2a5a6a,
         };
       case "giranTown":
         return {
-          skyTop: 0x3b2f44,
-          skyBottom: 0x100b14,
-          hazePrimary: 0x997b65,
-          hazeSecondary: 0x2c1c20,
+          skyTop: 0x6a5a78,
+          skyBottom: 0x4a3a58,
+          hazePrimary: 0xb89a80,
+          hazeSecondary: 0x6a4a50,
           sunTint: 0xf7ddbd,
-          ambient: 0x150f12,
+          ambient: 0x4a3a48,
         };
       case "dragonValley":
         return {
-          skyTop: 0x2a1513,
-          skyBottom: 0x0f0808,
-          hazePrimary: 0x964d3f,
-          hazeSecondary: 0x2a1411,
+          skyTop: 0x6a3a30,
+          skyBottom: 0x4a2a20,
+          hazePrimary: 0xb87a68,
+          hazeSecondary: 0x6a4038,
           sunTint: 0xffb167,
-          ambient: 0x160d0b,
+          ambient: 0x4a2a20,
         };
       case "ancientCave":
         return {
-          skyTop: 0x2e4060,
-          skyBottom: 0x18273a,
-          hazePrimary: 0x6a90b8,
-          hazeSecondary: 0x2a3f58,
+          skyTop: 0x5a7a9a,
+          skyBottom: 0x3a5a7a,
+          hazePrimary: 0x8ab0d0,
+          hazeSecondary: 0x5a7a98,
           sunTint: 0xb9d8ff,
-          ambient: 0x1c2e42,
+          ambient: 0x3a5a7a,
         };
       default:
         return {
-          skyTop: 0x13263a,
-          skyBottom: 0x061019,
-          hazePrimary: 0x2c5572,
-          hazeSecondary: 0x122433,
+          skyTop: 0x4a7a5a,
+          skyBottom: 0x2a5a3a,
+          hazePrimary: 0x5a9a88,
+          hazeSecondary: 0x3a7a5a,
           sunTint: 0xf4d693,
-          ambient: 0x08121a,
+          ambient: 0x2a5a3a,
         };
     }
   }
@@ -5546,7 +5546,10 @@ export class WorldScene extends Phaser.Scene {
               : this.mapId === "silverKnightTown" || this.mapId === "giranTown"
                 ? { r: 8, g: 10, b: 16, alpha: 0.05 }
                 : { r: 7, g: 16, b: 26, alpha: 0.06 };
-      this.ambientVeil.alpha = ambientBase.alpha + phase * 0.1 + breathe;
+      this.ambientVeil.alpha = Math.min(
+        ambientBase.alpha + phase * 0.04 + breathe,
+        0.08,
+      );
       this.ambientVeil.fillColor = Phaser.Display.Color.GetColor(
         Phaser.Math.Linear(ambientBase.r, ambientBase.r + 12, 1 - phase),
         Phaser.Math.Linear(ambientBase.g, ambientBase.g + 20, 1 - phase),
@@ -5643,7 +5646,7 @@ export class WorldScene extends Phaser.Scene {
     if (timeRatio < 0.15) {
       // Dawn (0-15%)
       newPhase = "dawn";
-      phaseAlpha = 0.1;
+      phaseAlpha = 0.03;
       phaseColor = 0xff8c00; // Orange
       timeIcon = "🌅";
       timeLabel = "새벽";
@@ -5657,14 +5660,14 @@ export class WorldScene extends Phaser.Scene {
     } else if (timeRatio < 0.65) {
       // Dusk (50-65%)
       newPhase = "dusk";
-      phaseAlpha = 0.08;
+      phaseAlpha = 0.03;
       phaseColor = 0xd2691e; // Saddle brown
       timeIcon = "🌇";
       timeLabel = "저녁";
     } else {
       // Night (65-100%)
       newPhase = "night";
-      phaseAlpha = 0.2;
+      phaseAlpha = 0.08;
       phaseColor = 0x1a1a2e; // Dark blue
       timeIcon = "🌙";
       timeLabel = "밤";
@@ -5694,7 +5697,7 @@ export class WorldScene extends Phaser.Scene {
         const playerScreenY = this.localPlayer.y - this.cameras.main.scrollY;
 
         // Fill entire screen with dark
-        this.visionMask.fillStyle(0x000000, 0.6);
+        this.visionMask.fillStyle(0x000000, 0.2);
         this.visionMask.fillRect(0, 0, this.scale.width, this.scale.height);
 
         // Cut out vision circle around player

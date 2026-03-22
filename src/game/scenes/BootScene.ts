@@ -132,7 +132,7 @@ export class BootScene extends Phaser.Scene {
     highlight: number,
   ) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Base foundation with subtle color variation
     g.fillStyle(base, 1).fillRect(0, 0, 96, 72);
@@ -1291,7 +1291,7 @@ export class BootScene extends Phaser.Scene {
     accent: number,
   ) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced cloak with folds and shading
     g.fillGradientStyle(cloak, cloak * 0.7, cloak * 0.5, cloak, 1);
@@ -1353,7 +1353,7 @@ export class BootScene extends Phaser.Scene {
     belly: number,
   ) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced blob with volumetric shading
     g.fillGradientStyle(body * 0.6, body, body * 1.2, body * 0.8, 1);
@@ -1401,7 +1401,7 @@ export class BootScene extends Phaser.Scene {
 
   private createSpiderTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced spider legs with segments
     const legColor = 0x172012;
@@ -1466,7 +1466,7 @@ export class BootScene extends Phaser.Scene {
 
   private createWolfTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced wolf body with fur texture
     g.fillGradientStyle(0x8b8f96, 0xa5a9b0, 0x707479, 0x8b8f96, 1);
@@ -1522,7 +1522,7 @@ export class BootScene extends Phaser.Scene {
 
   private createOrcTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced orc body with muscular definition
     g.fillGradientStyle(0x7da04e, 0x8fb158, 0x6a8d41, 0x7da04e, 1);
@@ -1570,7 +1570,7 @@ export class BootScene extends Phaser.Scene {
 
   private createBoarTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced boar body with bristled fur
     g.fillGradientStyle(0x7e5638, 0x8f6445, 0x6d4929, 0x7e5638, 1);
@@ -1625,7 +1625,7 @@ export class BootScene extends Phaser.Scene {
 
   private createWispTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced wisp with multiple energy layers
     g.fillStyle(0x7bd6ff, 0.4);
@@ -1676,7 +1676,7 @@ export class BootScene extends Phaser.Scene {
 
   private createDragonTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced dragon body with scales
     g.fillGradientStyle(0xb84b40, 0xd05f54, 0xa03c31, 0xb84b40, 1);
@@ -1735,7 +1735,7 @@ export class BootScene extends Phaser.Scene {
 
   private createRockGolemTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced golem body with rock texture
     g.fillGradientStyle(0x747b72, 0x85928a, 0x636a61, 0x747b72, 1);
@@ -1802,7 +1802,7 @@ export class BootScene extends Phaser.Scene {
 
   private createSkeletonTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced skull with bone texture
     g.fillGradientStyle(0xe6e2d7, 0xf5f1e6, 0xd4cfc2, 0xe6e2d7, 1);
@@ -1880,7 +1880,7 @@ export class BootScene extends Phaser.Scene {
     trunkColor?: number,
   ) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Tree shadow (more realistic)
     g.fillGradientStyle(0x0a0f10, 0x1a1f20, 0x0a0f10, 0x0a0f10, 0.4);
@@ -2027,7 +2027,7 @@ export class BootScene extends Phaser.Scene {
 
   private createRockTexture(key: string, scale?: number) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     const rockScale = scale || 1.0;
 
@@ -2136,7 +2136,7 @@ export class BootScene extends Phaser.Scene {
 
   private createFenceTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced fence posts with wood grain
     const posts = [
@@ -2223,7 +2223,7 @@ export class BootScene extends Phaser.Scene {
 
   private createBannerTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced banner pole with wood detail
     g.fillGradientStyle(0x5d4527, 0x6e5230, 0x4c3820, 0x5d4527, 1);
@@ -2291,7 +2291,7 @@ export class BootScene extends Phaser.Scene {
 
   private createRuinTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced ruin shadow
     g.fillGradientStyle(0x07090b, 0x15181a, 0x07090b, 0x07090b, 0.2);
@@ -2389,7 +2389,7 @@ export class BootScene extends Phaser.Scene {
 
   private createCrystalTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced crystal base glow
     g.fillGradientStyle(0x6fe2ff, 0x7fe8ff, 0x5fd6ee, 0x6fe2ff, 0.3);
@@ -2501,7 +2501,7 @@ export class BootScene extends Phaser.Scene {
 
   private createGemTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced gem with detailed faceting
     g.fillGradientStyle(0xffe178, 0xffea88, 0xffd865, 0xffe178, 1);
@@ -2540,7 +2540,7 @@ export class BootScene extends Phaser.Scene {
 
   private createArrowTexture(key: string) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Enhanced arrow shaft with wood grain
     g.fillGradientStyle(0x8b5a2b, 0x9d6733, 0x7a4d23, 0x8b5a2b, 1);
@@ -2596,7 +2596,7 @@ export class BootScene extends Phaser.Scene {
 
   private createParticleTexture(key: string, color: number, size: number) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     const center = size / 2;
 
@@ -2628,7 +2628,7 @@ export class BootScene extends Phaser.Scene {
     secondary: number,
   ) {
     if (this.textures.exists(key)) return;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
     const size = 8;
 
     if (key.includes("flower")) {
@@ -2684,7 +2684,7 @@ export class BootScene extends Phaser.Scene {
     if (this.textures.exists(key)) return;
     const size = 64;
     const center = size / 2;
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    const g = this.add.graphics({ x: 0, y: 0 }).setVisible(false);
 
     // Outer swirl
     g.fillStyle(0x4b0082, 0.3);
