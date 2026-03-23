@@ -1476,11 +1476,13 @@ export class WorldScene extends Phaser.Scene {
     this.scatterTileDecorations(map.id, map.width, map.height); // New enhanced decorations
     this.drawTownFence(map.id);
     this.drawMapLandmarks(map.id, mapWidth, mapHeight);
-    this.drawGroundShade(mapWidth, mapHeight);
-    this.drawAtmosphere(mapWidth, mapHeight);
+    // Shade & atmosphere disabled for brightness
+    // this.drawGroundShade(mapWidth, mapHeight);
+    // this.drawAtmosphere(mapWidth, mapHeight);
     this.drawWeatherEffects(map.id, mapWidth, mapHeight);
     this.createEnhancedAtmospherics(map.id, mapWidth, mapHeight); // Enhanced Lineage Classic effects
-    this.createMiniMap(map.id, map.width, map.height);
+    // Phaser minimap disabled — using React MiniMap component instead
+    // this.createMiniMap(map.id, map.width, map.height);
   }
 
   private getMapVisualTheme(mapId: string) {
