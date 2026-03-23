@@ -528,8 +528,8 @@ export class WorldScene extends Phaser.Scene {
     this.effectLayer = this.add.container(0, 0);
     this.overlayLayer = this.add.container(0, 0);
     this.weatherLayer = this.add.container(0, 0);
-    this.createAtmosphere();
-    // Day/night cycle disabled
+    // Atmosphere & day/night disabled for brightness
+    // this.createAtmosphere();
 
     this.destinationMarker = this.add
       .ellipse(0, 0, 30, 18, 0xf6df95, 0.14)
@@ -6979,6 +6979,7 @@ export class WorldScene extends Phaser.Scene {
             const newHp = Math.max(0, store.player.hp - dmg);
             store.setPlayer({ hp: newHp });
             ai.lastAttackAt = now;
+            sprite.attackUntil = now + 400;
 
             // Add system message for damage taken
             store.addChat({
