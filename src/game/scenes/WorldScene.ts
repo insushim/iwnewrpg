@@ -2111,6 +2111,13 @@ export class WorldScene extends Phaser.Scene {
     roof: number,
     scale: number,
   ) {
+    const key = "struct_house";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65)
+      );
+      return;
+    }
     const w = 110 * scale;
     const h = 64 * scale;
     g.fillStyle(0x070b0f, 0.16);
@@ -2143,6 +2150,13 @@ export class WorldScene extends Phaser.Scene {
     wall: number,
     roof: number,
   ) {
+    const key = "struct_keep";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5)
+      );
+      return;
+    }
     const w = 220 * scale;
     const h = 120 * scale;
     g.fillStyle(0x070b0f, 0.2);
@@ -2178,6 +2192,13 @@ export class WorldScene extends Phaser.Scene {
     scale: number,
     wall: number,
   ) {
+    const key = "struct_watch_tower";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x090d12, 0.18);
     g.fillEllipse(x, y + 68 * scale, 90 * scale, 18 * scale);
     g.fillStyle(wall, 0.95);
@@ -2194,6 +2215,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_market_hall";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x090b0d, 0.2);
     g.fillEllipse(x, y + 62 * scale, 210 * scale, 26 * scale);
     g.fillStyle(0xc49a69, 0.95);
@@ -2226,6 +2254,13 @@ export class WorldScene extends Phaser.Scene {
     stone: number,
     glow: number,
   ) {
+    const key = glow === 0xced8b4 ? "struct_shrine_forest" : "struct_shrine_wetland";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x06080a, 0.2);
     g.fillEllipse(x, y + 36, 120, 24);
     g.fillStyle(stone, 0.94);
@@ -2244,6 +2279,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_ruined_arch";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x07090b, 0.22);
     g.fillEllipse(x, y + 52 * scale, 140 * scale, 28 * scale);
     g.fillStyle(0x666a67, 0.94);
@@ -2261,6 +2303,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_lava_forge";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x080506, 0.22);
     g.fillEllipse(x, y + 40 * scale, 120 * scale, 24 * scale);
     g.fillStyle(0x524847, 0.96);
@@ -2289,6 +2338,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_crystal_obelisk";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x081016, 0.18);
     g.fillEllipse(x, y + 30 * scale, 72 * scale, 16 * scale);
     g.fillStyle(0x6fe2ff, 0.82);
@@ -2325,6 +2381,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_totem";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x090708, 0.2);
     g.fillEllipse(x, y + 38 * scale, 90 * scale, 20 * scale);
     g.fillStyle(0x6a4931, 0.96);
@@ -2341,6 +2404,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_campfire";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x090607, 0.22);
     g.fillEllipse(x, y + 22 * scale, 76 * scale, 18 * scale);
     g.fillStyle(0x6f5140, 0.95);
@@ -2365,6 +2435,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_farmstead";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65)
+      );
+      return;
+    }
     this.drawHouseCluster(g, x, y, 0xbe9a62, 0x835534, scale);
     g.fillStyle(0xb3a164, 0.24);
     g.fillRect(x + 68 * scale, y - 4 * scale, 72 * scale, 36 * scale);
@@ -2378,6 +2455,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_stone_circle";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x07090b, 0.18);
     g.fillEllipse(x, y + 26 * scale, 120 * scale, 24 * scale);
     for (let index = 0; index < 6; index += 1) {
@@ -2403,6 +2487,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_bridge";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65)
+      );
+      return;
+    }
     g.fillStyle(0x0a0e11, 0.16);
     g.fillEllipse(x, y + 24 * scale, 140 * scale, 20 * scale);
     g.fillStyle(0x7d5c3a, 0.95);
@@ -2430,6 +2521,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_dock";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x090d11, 0.18);
     g.fillEllipse(x, y + 26 * scale, 180 * scale, 24 * scale);
     g.fillStyle(0x805b39, 0.96);
@@ -2455,6 +2553,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_lighthouse";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x070b0f, 0.18);
     g.fillEllipse(x, y + 64 * scale, 96 * scale, 18 * scale);
     g.fillStyle(0xd8ddd8, 0.96);
@@ -2486,6 +2591,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_market_stalls";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     for (let index = -1; index <= 1; index += 1) {
       const ox = x + index * 52 * scale;
       g.fillStyle(0x0a0c0e, 0.16);
@@ -2516,6 +2628,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_gatehouse";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x070b0f, 0.18);
     g.fillEllipse(x, y + 50 * scale, 180 * scale, 22 * scale);
     g.fillStyle(0xaab4bf, 0.96);
@@ -2541,6 +2660,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_fountain";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x0b1014, 0.18);
     g.fillEllipse(x, y + 26 * scale, 140 * scale, 22 * scale);
     g.fillStyle(0x98a7b6, 0.96);
@@ -2559,6 +2685,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_barracks";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x080b0f, 0.18);
     g.fillEllipse(x, y + 38 * scale, 132 * scale, 20 * scale);
     g.fillStyle(0xadb6bd, 0.95);
@@ -2591,6 +2724,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_forest_arch";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x060909, 0.18);
     g.fillEllipse(x, y + 30 * scale, 110 * scale, 18 * scale);
     g.fillStyle(0x456445, 0.92);
@@ -2610,6 +2750,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_moonwell";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x081113, 0.16);
     g.fillEllipse(x, y + 22 * scale, 128 * scale, 18 * scale);
     g.fillStyle(0x6b7c77, 0.96);
@@ -2626,6 +2773,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_war_tent";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x090607, 0.18);
     g.fillEllipse(x, y + 28 * scale, 116 * scale, 18 * scale);
     g.fillStyle(0x6f4c36, 0.95);
@@ -2656,6 +2810,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_palisade";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x090707, 0.16);
     g.fillEllipse(x, y + 36 * scale, 220 * scale, 20 * scale);
     g.fillStyle(0x64432c, 0.95);
@@ -2680,6 +2841,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_windmill";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5)
+      );
+      return;
+    }
     g.fillStyle(0x090c0f, 0.16);
     g.fillEllipse(x, y + 48 * scale, 110 * scale, 18 * scale);
     g.fillStyle(0xc8bfac, 0.96);
@@ -2712,6 +2880,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_wagon";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x080a0c, 0.16);
     g.fillEllipse(x, y + 24 * scale, 100 * scale, 16 * scale);
     g.fillStyle(0x8a623c, 0.95);
@@ -2735,6 +2910,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_bog_platform";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x071012, 0.18);
     g.fillEllipse(x, y + 24 * scale, 126 * scale, 18 * scale);
     g.fillStyle(0x6d5d47, 0.94);
@@ -2759,6 +2941,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_sunken_barge";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x070b0d, 0.18);
     g.fillEllipse(x, y + 24 * scale, 132 * scale, 18 * scale);
     g.fillStyle(0x4c3a2e, 0.9);
@@ -2782,6 +2971,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_reed_cluster";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x243826, 0.92);
     for (let index = 0; index < 5; index += 1) {
       const px = x + (index - 2) * 8 * scale;
@@ -2804,6 +3000,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_caravan_canopy";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x0a0c0e, 0.16);
     g.fillEllipse(x, y + 18 * scale, 92 * scale, 14 * scale);
     g.fillStyle(0x9a6b42, 0.95);
@@ -2833,6 +3036,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_obsidian_spire";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x060506, 0.18);
     g.fillEllipse(x, y + 28 * scale, 96 * scale, 16 * scale);
     g.fillStyle(0x2a2024, 0.96);
@@ -2861,6 +3071,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_lava_vent";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+      );
+      return;
+    }
     g.fillStyle(0x090505, 0.18);
     g.fillEllipse(x, y + 18 * scale, 84 * scale, 14 * scale);
     g.fillStyle(0x5a433a, 0.94);
@@ -2877,6 +3094,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_crystal_ring";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5)
+      );
+      return;
+    }
     g.lineStyle(6 * scale, 0x7fdfff, 0.6);
     g.strokeEllipse(x, y, 126 * scale, 54 * scale);
     g.fillStyle(0xe8ffff, 0.14);
@@ -2889,6 +3113,13 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     scale: number,
   ) {
+    const key = "struct_crystal_altar";
+    if (this.textures.exists(key)) {
+      this.propLayer?.add(
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+      );
+      return;
+    }
     g.fillStyle(0x081118, 0.18);
     g.fillEllipse(x, y + 22 * scale, 126 * scale, 18 * scale);
     g.fillStyle(0x57636e, 0.95);
