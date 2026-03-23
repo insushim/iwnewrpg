@@ -1600,16 +1600,5 @@
         "h": 128
       }
     }
-  },
-  "meta": {
-    "app": "iwnewrpg atlas sample generator",
-    "version": "1.0",
-    "image": "atlas.png",
-    "format": "RGBA8888",
-    "size": {
-      "w": 512,
-      "h": 2560
-    },
-    "scale": "1"
   }
 }
