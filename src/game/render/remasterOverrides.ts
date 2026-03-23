@@ -74,15 +74,29 @@ export function preloadRemasterOverrides(
   scene: Phaser.Scene,
   manifest: RemasterManifest,
 ) {
-  const pending = manifest.textures.filter(
-    (entry) => !scene.textures.exists(entry.key),
-  );
-  const pendingSheets = manifest.spritesheets.filter((sheet) =>
-    sheet.entries.some((entry) => !scene.textures.exists(entry)),
-  );
-  const pendingAtlases = manifest.atlases.filter((atlas) =>
-    atlas.entries.some((entry) => !scene.textures.exists(entry.key)),
-  );
+  // Override: remove existing procedural textures so external PNGs replace them
+  const pending = manifest.textures.filter((entry) => {
+    if (scene.textures.exists(entry.key)) {
+      scene.textures.remove(entry.key);
+    }
+    return true;
+  });
+  const pendingSheets = manifest.spritesheets.filter((sheet) => {
+    sheet.entries.forEach((entry) => {
+      if (scene.textures.exists(entry)) {
+        scene.textures.remove(entry);
+      }
+    });
+    return true;
+  });
+  const pendingAtlases = manifest.atlases.filter((atlas) => {
+    atlas.entries.forEach((entry) => {
+      if (scene.textures.exists(entry.key)) {
+        scene.textures.remove(entry.key);
+      }
+    });
+    return true;
+  });
 
   if (pending.length === 0 && pendingSheets.length === 0 && pendingAtlases.length === 0) {
     return Promise.resolve();

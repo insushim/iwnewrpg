@@ -1,6 +1,203 @@
 {
   "version": 1,
-  "textures": [],
+  "textures": [
+    {
+      "key": "tile_grass_a",
+      "src": "/game-assets/remaster/tiles/tile_grass_a.png"
+    },
+    {
+      "key": "tile_grass_a_var1",
+      "src": "/game-assets/remaster/tiles/tile_grass_a_var1.png"
+    },
+    {
+      "key": "tile_grass_a_var2",
+      "src": "/game-assets/remaster/tiles/tile_grass_a_var2.png"
+    },
+    {
+      "key": "tile_grass_b",
+      "src": "/game-assets/remaster/tiles/tile_grass_b.png"
+    },
+    {
+      "key": "tile_grass_b_var1",
+      "src": "/game-assets/remaster/tiles/tile_grass_b_var1.png"
+    },
+    {
+      "key": "tile_grass_b_var2",
+      "src": "/game-assets/remaster/tiles/tile_grass_b_var2.png"
+    },
+    {
+      "key": "tile_meadow",
+      "src": "/game-assets/remaster/tiles/tile_meadow.png"
+    },
+    {
+      "key": "tile_meadow_var1",
+      "src": "/game-assets/remaster/tiles/tile_meadow_var1.png"
+    },
+    {
+      "key": "tile_meadow_var2",
+      "src": "/game-assets/remaster/tiles/tile_meadow_var2.png"
+    },
+    {
+      "key": "tile_forest",
+      "src": "/game-assets/remaster/tiles/tile_forest.png"
+    },
+    {
+      "key": "tile_forest_var1",
+      "src": "/game-assets/remaster/tiles/tile_forest_var1.png"
+    },
+    {
+      "key": "tile_forest_var2",
+      "src": "/game-assets/remaster/tiles/tile_forest_var2.png"
+    },
+    {
+      "key": "tile_moss",
+      "src": "/game-assets/remaster/tiles/tile_moss.png"
+    },
+    {
+      "key": "tile_moss_var1",
+      "src": "/game-assets/remaster/tiles/tile_moss_var1.png"
+    },
+    {
+      "key": "tile_moss_var2",
+      "src": "/game-assets/remaster/tiles/tile_moss_var2.png"
+    },
+    {
+      "key": "tile_dirt",
+      "src": "/game-assets/remaster/tiles/tile_dirt.png"
+    },
+    {
+      "key": "tile_dirt_var1",
+      "src": "/game-assets/remaster/tiles/tile_dirt_var1.png"
+    },
+    {
+      "key": "tile_dirt_var2",
+      "src": "/game-assets/remaster/tiles/tile_dirt_var2.png"
+    },
+    {
+      "key": "tile_path",
+      "src": "/game-assets/remaster/tiles/tile_path.png"
+    },
+    {
+      "key": "tile_path_var1",
+      "src": "/game-assets/remaster/tiles/tile_path_var1.png"
+    },
+    {
+      "key": "tile_path_var2",
+      "src": "/game-assets/remaster/tiles/tile_path_var2.png"
+    },
+    {
+      "key": "tile_cobble",
+      "src": "/game-assets/remaster/tiles/tile_cobble.png"
+    },
+    {
+      "key": "tile_cobble_var1",
+      "src": "/game-assets/remaster/tiles/tile_cobble_var1.png"
+    },
+    {
+      "key": "tile_cobble_var2",
+      "src": "/game-assets/remaster/tiles/tile_cobble_var2.png"
+    },
+    {
+      "key": "tile_sand",
+      "src": "/game-assets/remaster/tiles/tile_sand.png"
+    },
+    {
+      "key": "tile_sand_var1",
+      "src": "/game-assets/remaster/tiles/tile_sand_var1.png"
+    },
+    {
+      "key": "tile_sand_var2",
+      "src": "/game-assets/remaster/tiles/tile_sand_var2.png"
+    },
+    {
+      "key": "tile_water",
+      "src": "/game-assets/remaster/tiles/tile_water.png"
+    },
+    {
+      "key": "tile_wet_stone",
+      "src": "/game-assets/remaster/tiles/tile_wet_stone.png"
+    },
+    {
+      "key": "tile_marble",
+      "src": "/game-assets/remaster/tiles/tile_marble.png"
+    },
+    {
+      "key": "tile_volcanic",
+      "src": "/game-assets/remaster/tiles/tile_volcanic.png"
+    },
+    {
+      "key": "prop_tree",
+      "src": "/game-assets/remaster/props/prop_tree.png"
+    },
+    {
+      "key": "prop_tree_pine",
+      "src": "/game-assets/remaster/props/prop_tree_pine.png"
+    },
+    {
+      "key": "prop_tree_oak",
+      "src": "/game-assets/remaster/props/prop_tree_oak.png"
+    },
+    {
+      "key": "prop_tree_dead",
+      "src": "/game-assets/remaster/props/prop_tree_dead.png"
+    },
+    {
+      "key": "prop_rock",
+      "src": "/game-assets/remaster/props/prop_rock.png"
+    },
+    {
+      "key": "prop_rock_small",
+      "src": "/game-assets/remaster/props/prop_rock_small.png"
+    },
+    {
+      "key": "prop_rock_large",
+      "src": "/game-assets/remaster/props/prop_rock_large.png"
+    },
+    {
+      "key": "prop_fence",
+      "src": "/game-assets/remaster/props/prop_fence.png"
+    },
+    {
+      "key": "prop_banner",
+      "src": "/game-assets/remaster/props/prop_banner.png"
+    },
+    {
+      "key": "prop_ruin",
+      "src": "/game-assets/remaster/props/prop_ruin.png"
+    },
+    {
+      "key": "prop_crystal",
+      "src": "/game-assets/remaster/props/prop_crystal.png"
+    },
+    {
+      "key": "deco_flower",
+      "src": "/game-assets/remaster/decos/deco_flower.png"
+    },
+    {
+      "key": "deco_mushroom",
+      "src": "/game-assets/remaster/decos/deco_mushroom.png"
+    },
+    {
+      "key": "deco_pebble",
+      "src": "/game-assets/remaster/decos/deco_pebble.png"
+    },
+    {
+      "key": "deco_shell",
+      "src": "/game-assets/remaster/decos/deco_shell.png"
+    },
+    {
+      "key": "deco_leaf",
+      "src": "/game-assets/remaster/decos/deco_leaf.png"
+    },
+    {
+      "key": "deco_twig",
+      "src": "/game-assets/remaster/decos/deco_twig.png"
+    },
+    {
+      "key": "tile_lava",
+      "src": "/game-assets/remaster/tiles/tile_lava.png"
+    }
+  ],
   "spritesheets": [],
   "atlases": [
     {
