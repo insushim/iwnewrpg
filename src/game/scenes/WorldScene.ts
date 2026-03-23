@@ -517,7 +517,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.serverName = data?.serverName ?? useGameStore.getState().serverName;
 
-    this.cameras.main.setBackgroundColor("#4a7a3a");
+    this.cameras.main.setBackgroundColor("#7cc87c");
     this.cameras.main.setZoom(0.72);
     this.cameras.main.roundPixels = true;
 
@@ -1347,12 +1347,13 @@ export class WorldScene extends Phaser.Scene {
         return;
       }
 
-      if (
-        pointer.leftButtonDown() &&
-        !this.findMonsterAt(worldPoint.x, worldPoint.y) &&
-        !this.findLootAt(worldPoint.x, worldPoint.y)
-      ) {
-        this.clearSelection();
+      if (pointer.leftButtonDown()) {
+        const hitMonster = this.findMonsterAt(worldPoint.x, worldPoint.y);
+        const hitLoot = this.findLootAt(worldPoint.x, worldPoint.y);
+        if (!hitMonster && !hitLoot) {
+          this.clearSelection();
+          this.moveSelfTo(worldPoint.x, worldPoint.y);
+        }
       }
     });
   }
