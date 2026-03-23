@@ -45,15 +45,6 @@ export default function GamePage() {
     <main className="relative h-screen overflow-hidden bg-[#7cc87c]">
       <GameSocketBridge />
 
-      <div className="pointer-events-none absolute inset-3 bottom-[90px] md:bottom-[98px] rounded-[30px] border border-[#b48a46]/24 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_32px_80px_rgba(0,0,0,0.42)]">
-        <div className="absolute inset-0 rounded-[30px] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent_24%)]" />
-        <div className="absolute inset-[14px] rounded-[22px] border border-white/5" />
-        <div className="absolute left-5 top-5 h-5 w-5 border-l-2 border-t-2 border-[#d2ae71]/70" />
-        <div className="absolute right-5 top-5 h-5 w-5 border-r-2 border-t-2 border-[#d2ae71]/70" />
-        <div className="absolute bottom-5 left-5 h-5 w-5 border-b-2 border-l-2 border-[#d2ae71]/70" />
-        <div className="absolute bottom-5 right-5 h-5 w-5 border-b-2 border-r-2 border-[#d2ae71]/70" />
-      </div>
-
       <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2">
         <div className="rounded-[16px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(18,22,30,0.95),rgba(8,10,16,0.98))] px-4 py-2 text-center shadow-[0_18px_40px_rgba(0,0,0,0.35)] md:rounded-[20px] md:px-6 md:py-3">
           <div className="mb-1 h-px bg-[linear-gradient(90deg,transparent,rgba(255,222,150,0.45),transparent)] md:mb-2" />
@@ -67,7 +58,7 @@ export default function GamePage() {
         </div>
       </div>
 
-      <div className="absolute inset-0 bottom-[80px] md:bottom-[88px] game-canvas">
+      <div className="absolute inset-0 bottom-[80px] md:bottom-[88px] game-canvas z-0">
         <PhaserGame />
       </div>
 

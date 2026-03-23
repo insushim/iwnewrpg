@@ -3913,11 +3913,11 @@ export class WorldScene extends Phaser.Scene {
         0,
         this.getFrameKey(textureBase, "idle", "s", 0),
       );
-      sprite.setOrigin(0.5, 0.94);
+      sprite.setOrigin(0.5, 0.85);
       sprite.setScale(0.86);
 
       const label = this.add
-        .text(0, -78, npc.name, {
+        .text(0, -85, npc.name, {
           fontSize: "14px",
           color: "#fff4d5",
           fontFamily: "sans-serif",
@@ -4243,10 +4243,10 @@ export class WorldScene extends Phaser.Scene {
     const body = this.add
       .image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0))
       .setScale(isSelf ? 0.9 : 0.82)
-      .setOrigin(0.5, 0.94);
+      .setOrigin(0.5, 0.85);
     const label = this.add
-      .text(0, -96, payload.name, {
-        fontSize: "11px",
+      .text(0, -100, payload.name, {
+        fontSize: "13px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
         strokeThickness: 3,
@@ -4408,7 +4408,7 @@ export class WorldScene extends Phaser.Scene {
     );
     const body = this.add
       .image(0, 2, this.getFrameKey(textureBase, "idle", "s", 0))
-      .setOrigin(0.5, 0.92)
+      .setOrigin(0.5, 0.85)
       .setScale(this.getMonsterScale(baseId));
     const hpBack = this.add
       .rectangle(0, -68, 52, 7, 0x160808, 0.78)
@@ -4417,7 +4417,7 @@ export class WorldScene extends Phaser.Scene {
       .rectangle(-25, -68, 50, 5, 0xfb7260, 0.95)
       .setOrigin(0, 0.5);
     const label = this.add
-      .text(0, -110, payload.name, {
+      .text(0, -115, payload.name, {
         fontSize: isBoss ? "14px" : "13px",
         color: isBoss ? "#ffe7b4" : "#ffd9d1",
         stroke: "#07101a",
@@ -5968,7 +5968,7 @@ export class WorldScene extends Phaser.Scene {
   ) {
     return this.add
       .image(0, -1, textureKey)
-      .setOrigin(0.5, 0.94)
+      .setOrigin(0.5, 0.85)
       .setTint(tint)
       .setAlpha(alpha)
       .setScale(scale)
@@ -7208,8 +7208,8 @@ export class WorldScene extends Phaser.Scene {
             if (!monsterData) return;
 
             const dmg = Math.max(
-              1,
-              monsterData.atk + Phaser.Math.Between(-1, 2),
+              3,
+              monsterData.atk + Phaser.Math.Between(1, 5),
             );
             const newHp = Math.max(0, store.player.hp - dmg);
             store.setPlayer({ hp: newHp });
@@ -8009,7 +8009,7 @@ export class WorldScene extends Phaser.Scene {
         this.localPlayer.y + this.localPlayer.spriteBody.y,
         this.localPlayer.spriteBody.texture.key,
       )
-      .setOrigin(0.5, 0.94)
+      .setOrigin(0.5, 0.85)
       .setScale(
         this.localPlayer.spriteBody.scaleX,
         this.localPlayer.spriteBody.scaleY,
