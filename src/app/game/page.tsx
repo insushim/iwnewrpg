@@ -42,7 +42,7 @@ export default function GamePage() {
   }, [checkDailyLogin]);
 
   return (
-    <main className="relative h-screen overflow-hidden bg-[#4a7a3a]">
+    <main className="relative h-screen overflow-hidden bg-[#7cc87c]">
       <GameSocketBridge />
 
       <div className="pointer-events-none absolute inset-3 bottom-[90px] md:bottom-[98px] rounded-[30px] border border-[#b48a46]/24 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_32px_80px_rgba(0,0,0,0.42)]">

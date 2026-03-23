@@ -1480,7 +1480,8 @@ export class WorldScene extends Phaser.Scene {
     // this.drawGroundShade(mapWidth, mapHeight);
     // this.drawAtmosphere(mapWidth, mapHeight);
     this.drawWeatherEffects(map.id, mapWidth, mapHeight);
-    this.createEnhancedAtmospherics(map.id, mapWidth, mapHeight); // Enhanced Lineage Classic effects
+    // Enhanced atmospherics disabled — fogOfWar was darkening entire map
+    // this.createEnhancedAtmospherics(map.id, mapWidth, mapHeight);
     // Phaser minimap disabled — using React MiniMap component instead
     // this.createMiniMap(map.id, map.width, map.height);
   }
@@ -1489,84 +1490,84 @@ export class WorldScene extends Phaser.Scene {
     switch (mapId) {
       case "silverKnightTown":
         return {
-          skyTop: 0x5a8aaa,
-          skyBottom: 0x3a6a8a,
-          hazePrimary: 0xc8d8e8,
-          hazeSecondary: 0x8898a8,
+          skyTop: 0x8ab0cc,
+          skyBottom: 0x6a9abc,
+          hazePrimary: 0xd8e8f8,
+          hazeSecondary: 0xa8b8c8,
           sunTint: 0xf4dfae,
-          ambient: 0x4a6878,
+          ambient: 0x7a98a8,
         };
       case "windwoodForest":
         return {
-          skyTop: 0x3a7a5a,
-          skyBottom: 0x2a5a3a,
-          hazePrimary: 0x68b088,
-          hazeSecondary: 0x3a6a4a,
+          skyTop: 0x6aba8a,
+          skyBottom: 0x5aaa7a,
+          hazePrimary: 0x88d0a8,
+          hazeSecondary: 0x6aaa7a,
           sunTint: 0xcaefa6,
-          ambient: 0x2a5a3a,
+          ambient: 0x5aaa7a,
         };
       case "orcForest":
         return {
-          skyTop: 0x6a5a40,
-          skyBottom: 0x4a3a28,
-          hazePrimary: 0xa08868,
-          hazeSecondary: 0x5a4a38,
+          skyTop: 0x9a8a70,
+          skyBottom: 0x7a6a50,
+          hazePrimary: 0xc0a888,
+          hazeSecondary: 0x8a7a68,
           sunTint: 0xe7b06b,
-          ambient: 0x4a3a28,
+          ambient: 0x7a6a50,
         };
       case "gludioPlain":
         return {
-          skyTop: 0x5a8a50,
-          skyBottom: 0x3a6a30,
-          hazePrimary: 0x8ac87a,
-          hazeSecondary: 0x5a8a50,
+          skyTop: 0x7aba70,
+          skyBottom: 0x6aaa60,
+          hazePrimary: 0xaae89a,
+          hazeSecondary: 0x7aba70,
           sunTint: 0xf4de9a,
-          ambient: 0x3a6a30,
+          ambient: 0x6aaa60,
         };
       case "moonlitWetland":
         return {
-          skyTop: 0x3a6a80,
-          skyBottom: 0x2a4a60,
-          hazePrimary: 0x6abaaa,
-          hazeSecondary: 0x3a7a6a,
+          skyTop: 0x6a9ab0,
+          skyBottom: 0x5a8a98,
+          hazePrimary: 0x8adaca,
+          hazeSecondary: 0x6aaa9a,
           sunTint: 0xcff5ff,
-          ambient: 0x2a5a6a,
+          ambient: 0x5a8a9a,
         };
       case "giranTown":
         return {
-          skyTop: 0x6a5a78,
-          skyBottom: 0x4a3a58,
-          hazePrimary: 0xb89a80,
-          hazeSecondary: 0x6a4a50,
+          skyTop: 0x9a8aa8,
+          skyBottom: 0x7a6a88,
+          hazePrimary: 0xd8baa0,
+          hazeSecondary: 0x9a7a80,
           sunTint: 0xf7ddbd,
-          ambient: 0x4a3a48,
+          ambient: 0x7a6a78,
         };
       case "dragonValley":
         return {
-          skyTop: 0x6a3a30,
-          skyBottom: 0x4a2a20,
-          hazePrimary: 0xb87a68,
-          hazeSecondary: 0x6a4038,
+          skyTop: 0x9a6a60,
+          skyBottom: 0x7a5a50,
+          hazePrimary: 0xd89a88,
+          hazeSecondary: 0x9a7068,
           sunTint: 0xffb167,
-          ambient: 0x4a2a20,
+          ambient: 0x7a5a50,
         };
       case "ancientCave":
         return {
-          skyTop: 0x5a7a9a,
-          skyBottom: 0x3a5a7a,
-          hazePrimary: 0x8ab0d0,
-          hazeSecondary: 0x5a7a98,
+          skyTop: 0x7a9aba,
+          skyBottom: 0x6a8aaa,
+          hazePrimary: 0xaad0f0,
+          hazeSecondary: 0x7a9ab8,
           sunTint: 0xb9d8ff,
-          ambient: 0x3a5a7a,
+          ambient: 0x6a8aaa,
         };
       default:
         return {
-          skyTop: 0x4a7a5a,
-          skyBottom: 0x2a5a3a,
-          hazePrimary: 0x5a9a88,
-          hazeSecondary: 0x3a7a5a,
+          skyTop: 0x7cc87c,
+          skyBottom: 0x6ab86a,
+          hazePrimary: 0x8ada8a,
+          hazeSecondary: 0x7cc87c,
           sunTint: 0xf4d693,
-          ambient: 0x2a5a3a,
+          ambient: 0x6ab86a,
         };
     }
   }
@@ -3916,7 +3917,7 @@ export class WorldScene extends Phaser.Scene {
       sprite.setScale(0.86);
 
       const label = this.add
-        .text(0, -62, npc.name, {
+        .text(0, -78, npc.name, {
           fontSize: "14px",
           color: "#fff4d5",
           fontFamily: "sans-serif",
@@ -4244,7 +4245,7 @@ export class WorldScene extends Phaser.Scene {
       .setScale(isSelf ? 0.9 : 0.82)
       .setOrigin(0.5, 0.94);
     const label = this.add
-      .text(0, -80, payload.name, {
+      .text(0, -96, payload.name, {
         fontSize: "11px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
@@ -4416,7 +4417,7 @@ export class WorldScene extends Phaser.Scene {
       .rectangle(-25, -68, 50, 5, 0xfb7260, 0.95)
       .setOrigin(0, 0.5);
     const label = this.add
-      .text(0, -96, payload.name, {
+      .text(0, -110, payload.name, {
         fontSize: isBoss ? "14px" : "13px",
         color: isBoss ? "#ffe7b4" : "#ffd9d1",
         stroke: "#07101a",
