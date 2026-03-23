@@ -1330,6 +1330,7 @@ export class WorldScene extends Phaser.Scene {
     const townX = 530;
     const townY = 400;
     this.localPlayer.setPosition(townX, townY);
+    this.cameras.main.centerOn(townX, townY);
     this.stopAutoAttack();
     this.clearSelection();
   }
@@ -2115,7 +2116,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_house";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65),
       );
       return;
     }
@@ -2154,7 +2155,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_keep";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5),
       );
       return;
     }
@@ -2196,7 +2197,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_watch_tower";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2219,7 +2220,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_market_hall";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2255,11 +2256,10 @@ export class WorldScene extends Phaser.Scene {
     stone: number,
     glow: number,
   ) {
-    const key = glow === 0xced8b4 ? "struct_shrine_forest" : "struct_shrine_wetland";
+    const key =
+      glow === 0xced8b4 ? "struct_shrine_forest" : "struct_shrine_wetland";
     if (this.textures.exists(key)) {
-      this.propLayer?.add(
-        this.add.image(x, y, key).setOrigin(0.5, 0.55)
-      );
+      this.propLayer?.add(this.add.image(x, y, key).setOrigin(0.5, 0.55));
       return;
     }
     g.fillStyle(0x06080a, 0.2);
@@ -2283,7 +2283,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_ruined_arch";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2307,7 +2307,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_lava_forge";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2342,7 +2342,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_crystal_obelisk";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2385,7 +2385,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_totem";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2408,7 +2408,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_campfire";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2439,7 +2439,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_farmstead";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65),
       );
       return;
     }
@@ -2459,7 +2459,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_stone_circle";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2491,7 +2491,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_bridge";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.65),
       );
       return;
     }
@@ -2525,7 +2525,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_dock";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2557,7 +2557,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_lighthouse";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2595,7 +2595,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_market_stalls";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2632,7 +2632,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_gatehouse";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2664,7 +2664,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_fountain";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2689,7 +2689,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_barracks";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2728,7 +2728,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_forest_arch";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2754,7 +2754,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_moonwell";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2777,7 +2777,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_war_tent";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -2814,7 +2814,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_palisade";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2845,7 +2845,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_windmill";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5),
       );
       return;
     }
@@ -2884,7 +2884,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_wagon";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2914,7 +2914,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_bog_platform";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2945,7 +2945,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_sunken_barge";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -2975,7 +2975,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_reed_cluster";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -3004,7 +3004,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_caravan_canopy";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -3040,7 +3040,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_obsidian_spire";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -3075,7 +3075,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_lava_vent";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.6),
       );
       return;
     }
@@ -3098,7 +3098,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_crystal_ring";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.5),
       );
       return;
     }
@@ -3117,7 +3117,7 @@ export class WorldScene extends Phaser.Scene {
     const key = "struct_crystal_altar";
     if (this.textures.exists(key)) {
       this.propLayer?.add(
-        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55)
+        this.add.image(x, y, key).setScale(scale).setOrigin(0.5, 0.55),
       );
       return;
     }
@@ -3897,7 +3897,7 @@ export class WorldScene extends Phaser.Scene {
         npc.position.y,
       );
       const textureBase = this.getNpcTexture(npc.role);
-      const shadow = this.add.ellipse(0, 14, 58, 20, 0x08131b, 0.3);
+      const shadow = this.add.ellipse(0, 6, 58, 20, 0x08131b, 0.3);
       const aura = this.createAuraSigil(0x9ce7db, 0.14, 76, 28, 0.94);
       const glow = this.createUnitBacklight(
         this.getFrameKey(textureBase, "idle", "s", 0),
@@ -4220,7 +4220,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const isSelf = payload.id === this.selfId;
-    const shadow = this.add.ellipse(0, 14, 60, 20, 0x08131b, 0.3);
+    const shadow = this.add.ellipse(0, 6, 60, 20, 0x08131b, 0.3);
     const aura = this.createAuraSigil(
       isSelf ? classTone.burstTint : classTone.projectileTint,
       isSelf ? 0.18 : 0.1,
@@ -4229,7 +4229,7 @@ export class WorldScene extends Phaser.Scene {
       isSelf ? 1.02 : 0.92,
     );
     const ring = this.add
-      .ellipse(0, 14, 70, 22, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
+      .ellipse(0, 6, 70, 22, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
       .setStrokeStyle(2, isSelf ? 0xffefb2 : 0x89cffd, 0.7);
     const glow = this.createUnitBacklight(
       this.getFrameKey(textureBase, "idle", "s", 0),
@@ -4379,7 +4379,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const shadow = this.add.ellipse(0, 16, 62, 22, 0x08131b, 0.3);
+    const shadow = this.add.ellipse(0, 8, 62, 22, 0x08131b, 0.3);
     const aura = this.createAuraSigil(
       isBoss ? 0xffd37f : 0xff8f74,
       isBoss ? 0.2 : 0.12,
@@ -4390,7 +4390,7 @@ export class WorldScene extends Phaser.Scene {
     const ring = this.add
       .ellipse(
         0,
-        16,
+        8,
         isBoss ? 84 : 70,
         isBoss ? 30 : 24,
         isBoss ? 0xffc976 : 0xf57f69,
@@ -6406,7 +6406,7 @@ export class WorldScene extends Phaser.Scene {
 
     return {
       texture: baseTexture,
-      alpha: 0.92,
+      alpha: 1,
       tint: 0xffffff,
       rotation: 0,
       scaleX: 0,

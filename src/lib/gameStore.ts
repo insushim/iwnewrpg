@@ -408,7 +408,9 @@ const INITIAL_SYSTEM_TIMESTAMP = 0;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   player: {
-    name: "견습 모험가",
+    name:
+      (typeof window !== "undefined" && localStorage.getItem("playerName")) ||
+      "견습 모험가",
     className: "Guardian",
     level: 1,
     hp: 52,
@@ -524,13 +526,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // 자동 사냥 시스템 초기값
   autoHuntEnabled: false,
   lastAutoPotion: 0,
-  setPlayer: (player) =>
+  setPlayer: (player) => {
+    if (player.name && typeof window !== "undefined") {
+      localStorage.setItem("playerName", player.name);
+    }
     set((state) => ({
       player: {
         ...state.player,
         ...player,
       },
-    })),
+    }));
+  },
   setServerName: (serverName) => set(() => ({ serverName })),
   setGrade: (grade) =>
     set(() => ({ grade, usedWordIds: new Set(), wrongWordIds: new Set() })),

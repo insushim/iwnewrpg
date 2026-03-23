@@ -45,7 +45,7 @@ export default function GamePage() {
     <main className="relative h-screen overflow-hidden bg-[#4a7a3a]">
       <GameSocketBridge />
 
-      <div className="pointer-events-none absolute inset-3 bottom-[98px] rounded-[30px] border border-[#b48a46]/24 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_32px_80px_rgba(0,0,0,0.42)]">
+      <div className="pointer-events-none absolute inset-3 bottom-[90px] md:bottom-[98px] rounded-[30px] border border-[#b48a46]/24 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_32px_80px_rgba(0,0,0,0.42)]">
         <div className="absolute inset-0 rounded-[30px] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent_24%)]" />
         <div className="absolute inset-[14px] rounded-[22px] border border-white/5" />
         <div className="absolute left-5 top-5 h-5 w-5 border-l-2 border-t-2 border-[#d2ae71]/70" />
@@ -67,7 +67,7 @@ export default function GamePage() {
         </div>
       </div>
 
-      <div className="absolute inset-0 bottom-[88px] game-canvas">
+      <div className="absolute inset-0 bottom-[80px] md:bottom-[88px] game-canvas">
         <PhaserGame />
       </div>
 
