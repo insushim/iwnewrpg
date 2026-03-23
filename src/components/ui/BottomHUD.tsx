@@ -168,7 +168,7 @@ export function BottomHUD() {
 
   return (
     <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-20 px-2 pb-0 md:px-3">
-      <div className="relative flex h-[80px] items-center gap-2 overflow-hidden rounded-[20px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(14,18,28,0.96),rgba(4,6,12,0.98))] px-2 py-2 shadow-[0_-10px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,228,168,0.05)] md:h-[88px] md:gap-4 md:rounded-[28px] md:px-4 md:py-3">
+      <div className="relative flex h-[80px] items-center gap-2 overflow-visible rounded-[20px] border border-[#b48a46]/35 bg-[linear-gradient(180deg,rgba(14,18,28,0.96),rgba(4,6,12,0.98))] px-2 py-2 shadow-[0_-10px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,228,168,0.05)] md:h-[88px] md:gap-4 md:rounded-[28px] md:px-4 md:py-3">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,214,128,0.09),transparent_28%),linear-gradient(90deg,transparent,rgba(119,168,255,0.04),transparent)]" />
         <div className="absolute inset-[10px] rounded-[22px] border border-white/5" />
 

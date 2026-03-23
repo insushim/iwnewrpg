@@ -3211,7 +3211,7 @@ export class WorldScene extends Phaser.Scene {
           else texture = "prop_tree";
         }
       }
-      const image = this.add.image(x, y, texture).setOrigin(0.5, 0.85);
+      const image = this.add.image(x, y, texture).setOrigin(0.5, 0.78);
       const propShadow = this.add
         .ellipse(
           x + 2,
@@ -3900,7 +3900,7 @@ export class WorldScene extends Phaser.Scene {
         npc.position.y,
       );
       const textureBase = this.getNpcTexture(npc.role);
-      const shadow = this.add.ellipse(0, 6, 58, 20, 0x08131b, 0.3);
+      const shadow = this.add.ellipse(0, 2, 58, 20, 0x08131b, 0.3);
       const aura = this.createAuraSigil(0x9ce7db, 0.14, 76, 28, 0.94);
       const glow = this.createUnitBacklight(
         this.getFrameKey(textureBase, "idle", "s", 0),
@@ -3913,11 +3913,11 @@ export class WorldScene extends Phaser.Scene {
         0,
         this.getFrameKey(textureBase, "idle", "s", 0),
       );
-      sprite.setOrigin(0.5, 0.85);
+      sprite.setOrigin(0.5, 0.78);
       sprite.setScale(0.86);
 
       const label = this.add
-        .text(0, -85, npc.name, {
+        .text(0, -50, npc.name, {
           fontSize: "14px",
           color: "#fff4d5",
           fontFamily: "sans-serif",
@@ -4223,7 +4223,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const isSelf = payload.id === this.selfId;
-    const shadow = this.add.ellipse(0, 6, 60, 20, 0x08131b, 0.3);
+    const shadow = this.add.ellipse(0, 2, 60, 20, 0x08131b, 0.3);
     const aura = this.createAuraSigil(
       isSelf ? classTone.burstTint : classTone.projectileTint,
       isSelf ? 0.18 : 0.1,
@@ -4243,9 +4243,9 @@ export class WorldScene extends Phaser.Scene {
     const body = this.add
       .image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0))
       .setScale(isSelf ? 0.9 : 0.82)
-      .setOrigin(0.5, 0.85);
+      .setOrigin(0.5, 0.78);
     const label = this.add
-      .text(0, -100, payload.name, {
+      .text(0, -55, payload.name, {
         fontSize: "13px",
         color: isSelf ? "#fff4ba" : "#f5f5f5",
         stroke: "#07101a",
@@ -4382,7 +4382,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const shadow = this.add.ellipse(0, 8, 62, 22, 0x08131b, 0.3);
+    const shadow = this.add.ellipse(0, 4, 62, 22, 0x08131b, 0.3);
     const aura = this.createAuraSigil(
       isBoss ? 0xffd37f : 0xff8f74,
       isBoss ? 0.2 : 0.12,
@@ -4408,16 +4408,16 @@ export class WorldScene extends Phaser.Scene {
     );
     const body = this.add
       .image(0, 2, this.getFrameKey(textureBase, "idle", "s", 0))
-      .setOrigin(0.5, 0.85)
+      .setOrigin(0.5, 0.78)
       .setScale(this.getMonsterScale(baseId));
     const hpBack = this.add
-      .rectangle(0, -68, 52, 7, 0x160808, 0.78)
+      .rectangle(0, -48, 52, 7, 0x160808, 0.78)
       .setOrigin(0.5);
     const hpFill = this.add
-      .rectangle(-25, -68, 50, 5, 0xfb7260, 0.95)
+      .rectangle(-25, -48, 50, 5, 0xfb7260, 0.95)
       .setOrigin(0, 0.5);
     const label = this.add
-      .text(0, -115, payload.name, {
+      .text(0, -60, payload.name, {
         fontSize: isBoss ? "14px" : "13px",
         color: isBoss ? "#ffe7b4" : "#ffd9d1",
         stroke: "#07101a",
@@ -5968,7 +5968,7 @@ export class WorldScene extends Phaser.Scene {
   ) {
     return this.add
       .image(0, -1, textureKey)
-      .setOrigin(0.5, 0.85)
+      .setOrigin(0.5, 0.78)
       .setTint(tint)
       .setAlpha(alpha)
       .setScale(scale)
@@ -6061,8 +6061,20 @@ export class WorldScene extends Phaser.Scene {
         return "anim_player_guardian_greatsword";
       return "anim_player_guardian";
     }
-    if (className.includes("ranger")) return "anim_player_ranger";
-    if (className.includes("arcan")) return "anim_player_arcanist";
+    if (className.includes("ranger")) {
+      if (weaponVariant === "dagger") return "anim_player_ranger_dagger";
+      if (weaponVariant === "sword") return "anim_player_ranger_sword";
+      if (weaponVariant === "greatsword")
+        return "anim_player_ranger_greatsword";
+      return "anim_player_ranger";
+    }
+    if (className.includes("arcan")) {
+      if (weaponVariant === "dagger") return "anim_player_arcanist_dagger";
+      if (weaponVariant === "sword") return "anim_player_arcanist_sword";
+      if (weaponVariant === "greatsword")
+        return "anim_player_arcanist_greatsword";
+      return "anim_player_arcanist";
+    }
     if (className.includes("sovereign")) {
       if (weaponVariant === "dagger") return "anim_player_sovereign_dagger";
       if (weaponVariant === "sword") return "anim_player_sovereign_sword";
@@ -7208,8 +7220,8 @@ export class WorldScene extends Phaser.Scene {
             if (!monsterData) return;
 
             const dmg = Math.max(
-              3,
-              monsterData.atk + Phaser.Math.Between(1, 5),
+              5,
+              monsterData.atk + Phaser.Math.Between(3, 8),
             );
             const newHp = Math.max(0, store.player.hp - dmg);
             store.setPlayer({ hp: newHp });
@@ -8009,7 +8021,7 @@ export class WorldScene extends Phaser.Scene {
         this.localPlayer.y + this.localPlayer.spriteBody.y,
         this.localPlayer.spriteBody.texture.key,
       )
-      .setOrigin(0.5, 0.85)
+      .setOrigin(0.5, 0.78)
       .setScale(
         this.localPlayer.spriteBody.scaleX,
         this.localPlayer.spriteBody.scaleY,

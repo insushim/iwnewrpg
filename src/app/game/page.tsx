@@ -58,7 +58,7 @@ export default function GamePage() {
         </div>
       </div>
 
-      <div className="absolute inset-0 bottom-[80px] md:bottom-[88px] game-canvas z-0">
+      <div className="absolute inset-0 bottom-[84px] md:bottom-[92px] game-canvas z-0">
         <PhaserGame />
       </div>
 

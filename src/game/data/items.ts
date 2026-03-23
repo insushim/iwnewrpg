@@ -1,5 +1,11 @@
 import { CharacterClass } from "@/types/game";
-import { ArmorSubType, ItemRarity, ItemType, WeaponSubType, type Item } from "@/types/item";
+import {
+  ArmorSubType,
+  ItemRarity,
+  ItemType,
+  WeaponSubType,
+  type Item,
+} from "@/types/item";
 
 export const ITEMS: Record<string, Item> = {
   trainee_dagger: {
@@ -23,7 +29,10 @@ export const ITEMS: Record<string, Item> = {
     subtype: WeaponSubType.ONE_HAND_SWORD,
     rarity: ItemRarity.COMMON,
     stats: { minAttack: 4, maxAttack: 10 },
-    requirements: { level: 5, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    requirements: {
+      level: 5,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 15,
     stackable: false,
     description: "기본기에 충실한 검입니다.",
@@ -37,7 +46,10 @@ export const ITEMS: Record<string, Item> = {
     subtype: WeaponSubType.ONE_HAND_SWORD,
     rarity: ItemRarity.UNCOMMON,
     stats: { minAttack: 8, maxAttack: 16 },
-    requirements: { level: 15, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    requirements: {
+      level: 15,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 20,
     stackable: false,
     description: "가볍고 날카로운 미스릴 장검입니다.",
@@ -50,7 +62,7 @@ export const ITEMS: Record<string, Item> = {
     type: ItemType.WEAPON,
     subtype: WeaponSubType.BOW,
     rarity: ItemRarity.COMMON,
-    stats: { minAttack: 2, maxAttack: 2, rangedDamage: 1 },
+    stats: { minAttack: 4, maxAttack: 8, rangedDamage: 2 },
     requirements: { level: 1, classes: [CharacterClass.RANGER] },
     weight: 6,
     stackable: false,
@@ -93,7 +105,10 @@ export const ITEMS: Record<string, Item> = {
     subtype: ArmorSubType.ARMOR,
     rarity: ItemRarity.COMMON,
     stats: { ac: -4 },
-    requirements: { level: 10, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    requirements: {
+      level: 10,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 30,
     stackable: false,
     description: "금속 고리로 엮어 만든 실전 갑옷입니다.",
@@ -294,7 +309,10 @@ export const ITEMS: Record<string, Item> = {
     subtype: WeaponSubType.TWO_HAND_SWORD,
     rarity: ItemRarity.EPIC,
     stats: { minAttack: 22, maxAttack: 38, hp: 20 },
-    requirements: { level: 35, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    requirements: {
+      level: 35,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 35,
     stackable: false,
     description: "드래곤의 비늘로 단조된 거대한 양손검입니다.",
@@ -307,7 +325,7 @@ export const ITEMS: Record<string, Item> = {
     type: ItemType.WEAPON,
     subtype: WeaponSubType.BOW,
     rarity: ItemRarity.EPIC,
-    stats: { minAttack: 10, maxAttack: 18, rangedDamage: 5, critRate: 0.08 },
+    stats: { minAttack: 16, maxAttack: 26, rangedDamage: 8, critRate: 0.08 },
     requirements: { level: 30, classes: [CharacterClass.RANGER] },
     weight: 10,
     stackable: false,
@@ -336,8 +354,11 @@ export const ITEMS: Record<string, Item> = {
     type: ItemType.WEAPON,
     subtype: WeaponSubType.ONE_HAND_SWORD,
     rarity: ItemRarity.LEGENDARY,
-    stats: { minAttack: 30, maxAttack: 50, critRate: 0.10, hp: 30 },
-    requirements: { level: 45, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    stats: { minAttack: 30, maxAttack: 50, critRate: 0.1, hp: 30 },
+    requirements: {
+      level: 45,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 25,
     stackable: false,
     description: "신화 속 영웅이 사용한 불멸의 검입니다.",
@@ -351,7 +372,13 @@ export const ITEMS: Record<string, Item> = {
     type: ItemType.WEAPON,
     subtype: WeaponSubType.STAFF,
     rarity: ItemRarity.LEGENDARY,
-    stats: { minAttack: 15, maxAttack: 25, spellPower: 25, mp: 150, critRate: 0.08 },
+    stats: {
+      minAttack: 15,
+      maxAttack: 25,
+      spellPower: 25,
+      mp: 150,
+      critRate: 0.08,
+    },
     requirements: { level: 45, classes: [CharacterClass.ARCANIST] },
     weight: 18,
     stackable: false,
@@ -368,7 +395,10 @@ export const ITEMS: Record<string, Item> = {
     subtype: ArmorSubType.ARMOR,
     rarity: ItemRarity.EPIC,
     stats: { ac: -10, hp: 50, magicResistance: 5 },
-    requirements: { level: 35, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    requirements: {
+      level: 35,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 45,
     stackable: false,
     description: "레드 드래곤의 비늘로 만든 초고강도 갑옷입니다.",
@@ -443,7 +473,10 @@ export const ITEMS: Record<string, Item> = {
     subtype: ArmorSubType.SHIELD,
     rarity: ItemRarity.COMMON,
     stats: { ac: -3 },
-    requirements: { level: 5, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    requirements: {
+      level: 5,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 20,
     stackable: false,
     description: "기본적인 철제 방패입니다.",
@@ -457,7 +490,10 @@ export const ITEMS: Record<string, Item> = {
     subtype: ArmorSubType.SHIELD,
     rarity: ItemRarity.UNCOMMON,
     stats: { ac: -5, magicResistance: 3 },
-    requirements: { level: 20, classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN] },
+    requirements: {
+      level: 20,
+      classes: [CharacterClass.GUARDIAN, CharacterClass.SOVEREIGN],
+    },
     weight: 22,
     stackable: false,
     description: "마법 저항력이 있는 미스릴 방패입니다.",
@@ -580,7 +616,8 @@ export const ITEMS: Record<string, Item> = {
     stats: { attackSpeedTier: 3, moveSpeedPercent: 50 },
     weight: 3,
     stackable: true,
-    description: "근접 전용. 50초간 공격/이동 속도 대폭 증가. 다른 버프와 중첩 가능.",
+    description:
+      "근접 전용. 50초간 공격/이동 속도 대폭 증가. 다른 버프와 중첩 가능.",
     icon: "potion_red_rare",
     price: 800,
     maxStack: 20,
@@ -691,7 +728,8 @@ export const ITEMS: Record<string, Item> = {
     stats: {},
     weight: 1,
     stackable: true,
-    description: "선택한 몬스터를 길들이려 시도합니다. 약할수록 성공률이 높으며 최대 2마리 보유 가능. 테이밍 성공 시 30분 동반.",
+    description:
+      "선택한 몬스터를 길들이려 시도합니다. 약할수록 성공률이 높으며 최대 2마리 보유 가능. 테이밍 성공 시 30분 동반.",
     icon: "taming_stone",
     price: 1200,
     maxStack: 10,
@@ -706,7 +744,8 @@ export const ITEMS: Record<string, Item> = {
     stats: {},
     weight: 1,
     stackable: true,
-    description: "1~2마리의 하급 정령을 60초간 소환합니다. 소환된 정령이 자동으로 적을 공격합니다.",
+    description:
+      "1~2마리의 하급 정령을 60초간 소환합니다. 소환된 정령이 자동으로 적을 공격합니다.",
     icon: "summon_stone_lesser",
     price: 800,
     maxStack: 10,
@@ -720,7 +759,8 @@ export const ITEMS: Record<string, Item> = {
     stats: {},
     weight: 1,
     stackable: true,
-    description: "2~3마리의 중급 정령을 90초간 소환합니다. 강력한 공격력으로 사냥을 지원합니다.",
+    description:
+      "2~3마리의 중급 정령을 90초간 소환합니다. 강력한 공격력으로 사냥을 지원합니다.",
     icon: "summon_stone_mid",
     price: 3000,
     maxStack: 5,
@@ -734,7 +774,8 @@ export const ITEMS: Record<string, Item> = {
     stats: {},
     weight: 1,
     stackable: true,
-    description: "3~5마리의 상급 전사를 120초간 소환합니다. 강력한 전사들이 모든 적을 격파합니다.",
+    description:
+      "3~5마리의 상급 전사를 120초간 소환합니다. 강력한 전사들이 모든 적을 격파합니다.",
     icon: "summon_stone_greater",
     price: 10000,
     maxStack: 3,
