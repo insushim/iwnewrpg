@@ -6212,7 +6212,7 @@ export class WorldScene extends Phaser.Scene {
           mapId === "silverKnightTown" || mapId === "giranTown"
             ? "tile_cobble"
             : "tile_path",
-        alpha: 0.94,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6223,7 +6223,7 @@ export class WorldScene extends Phaser.Scene {
     if (mapId === "moonlitWetland" && moisture > 0.7) {
       return {
         texture: moisture > 0.82 ? "tile_water" : "tile_wet_stone",
-        alpha: 0.85,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6239,7 +6239,7 @@ export class WorldScene extends Phaser.Scene {
             : seed > 0.56
               ? "tile_volcanic"
               : "tile_dirt",
-        alpha: ridge > 0.8 ? 0.95 : 0.9,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6265,7 +6265,7 @@ export class WorldScene extends Phaser.Scene {
 
       return {
         texture: baseTexture,
-        alpha: 0.92,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6281,7 +6281,7 @@ export class WorldScene extends Phaser.Scene {
             : seed > 0.32
               ? "tile_marble"
               : "tile_path",
-        alpha: 0.9,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6307,7 +6307,7 @@ export class WorldScene extends Phaser.Scene {
 
       return {
         texture: baseTexture,
-        alpha: 0.88,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6333,7 +6333,7 @@ export class WorldScene extends Phaser.Scene {
 
       return {
         texture: baseTexture,
-        alpha: 0.88,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6359,7 +6359,7 @@ export class WorldScene extends Phaser.Scene {
 
       return {
         texture: baseTexture,
-        alpha: 0.9,
+        alpha: 1,
         tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
@@ -6380,8 +6380,8 @@ export class WorldScene extends Phaser.Scene {
               : "tile_cobble";
       return {
         texture: caveTexture,
-        alpha: 0.88 + caveNoise * 0.08,
-        tint: 0xd8d0c8,
+        alpha: 1,
+        tint: 0xffffff,
         rotation: 0,
         scaleX: 0,
         scaleY: 0,
