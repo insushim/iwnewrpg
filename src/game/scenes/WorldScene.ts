@@ -5484,19 +5484,27 @@ export class WorldScene extends Phaser.Scene {
         sprite.glowBody.setTexture(fallback);
       }
     }
-    // Monster attack visual: bright red tint + scale pulse + glow
+    // Monster attack visual: red ring pulse + body flash
     if (!("playerId" in sprite) && sprite.animState === "attack") {
-      sprite.spriteBody.setTint(0xff2200);
-      sprite.glowBody.setTint(0xff0000);
-      sprite.glowBody.setAlpha(0.5);
-      const baseScale = sprite.spriteBody.scaleX;
-      const pulse = 1 + Math.sin(now * 0.02) * 0.08;
-      sprite.spriteBody.setScale(baseScale > 0 ? Math.abs(baseScale) * pulse : 0.9);
+      const ms = sprite as MonsterSprite;
+      // Bright pulsing red ring under monster
+      ms.ring.setFillStyle(0xff2200, 0.35);
+      ms.ring.setStrokeStyle(3, 0xff0000, 0.9);
+      const ringPulse = 1.2 + Math.sin(now * 0.015) * 0.3;
+      ms.ring.setScale(ringPulse, ringPulse * 0.7);
+      // Flash the sprite body between red and normal
+      if (sprite.animFrame % 2 === 0) {
+        sprite.spriteBody.setTint(0xff4444);
+      } else {
+        sprite.spriteBody.clearTint();
+      }
     } else if (!("playerId" in sprite)) {
+      const ms = sprite as MonsterSprite;
+      ms.ring.setFillStyle(ms.isBoss ? 0xffc976 : 0xf57f69, ms.isBoss ? 0.16 : 0.12);
+      ms.ring.setStrokeStyle(2, ms.isBoss ? 0xffe1a8 : 0xff9c88, ms.isBoss ? 0.84 : 0.75);
+      ms.ring.setScale(1, 1);
       if (sprite.spriteBody.tintTopLeft !== 0xffffff) {
         sprite.spriteBody.clearTint();
-        sprite.glowBody.clearTint();
-        sprite.glowBody.setAlpha(0.18);
       }
     }
 
