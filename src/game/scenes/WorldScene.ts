@@ -5643,27 +5643,46 @@ export class WorldScene extends Phaser.Scene {
       nw: (-3 * Math.PI) / 4,
     };
 
-    // Claw slash arc
+    // Impact flash
+    const flash = this.add
+      .circle(x + off.x * 0.5, y + off.y * 0.5, 8, 0xffddaa, 0.6)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.effectLayer?.add(flash);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scaleX: 3,
+      scaleY: 3,
+      duration: 200,
+      ease: "Quad.Out",
+      onComplete: () => flash.destroy(),
+    });
+
+    // Claw slash arcs (3 lines for visibility)
     const slash = this.add.graphics();
     slash.setPosition(x + off.x, y + off.y);
     slash.setRotation(slashRotation[facing]);
-    slash.setAlpha(0.85);
-    slash.lineStyle(3, 0xff6644, 1);
+    slash.setAlpha(0.9);
+    slash.lineStyle(4, 0xff4422, 1);
+    slash.beginPath();
+    slash.arc(0, 0, 24, -0.8, 0.8, false);
+    slash.strokePath();
+    slash.lineStyle(3, 0xff8844, 0.8);
     slash.beginPath();
     slash.arc(0, 0, 18, -0.6, 0.6, false);
     slash.strokePath();
-    slash.lineStyle(2, 0xffaa66, 0.7);
+    slash.lineStyle(2, 0xffcc66, 0.6);
     slash.beginPath();
-    slash.arc(0, 0, 14, -0.4, 0.4, false);
+    slash.arc(0, 0, 12, -0.4, 0.4, false);
     slash.strokePath();
     this.effectLayer?.add(slash);
 
     this.tweens.add({
       targets: slash,
       alpha: 0,
-      scaleX: 1.6,
-      scaleY: 1.4,
-      duration: 280,
+      scaleX: 1.8,
+      scaleY: 1.6,
+      duration: 350,
       ease: "Quad.Out",
       onComplete: () => slash.destroy(),
     });
@@ -7342,7 +7361,7 @@ export class WorldScene extends Phaser.Scene {
           }
         } else {
           // Within attack range — deal damage to player
-          const ATTACK_INTERVAL = 1200;
+          const ATTACK_INTERVAL = 1000;
           if (now - ai.lastAttackAt >= ATTACK_INTERVAL) {
             const store = useGameStore.getState();
             if (store.ui.deathOpen || store.player.hp <= 0) return;
@@ -7357,7 +7376,7 @@ export class WorldScene extends Phaser.Scene {
             const newHp = Math.max(0, store.player.hp - dmg);
             store.setPlayer({ hp: newHp });
             ai.lastAttackAt = now;
-            sprite.attackUntil = now + 400;
+            sprite.attackUntil = now + 800;
 
             // Add system message for damage taken
             store.addChat({
