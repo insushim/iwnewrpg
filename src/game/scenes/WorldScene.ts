@@ -4234,14 +4234,17 @@ export class WorldScene extends Phaser.Scene {
     const ring = this.add
       .ellipse(0, 6, 70, 22, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
       .setStrokeStyle(2, isSelf ? 0xffefb2 : 0x89cffd, 0.7);
+    const initialFrameKey = this.getFrameKey(textureBase, "idle", "s", 0);
+    // Ensure texture exists — force-create procedural if missing
+    this.ensureTextureExists(textureBase, "idle", "s", 0);
     const glow = this.createUnitBacklight(
-      this.getFrameKey(textureBase, "idle", "s", 0),
+      initialFrameKey,
       isSelf ? 0xffe5a6 : 0x9fdcff,
       isSelf ? 0.24 : 0.16,
       isSelf ? 1.04 : 0.94,
     );
     const body = this.add
-      .image(0, 0, this.getFrameKey(textureBase, "idle", "s", 0))
+      .image(0, 0, initialFrameKey)
       .setScale(isSelf ? 0.9 : 0.82)
       .setOrigin(0.5, 0.78);
     const label = this.add
@@ -4400,6 +4403,7 @@ export class WorldScene extends Phaser.Scene {
         isBoss ? 0.16 : 0.12,
       )
       .setStrokeStyle(2, isBoss ? 0xffe1a8 : 0xff9c88, isBoss ? 0.84 : 0.75);
+    this.ensureTextureExists(textureBase, "idle", "s", 0);
     const glow = this.createUnitBacklight(
       this.getFrameKey(textureBase, "idle", "s", 0),
       isBoss ? 0xffd18a : 0xffa37f,
@@ -4818,9 +4822,9 @@ export class WorldScene extends Phaser.Scene {
 
       const state = useGameStore.getState();
       const attackProfile = state.getAttackProfile();
-      const physical = Math.floor(
-        attackProfile.str * 0.6 + attackProfile.dex * 0.3,
-      );
+      const primaryPhys = Math.max(attackProfile.str, attackProfile.dex);
+      const secondaryPhys = Math.min(attackProfile.str, attackProfile.dex);
+      const physical = Math.floor(primaryPhys * 0.6 + secondaryPhys * 0.25);
       const magical = Math.floor(attackProfile.int * 0.8);
       const baseDamage = Math.max(physical, magical) + 2;
       const variance = Math.floor(
@@ -5432,22 +5436,20 @@ export class WorldScene extends Phaser.Scene {
       );
     }
 
-    sprite.spriteBody.setTexture(
-      this.getFrameKey(
-        sprite.textureBase,
-        sprite.animState,
-        sprite.facing,
-        sprite.animFrame,
-      ),
+    const frameKey = this.getFrameKey(
+      sprite.textureBase,
+      sprite.animState,
+      sprite.facing,
+      sprite.animFrame,
     );
-    sprite.glowBody.setTexture(
-      this.getFrameKey(
-        sprite.textureBase,
-        sprite.animState,
-        sprite.facing,
-        sprite.animFrame,
-      ),
-    );
+    // Safety: fallback to idle_s_0 if texture doesn't exist yet
+    const safeKey = this.textures.exists(frameKey)
+      ? frameKey
+      : this.textures.exists(`${sprite.textureBase}_idle_s_0`)
+        ? `${sprite.textureBase}_idle_s_0`
+        : frameKey;
+    sprite.spriteBody.setTexture(safeKey);
+    sprite.glowBody.setTexture(safeKey);
     const bob =
       sprite.animState === "walk"
         ? [0, -2.2, -0.8, -1.5][sprite.animFrame % 4]
@@ -6982,6 +6984,53 @@ export class WorldScene extends Phaser.Scene {
     frame: number,
   ) {
     return `${base}_${state}_${direction}_${frame}`;
+  }
+
+  /** Force-create a procedural texture if it doesn't exist */
+  private ensureTextureExists(
+    base: string,
+    state: AnimState,
+    direction: DirectionKey,
+    frame: number,
+  ) {
+    const key = this.getFrameKey(base, state, direction, frame);
+    if (this.textures.exists(key)) return;
+
+    // Create a simple colored placeholder texture so sprite isn't a green square
+    const SIZE = 128;
+    const canvas = this.textures.createCanvas(key, SIZE, SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    // Draw a simple humanoid silhouette
+    const cx = SIZE / 2;
+    const cy = 58;
+
+    // Shadow
+    ctx.fillStyle = "rgba(4,8,13,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 38, 28, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = "#506878";
+    ctx.beginPath();
+    ctx.roundRect(cx - 16, cy - 8, 32, 34, 8);
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = "#708898";
+    ctx.beginPath();
+    ctx.arc(cx, cy - 18, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Legs
+    ctx.fillStyle = "#3a4a56";
+    ctx.fillRect(cx - 10, cy + 24, 8, 18);
+    ctx.fillRect(cx + 2, cy + 24, 8, 18);
+
+    canvas.refresh();
   }
 
   private resolveDirection(

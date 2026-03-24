@@ -193,7 +193,7 @@ export function BottomHUD() {
       </div>
 
       {/* Main HUD bar */}
-      <div className="relative mx-1 mb-0.5 flex h-[76px] items-stretch gap-0 overflow-hidden rounded-t-[16px] border border-b-0 border-[#2a2a3a] bg-[linear-gradient(180deg,rgba(16,18,28,0.98),rgba(8,10,16,0.99))] shadow-[0_-8px_32px_rgba(0,0,0,0.5)] md:mx-2 md:h-[82px] md:rounded-t-[20px]">
+      <div className="relative mx-1 mb-0.5 flex h-[80px] items-stretch gap-0 overflow-hidden rounded-t-[16px] border border-b-0 border-[#2a2a3a] bg-[linear-gradient(180deg,rgba(16,18,28,0.98),rgba(8,10,16,0.99))] shadow-[0_-8px_32px_rgba(0,0,0,0.5)] md:mx-2 md:h-[96px] md:rounded-t-[20px]">
         {/* Gold accent line at top */}
         <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent_5%,rgba(180,138,70,0.3)_30%,rgba(180,138,70,0.5)_50%,rgba(180,138,70,0.3)_70%,transparent_95%)]" />
 

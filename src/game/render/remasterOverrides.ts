@@ -236,14 +236,15 @@ function materializeAtlasEntries(
   }
 
   atlas.entries.forEach((entry) => {
-    // Remove existing procedural texture to replace with atlas version
-    if (scene.textures.exists(entry.key)) {
-      scene.textures.remove(entry.key);
+    const frame = texture.get(entry.frame);
+    // Validate frame exists and isn't just the fallback base frame
+    if (!frame || frame.cutWidth < 2 || frame.cutHeight < 2) {
+      return;
     }
 
-    const frame = texture.get(entry.frame);
-    if (!frame || frame.name === "__BASE") {
-      return;
+    // Only remove procedural texture AFTER validating atlas frame exists
+    if (scene.textures.exists(entry.key)) {
+      scene.textures.remove(entry.key);
     }
 
     const canvasTexture = scene.textures.createCanvas(
