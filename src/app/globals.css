@@ -430,11 +430,11 @@ a {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  background: #0f1923;
+  background: #2d4a2d;
 }
 
 .game-canvas canvas {
-  background: #0f1923 !important;
+  background: #2d4a2d !important;
 }
 
 /* Prevent pull-to-refresh on mobile */

@@ -10,7 +10,7 @@ export function createGameConfig(parent: string): Phaser.Types.Core.GameConfig {
     width: window.innerWidth,
     height: window.innerHeight,
     parent,
-    backgroundColor: "#0f1923",
+    backgroundColor: "#2d4a2d",
     pixelArt: false,
     roundPixels: true,
     antialias: true,

@@ -517,7 +517,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.serverName = data?.serverName ?? useGameStore.getState().serverName;
 
-    this.cameras.main.setBackgroundColor("#0f1923");
+    this.cameras.main.setBackgroundColor("#2d4a2d");
     this.cameras.main.setZoom(0.72);
     this.cameras.main.roundPixels = true;
 
