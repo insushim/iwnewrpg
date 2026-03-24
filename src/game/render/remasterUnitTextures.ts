@@ -74,11 +74,11 @@ export function registerRemasterUnitTextures(scene: Phaser.Scene) {
   // Process in batches of 40 per frame to avoid jank
   const BATCH_SIZE = 40;
   let offset = 0;
+  const textures = scene.textures;
   const processBatch = () => {
-    if (!scene.scene.isActive()) return;
     const end = Math.min(offset + BATCH_SIZE, queue.length);
     for (let i = offset; i < end; i++) {
-      createFrame(scene, queue[i].key, queue[i].spec);
+      createFrameOnManager(textures, queue[i].key, queue[i].spec);
     }
     offset = end;
     if (offset < queue.length) {
@@ -86,6 +86,67 @@ export function registerRemasterUnitTextures(scene: Phaser.Scene) {
     }
   };
   setTimeout(processBatch, 100);
+}
+
+function createFrameOnManager(
+  textures: Phaser.Textures.TextureManager,
+  key: string,
+  spec: FrameSpec,
+) {
+  if (textures.exists(key)) {
+    return;
+  }
+
+  const texture = textures.createCanvas(
+    key,
+    REMASTER_FRAME_SIZE,
+    REMASTER_FRAME_SIZE,
+  );
+  if (!texture) {
+    return;
+  }
+  const ctx = texture.context;
+  ctx.clearRect(0, 0, REMASTER_FRAME_SIZE, REMASTER_FRAME_SIZE);
+
+  const dir = directionVector(spec.direction);
+  const isBowAttack = spec.weapon === "bow" && spec.state === "attack";
+  const isStaffAttack = spec.weapon === "staff" && spec.state === "attack";
+
+  const bob =
+    spec.state === "walk"
+      ? [0, 4, 2, -1][spec.frame % 4]
+      : isBowAttack
+        ? [-1, -4, 0, -1][spec.frame % 4]
+        : spec.state === "attack"
+          ? [-3, -7, 1, -1][spec.frame % 4]
+          : [0, -1][spec.frame % 2];
+  const stride =
+    spec.state === "walk"
+      ? [-6, 6, -2, 4][spec.frame % 4]
+      : isBowAttack
+        ? [0, -3, 2, 0][spec.frame % 4]
+        : spec.state === "attack"
+          ? [0, 3, 7, 2][spec.frame % 4]
+          : 0;
+  const swing = isBowAttack
+    ? [0, -14, 8, 0][spec.frame % 4]
+    : isStaffAttack
+      ? [0, 6, 14, 4][spec.frame % 4]
+      : spec.state === "attack"
+        ? [0, 10, 18, 8][spec.frame % 4]
+        : 0;
+  const centerX = REMASTER_FRAME_SIZE / 2;
+  const centerY = 58 + bob;
+
+  if (spec.family === "humanoid") {
+    drawHumanoid(ctx, spec, centerX, centerY, dir, stride, swing);
+  } else if (spec.family === "slime") {
+    drawSlime(ctx, spec, centerX, centerY, dir, stride, swing);
+  } else {
+    drawBeast(ctx, spec, centerX, centerY, dir, stride, swing);
+  }
+
+  texture.refresh();
 }
 
 function createFrame(scene: Phaser.Scene, key: string, spec: FrameSpec) {

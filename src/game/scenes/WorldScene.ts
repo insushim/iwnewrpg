@@ -517,7 +517,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.serverName = data?.serverName ?? useGameStore.getState().serverName;
 
-    this.cameras.main.setBackgroundColor("#7cc87c");
+    this.cameras.main.setBackgroundColor("#0f1923");
     this.cameras.main.setZoom(0.72);
     this.cameras.main.roundPixels = true;
 
@@ -5375,6 +5375,21 @@ export class WorldScene extends Phaser.Scene {
       sprite.facing = this.resolveDirection(dx, dy, sprite.facing);
     }
 
+    // Monster: face player while attacking
+    if (
+      !("playerId" in sprite) &&
+      sprite.attackUntil > now &&
+      this.localPlayer
+    ) {
+      const toPlayerDx = this.localPlayer.x - sprite.x;
+      const toPlayerDy = this.localPlayer.y - sprite.y;
+      sprite.facing = this.resolveDirection(
+        toPlayerDx,
+        toPlayerDy,
+        sprite.facing,
+      );
+    }
+
     const nextState: AnimState =
       sprite.attackUntil > now ? "attack" : moving ? "walk" : "idle";
     const frameInterval =
@@ -5389,6 +5404,10 @@ export class WorldScene extends Phaser.Scene {
     const previousFrame = sprite.animFrame;
 
     if (sprite.animState !== nextState) {
+      // Spawn attack effect when transitioning to attack state
+      if (nextState === "attack" && !("playerId" in sprite)) {
+        this.spawnMonsterAttackEffect(sprite.x, sprite.y, sprite.facing);
+      }
       sprite.animState = nextState;
       sprite.animFrame = 0;
       sprite.frameTimer = now;
@@ -5568,6 +5587,59 @@ export class WorldScene extends Phaser.Scene {
     }
     sprite.lastX = sprite.x;
     sprite.lastY = sprite.y;
+  }
+
+  private spawnMonsterAttackEffect(
+    x: number,
+    y: number,
+    facing: DirectionKey,
+  ) {
+    const dirOffset: Record<DirectionKey, { x: number; y: number }> = {
+      n: { x: 0, y: -28 },
+      ne: { x: 20, y: -20 },
+      e: { x: 28, y: 0 },
+      se: { x: 20, y: 16 },
+      s: { x: 0, y: 24 },
+      sw: { x: -20, y: 16 },
+      w: { x: -28, y: 0 },
+      nw: { x: -20, y: -20 },
+    };
+    const off = dirOffset[facing];
+    const slashRotation: Record<DirectionKey, number> = {
+      n: -Math.PI / 2,
+      ne: -Math.PI / 4,
+      e: 0,
+      se: Math.PI / 4,
+      s: Math.PI / 2,
+      sw: (3 * Math.PI) / 4,
+      w: Math.PI,
+      nw: (-3 * Math.PI) / 4,
+    };
+
+    // Claw slash arc
+    const slash = this.add.graphics();
+    slash.setPosition(x + off.x, y + off.y);
+    slash.setRotation(slashRotation[facing]);
+    slash.setAlpha(0.85);
+    slash.lineStyle(3, 0xff6644, 1);
+    slash.beginPath();
+    slash.arc(0, 0, 18, -0.6, 0.6, false);
+    slash.strokePath();
+    slash.lineStyle(2, 0xffaa66, 0.7);
+    slash.beginPath();
+    slash.arc(0, 0, 14, -0.4, 0.4, false);
+    slash.strokePath();
+    this.effectLayer?.add(slash);
+
+    this.tweens.add({
+      targets: slash,
+      alpha: 0,
+      scaleX: 1.6,
+      scaleY: 1.4,
+      duration: 280,
+      ease: "Quad.Out",
+      onComplete: () => slash.destroy(),
+    });
   }
 
   private spawnWalkStepEffect(
