@@ -89,14 +89,7 @@ export function preloadRemasterOverrides(
     });
     return true;
   });
-  const pendingAtlases = manifest.atlases.filter((atlas) => {
-    atlas.entries.forEach((entry) => {
-      if (scene.textures.exists(entry.key)) {
-        scene.textures.remove(entry.key);
-      }
-    });
-    return true;
-  });
+  const pendingAtlases = manifest.atlases;
 
   if (pending.length === 0 && pendingSheets.length === 0 && pendingAtlases.length === 0) {
     return Promise.resolve();
@@ -183,15 +176,18 @@ function materializeSpritesheetEntries(
   sheet: RemasterSpritesheetOverride,
 ) {
   const texture = scene.textures.get(sheet.key);
+  if (!texture || texture.key === "__MISSING") {
+    return;
+  }
   const sourceImage = texture.getSourceImage();
-  if (!sourceImage) {
+  if (!sourceImage || (sourceImage as HTMLImageElement).width < 2) {
     return;
   }
 
   const startFrame = sheet.startFrame ?? 0;
   sheet.entries.forEach((runtimeKey, index) => {
     if (scene.textures.exists(runtimeKey)) {
-      return;
+      scene.textures.remove(runtimeKey);
     }
 
     const frame = texture.get(startFrame + index);
@@ -230,18 +226,23 @@ function materializeAtlasEntries(
   atlas: RemasterAtlasOverride,
 ) {
   const texture = scene.textures.get(atlas.key);
+  // Guard: skip if atlas failed to load (Phaser returns __MISSING texture)
+  if (!texture || texture.key === "__MISSING") {
+    return;
+  }
   const sourceImage = texture.getSourceImage();
-  if (!sourceImage) {
+  if (!sourceImage || (sourceImage as HTMLImageElement).width < 2) {
     return;
   }
 
   atlas.entries.forEach((entry) => {
+    // Remove existing procedural texture to replace with atlas version
     if (scene.textures.exists(entry.key)) {
-      return;
+      scene.textures.remove(entry.key);
     }
 
     const frame = texture.get(entry.frame);
-    if (!frame) {
+    if (!frame || frame.name === "__BASE") {
       return;
     }
 

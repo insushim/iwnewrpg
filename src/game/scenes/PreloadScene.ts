@@ -12,9 +12,11 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   async create() {
+    // Generate procedural textures FIRST as baseline fallback
+    registerRemasterUnitTextures(this);
+    // Then load atlas overrides which replace procedural textures with pixel-art
     const manifest = await fetchRemasterManifest();
     await preloadRemasterOverrides(this, manifest);
-    registerRemasterUnitTextures(this);
 
     const savedRaw = localStorage.getItem("iwnewrpg_save");
     if (savedRaw) {
