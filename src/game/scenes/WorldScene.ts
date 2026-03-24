@@ -5484,14 +5484,20 @@ export class WorldScene extends Phaser.Scene {
         sprite.glowBody.setTexture(fallback);
       }
     }
-    // Monster attack visual: red tint + scale pulse
+    // Monster attack visual: bright red tint + scale pulse + glow
     if (!("playerId" in sprite) && sprite.animState === "attack") {
-      const attackProgress = sprite.animFrame / ATTACK_FRAME_COUNT;
-      const pulse = 1.05 + Math.sin(attackProgress * Math.PI) * 0.1;
-      sprite.spriteBody.setTint(0xff6644);
-      sprite.spriteBody.setScale(this.getMonsterScale?.(sprite.textureBase) ?? 0.9 * pulse);
-    } else if (!("playerId" in sprite) && sprite.spriteBody.tintTopLeft !== 0xffffff) {
-      sprite.spriteBody.clearTint();
+      sprite.spriteBody.setTint(0xff2200);
+      sprite.glowBody.setTint(0xff0000);
+      sprite.glowBody.setAlpha(0.5);
+      const baseScale = sprite.spriteBody.scaleX;
+      const pulse = 1 + Math.sin(now * 0.02) * 0.08;
+      sprite.spriteBody.setScale(baseScale > 0 ? Math.abs(baseScale) * pulse : 0.9);
+    } else if (!("playerId" in sprite)) {
+      if (sprite.spriteBody.tintTopLeft !== 0xffffff) {
+        sprite.spriteBody.clearTint();
+        sprite.glowBody.clearTint();
+        sprite.glowBody.setAlpha(0.18);
+      }
     }
 
     const bob =
@@ -6181,36 +6187,12 @@ export class WorldScene extends Phaser.Scene {
   private getPlayerTexture() {
     const state = useGameStore.getState();
     const className = state.player.className.toLowerCase();
-    const weaponId = state.equipment.weapon?.id;
-    const weaponSubtype = weaponId ? ITEMS[weaponId]?.subtype : undefined;
-    const weaponVariant =
-      weaponSubtype === WeaponSubType.DAGGER
-        ? "dagger"
-        : weaponSubtype === WeaponSubType.TWO_HAND_SWORD
-          ? "greatsword"
-          : weaponSubtype === WeaponSubType.ONE_HAND_SWORD
-            ? "sword"
-            : null;
 
-    let base = "anim_player_guardian";
-    if (className.includes("guardian")) base = "anim_player_guardian";
-    else if (className.includes("ranger")) base = "anim_player_ranger";
-    else if (className.includes("arcan")) base = "anim_player_arcanist";
-    else if (className.includes("sovereign")) base = "anim_player_sovereign";
-
-    // Try weapon variant — only use if atlas or procedural pack exists
-    if (weaponVariant) {
-      const variantKey = `${base}_${weaponVariant}`;
-      const variantAtlas = `${variantKey}_atlas`;
-      if (
-        this.textures.exists(variantAtlas) ||
-        this.textures.exists(`${variantKey}_idle_s_0`)
-      ) {
-        return variantKey;
-      }
-    }
-
-    return base;
+    // Always use base class texture (has atlas with nice pixel art)
+    if (className.includes("ranger")) return "anim_player_ranger";
+    if (className.includes("arcan")) return "anim_player_arcanist";
+    if (className.includes("sovereign")) return "anim_player_sovereign";
+    return "anim_player_guardian";
   }
 
   private getNpcTexture(role: string) {
@@ -7408,6 +7390,7 @@ export class WorldScene extends Phaser.Scene {
         } else {
           // Within attack range — deal damage to player
           const ATTACK_INTERVAL = 1000;
+          console.log(`[MONSTER ATK] ${monsterId} dist=${distToPlayer.toFixed(0)} range=${ATTACK_RANGE} cooldown=${(now - ai.lastAttackAt).toFixed(0)}/${ATTACK_INTERVAL} attackUntil=${sprite.attackUntil > now}`);
           if (now - ai.lastAttackAt >= ATTACK_INTERVAL) {
             const store = useGameStore.getState();
             if (store.ui.deathOpen || store.player.hp <= 0) return;
