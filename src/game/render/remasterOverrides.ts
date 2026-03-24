@@ -113,7 +113,8 @@ export function preloadRemasterOverrides(
   return new Promise<void>((resolve) => {
     scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
       pendingSheets.forEach((sheet) => materializeSpritesheetEntries(scene, sheet));
-      pendingAtlases.forEach((atlas) => materializeAtlasEntries(scene, atlas));
+      // Atlas entries are now used directly via setTexture(atlasKey, frameName)
+      // No need to materialize into individual canvas textures
       resolve();
     });
     scene.load.start();

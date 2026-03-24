@@ -3900,19 +3900,21 @@ export class WorldScene extends Phaser.Scene {
         npc.position.y,
       );
       const textureBase = this.getNpcTexture(npc.role);
+      const npcFrameKey = this.getFrameKey(textureBase, "idle", "s", 0);
+      const npcAtlasKey = textureBase + "_atlas";
+      const useNpcAtlas = this.textures.exists(npcAtlasKey);
       const shadow = this.add.ellipse(0, 2, 58, 20, 0x08131b, 0.3);
       const aura = this.createAuraSigil(0x9ce7db, 0.14, 76, 28, 0.94);
       const glow = this.createUnitBacklight(
-        this.getFrameKey(textureBase, "idle", "s", 0),
+        useNpcAtlas ? npcAtlasKey : npcFrameKey,
         0xcaf2ff,
         0.18,
         0.98,
+        useNpcAtlas ? npcFrameKey : undefined,
       );
-      const sprite = this.add.image(
-        0,
-        0,
-        this.getFrameKey(textureBase, "idle", "s", 0),
-      );
+      const sprite = useNpcAtlas
+        ? this.add.image(0, 0, npcAtlasKey, npcFrameKey)
+        : this.add.image(0, 0, npcFrameKey);
       sprite.setOrigin(0.5, 0.78);
       sprite.setScale(0.86);
 
@@ -4235,18 +4237,25 @@ export class WorldScene extends Phaser.Scene {
       .ellipse(0, 6, 70, 22, isSelf ? 0xffefb2 : 0x89cffd, 0.16)
       .setStrokeStyle(2, isSelf ? 0xffefb2 : 0x89cffd, 0.7);
     const initialFrameKey = this.getFrameKey(textureBase, "idle", "s", 0);
-    // Ensure texture exists — force-create procedural if missing
-    this.ensureTextureExists(textureBase, "idle", "s", 0);
+    const playerAtlasKey = textureBase + "_atlas";
+    const useAtlas = this.textures.exists(playerAtlasKey);
+    if (!useAtlas) this.ensureTextureExists(textureBase, "idle", "s", 0);
     const glow = this.createUnitBacklight(
-      initialFrameKey,
+      useAtlas ? playerAtlasKey : initialFrameKey,
       isSelf ? 0xffe5a6 : 0x9fdcff,
       isSelf ? 0.24 : 0.16,
       isSelf ? 1.04 : 0.94,
+      useAtlas ? initialFrameKey : undefined,
     );
-    const body = this.add
-      .image(0, 0, initialFrameKey)
-      .setScale(isSelf ? 0.9 : 0.82)
-      .setOrigin(0.5, 0.78);
+    const body = useAtlas
+      ? this.add
+          .image(0, 0, playerAtlasKey, initialFrameKey)
+          .setScale(isSelf ? 0.9 : 0.82)
+          .setOrigin(0.5, 0.78)
+      : this.add
+          .image(0, 0, initialFrameKey)
+          .setScale(isSelf ? 0.9 : 0.82)
+          .setOrigin(0.5, 0.78);
     const label = this.add
       .text(0, -55, payload.name, {
         fontSize: "13px",
@@ -4403,17 +4412,26 @@ export class WorldScene extends Phaser.Scene {
         isBoss ? 0.16 : 0.12,
       )
       .setStrokeStyle(2, isBoss ? 0xffe1a8 : 0xff9c88, isBoss ? 0.84 : 0.75);
-    this.ensureTextureExists(textureBase, "idle", "s", 0);
+    const monsterFrameKey = this.getFrameKey(textureBase, "idle", "s", 0);
+    const monsterAtlasKey = textureBase + "_atlas";
+    const useMonsterAtlas = this.textures.exists(monsterAtlasKey);
+    if (!useMonsterAtlas) this.ensureTextureExists(textureBase, "idle", "s", 0);
     const glow = this.createUnitBacklight(
-      this.getFrameKey(textureBase, "idle", "s", 0),
+      useMonsterAtlas ? monsterAtlasKey : monsterFrameKey,
       isBoss ? 0xffd18a : 0xffa37f,
       isBoss ? 0.26 : 0.18,
       isBoss ? 1 : 0.92,
+      useMonsterAtlas ? monsterFrameKey : undefined,
     );
-    const body = this.add
-      .image(0, 2, this.getFrameKey(textureBase, "idle", "s", 0))
-      .setOrigin(0.5, 0.78)
-      .setScale(this.getMonsterScale(baseId));
+    const body = useMonsterAtlas
+      ? this.add
+          .image(0, 2, monsterAtlasKey, monsterFrameKey)
+          .setOrigin(0.5, 0.78)
+          .setScale(this.getMonsterScale(baseId))
+      : this.add
+          .image(0, 2, monsterFrameKey)
+          .setOrigin(0.5, 0.78)
+          .setScale(this.getMonsterScale(baseId));
     const hpBack = this.add
       .rectangle(0, -48, 52, 7, 0x160808, 0.78)
       .setOrigin(0.5);
@@ -5442,14 +5460,21 @@ export class WorldScene extends Phaser.Scene {
       sprite.facing,
       sprite.animFrame,
     );
-    // Safety: fallback to idle_s_0 if texture doesn't exist yet
-    const safeKey = this.textures.exists(frameKey)
-      ? frameKey
-      : this.textures.exists(`${sprite.textureBase}_idle_s_0`)
-        ? `${sprite.textureBase}_idle_s_0`
-        : frameKey;
-    sprite.spriteBody.setTexture(safeKey);
-    sprite.glowBody.setTexture(safeKey);
+    // Use atlas frame directly if available (avoids canvas limit issues)
+    const atlasKey = sprite.textureBase + "_atlas";
+    if (this.textures.exists(atlasKey)) {
+      sprite.spriteBody.setTexture(atlasKey, frameKey);
+      sprite.glowBody.setTexture(atlasKey, frameKey);
+    } else if (this.textures.exists(frameKey)) {
+      sprite.spriteBody.setTexture(frameKey);
+      sprite.glowBody.setTexture(frameKey);
+    } else {
+      const fallback = `${sprite.textureBase}_idle_s_0`;
+      if (this.textures.exists(fallback)) {
+        sprite.spriteBody.setTexture(fallback);
+        sprite.glowBody.setTexture(fallback);
+      }
+    }
     const bob =
       sprite.animState === "walk"
         ? [0, -2.2, -0.8, -1.5][sprite.animFrame % 4]
@@ -5708,22 +5733,20 @@ export class WorldScene extends Phaser.Scene {
     if (now - sprite.frameTimer >= 320) {
       sprite.animFrame = (sprite.animFrame + 1) % IDLE_FRAME_COUNT;
       sprite.frameTimer = now;
-      sprite.spriteBody.setTexture(
-        this.getFrameKey(
-          sprite.textureBase,
-          "idle",
-          sprite.facing,
-          sprite.animFrame,
-        ),
+      const npcFrame = this.getFrameKey(
+        sprite.textureBase,
+        "idle",
+        sprite.facing,
+        sprite.animFrame,
       );
-      sprite.glowBody.setTexture(
-        this.getFrameKey(
-          sprite.textureBase,
-          "idle",
-          sprite.facing,
-          sprite.animFrame,
-        ),
-      );
+      const npcAtlas = sprite.textureBase + "_atlas";
+      if (this.textures.exists(npcAtlas)) {
+        sprite.spriteBody.setTexture(npcAtlas, npcFrame);
+        sprite.glowBody.setTexture(npcAtlas, npcFrame);
+      } else {
+        sprite.spriteBody.setTexture(npcFrame);
+        sprite.glowBody.setTexture(npcFrame);
+      }
       sprite.spriteBody.y = sprite.animFrame === 0 ? 0 : -0.5;
       sprite.glowBody.y = sprite.animFrame === 0 ? -1 : -1.5;
     }
@@ -6039,9 +6062,12 @@ export class WorldScene extends Phaser.Scene {
     tint: number,
     alpha: number,
     scale: number,
+    frame?: string,
   ) {
-    return this.add
-      .image(0, -1, textureKey)
+    const img = frame
+      ? this.add.image(0, -1, textureKey, frame)
+      : this.add.image(0, -1, textureKey);
+    return img
       .setOrigin(0.5, 0.78)
       .setTint(tint)
       .setAlpha(alpha)
