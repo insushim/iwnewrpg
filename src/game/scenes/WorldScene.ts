@@ -430,6 +430,7 @@ export class WorldScene extends Phaser.Scene {
     }
   >();
   private pendingOfflineMonsterId: string | null = null;
+  private pendingQuizWordId: string | null = null;
   private offlineStreak = 0;
   private offlineAttackCount = new Map<string, number>();
   private QUIZ_EVERY_N_ATTACKS = 5;
@@ -560,6 +561,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateMobileMovement();
     this.cameras.main.centerOn(this.localPlayer.x, this.localPlayer.y);
     // Day/night removed for brightness
+    this.updateMonsterAI(); // Move before updateAnimatedUnits to fix attack animation timing
     this.updateAnimatedUnits();
     if (this.frameCount % 4 === 0) {
       this.sortActorLayer();
@@ -567,7 +569,6 @@ export class WorldScene extends Phaser.Scene {
     if (this.frameCount % 3 === 0) {
       this.updateNpcProximity();
     }
-    this.updateMonsterAI();
     this.updateSummonedAllies();
     this.updateTamedMonsters();
     this.checkPortalTransitions();
@@ -1054,6 +1055,7 @@ export class WorldScene extends Phaser.Scene {
     const vocab = this.getGradeVocabulary();
     const { entry: questionEntry, index: questionIndex } =
       this.pickQuizWord(vocab);
+    this.pendingQuizWordId = questionEntry.en;
     const useEnToKr = Math.random() > 0.5;
 
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
@@ -1096,6 +1098,7 @@ export class WorldScene extends Phaser.Scene {
     const vocab = this.getGradeVocabulary();
     const { entry: questionEntry, index: questionIndex } =
       this.pickQuizWord(vocab);
+    this.pendingQuizWordId = questionEntry.en;
     const useEnToKr = Math.random() > 0.5;
 
     const correctAnswer = useEnToKr ? questionEntry.kr : questionEntry.en;
@@ -1151,9 +1154,10 @@ export class WorldScene extends Phaser.Scene {
     if (payload.status !== "correct") {
       this.offlineStreak = 0;
       // 틀린 단어 기록 (나중에 다시 출제)
-      if (payload.answer) {
-        useGameStore.getState().markWordWrong(payload.answer);
+      if (this.pendingQuizWordId) {
+        useGameStore.getState().markWordWrong(this.pendingQuizWordId);
       }
+      this.pendingQuizWordId = null;
       // 오답이어도 몬스터가 살아있으면 자동공격 재개
       if (monsterData.hp > 0 && this.selectedMonsterId === monsterId) {
         this.startAutoAttack(monsterId);
@@ -1161,6 +1165,11 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
+    // 정답 — 단어를 "학습 완료"로 표시하여 세션 내 반복 방지
+    if (this.pendingQuizWordId) {
+      useGameStore.getState().markWordUsed(this.pendingQuizWordId);
+    }
+    this.pendingQuizWordId = null;
     this.offlineStreak += 1;
 
     // 킬 퀴즈 (몬스터가 이미 사망): 보너스 보상만 지급
@@ -6924,33 +6933,38 @@ export class WorldScene extends Phaser.Scene {
     const usedIds = store.usedWordIds;
     const wrongIds = store.wrongWordIds;
 
-    // 틀렸던 단어 우선 (복습)
-    const wrong = fullVocab.filter(
+    // 틀렸던 단어는 항상 복습 대상 (맞힌 적 없으면 반복 가능)
+    const wrongNotMastered = fullVocab.filter(
       (w) => wrongIds.has(w.en) && !usedIds.has(w.en),
     );
-    if (wrong.length >= 4 && Math.random() < 0.3) {
-      return wrong;
+
+    // 40% 확률로 틀렸던 단어 복습 (최소 2개 이상 있을 때)
+    if (wrongNotMastered.length >= 2 && Math.random() < 0.4) {
+      return wrongNotMastered;
     }
 
-    // 아직 안 나온 단어
+    // 아직 안 나온 단어 (맞힌 적 없는 단어들)
     const unused = fullVocab.filter((w) => !usedIds.has(w.en));
     if (unused.length >= 5) {
       return unused;
     }
 
-    // 모든 단어를 다 풀었으면 리셋
+    // 모든 단어를 다 풀었으면 리셋하되, 틀린 단어는 유지
     useGameStore.getState().resetUsedWords();
     return fullVocab;
   }
 
+  /** Fisher-Yates 셔플 기반 랜덤 선택 — 단어를 "사용됨"으로 표시하지 않음
+   *  정답 시에만 markWordUsed를 호출하여 틀린 단어가 반복 출제될 수 있도록 함 */
   private pickQuizWord(vocab: VocabularyEntry[]): {
     entry: VocabularyEntry;
     index: number;
   } {
-    const idx = Math.floor(Math.random() * vocab.length);
-    const entry = vocab[idx];
-    useGameStore.getState().markWordUsed(entry.en);
-    return { entry, index: idx };
+    // Fisher-Yates 부분 셔플: 첫 항목만 결정
+    const n = vocab.length;
+    const randomIdx = Math.floor(Math.random() * n);
+    const entry = vocab[randomIdx];
+    return { entry, index: randomIdx };
   }
 
   /** 오답 보기를 다른 카테고리에서 우선 선택 */
