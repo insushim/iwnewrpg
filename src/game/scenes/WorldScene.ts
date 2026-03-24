@@ -4239,6 +4239,8 @@ export class WorldScene extends Phaser.Scene {
     const initialFrameKey = this.getFrameKey(textureBase, "idle", "s", 0);
     const playerAtlasKey = textureBase + "_atlas";
     const useAtlas = this.textures.exists(playerAtlasKey);
+    const hasProceduralFrame = this.textures.exists(initialFrameKey);
+    console.log(`[SPRITE DEBUG] player=${payload.name} textureBase=${textureBase} atlasKey=${playerAtlasKey} useAtlas=${useAtlas} hasFrame=${hasProceduralFrame} allKeys=${this.textures.getTextureKeys().filter(k=>k.includes('ranger')).join(',')}`);
     if (!useAtlas) this.ensureTextureExists(textureBase, "idle", "s", 0);
     const glow = this.createUnitBacklight(
       useAtlas ? playerAtlasKey : initialFrameKey,
