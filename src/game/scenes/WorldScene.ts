@@ -7342,7 +7342,7 @@ export class WorldScene extends Phaser.Scene {
       const isAggressive = MONSTERS[mBase]?.aggressive ?? true;
       // Aggressive monsters spot player from further away
       const AGGRO_RANGE = isAggressive ? 320 : 240;
-      const ATTACK_RANGE = 64;
+      const ATTACK_RANGE = 130;
       // Leash: monster gives up if too far from spawn
       const LEASH_DIST = 900;
 
