@@ -5484,6 +5484,16 @@ export class WorldScene extends Phaser.Scene {
         sprite.glowBody.setTexture(fallback);
       }
     }
+    // Monster attack visual: red tint + scale pulse
+    if (!("playerId" in sprite) && sprite.animState === "attack") {
+      const attackProgress = sprite.animFrame / ATTACK_FRAME_COUNT;
+      const pulse = 1.05 + Math.sin(attackProgress * Math.PI) * 0.1;
+      sprite.spriteBody.setTint(0xff6644);
+      sprite.spriteBody.setScale(this.getMonsterScale?.(sprite.textureBase) ?? 0.9 * pulse);
+    } else if (!("playerId" in sprite) && sprite.spriteBody.tintTopLeft !== 0xffffff) {
+      sprite.spriteBody.clearTint();
+    }
+
     const bob =
       sprite.animState === "walk"
         ? [0, -2.2, -0.8, -1.5][sprite.animFrame % 4]
@@ -6927,31 +6937,49 @@ export class WorldScene extends Phaser.Scene {
           : GRADE3_VOCABULARY;
   }
 
+  private shuffledVocab: VocabularyEntry[] = [];
+  private shuffledGrade: number = -1;
+
   private getGradeVocabulary(): VocabularyEntry[] {
     const fullVocab = this.getFullGradeVocabulary();
     const store = useGameStore.getState();
     const usedIds = store.usedWordIds;
     const wrongIds = store.wrongWordIds;
+    const grade = store.grade ?? 3;
 
-    // 틀렸던 단어는 항상 복습 대상 (맞힌 적 없으면 반복 가능)
+    // 틀렸던 단어 복습 (40% 확률)
     const wrongNotMastered = fullVocab.filter(
       (w) => wrongIds.has(w.en) && !usedIds.has(w.en),
     );
-
-    // 40% 확률로 틀렸던 단어 복습 (최소 2개 이상 있을 때)
     if (wrongNotMastered.length >= 2 && Math.random() < 0.4) {
       return wrongNotMastered;
     }
 
-    // 아직 안 나온 단어 (맞힌 적 없는 단어들)
-    const unused = fullVocab.filter((w) => !usedIds.has(w.en));
+    // 세션 셔플: 학년이 바뀌거나 셔플이 없으면 전체 셔플
+    if (this.shuffledGrade !== grade || this.shuffledVocab.length === 0) {
+      this.shuffledVocab = [...fullVocab];
+      // Fisher-Yates shuffle
+      for (let i = this.shuffledVocab.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [this.shuffledVocab[i], this.shuffledVocab[j]] = [this.shuffledVocab[j], this.shuffledVocab[i]];
+      }
+      this.shuffledGrade = grade;
+    }
+
+    // 셔플된 순서에서 아직 안 나온 단어
+    const unused = this.shuffledVocab.filter((w) => !usedIds.has(w.en));
     if (unused.length >= 5) {
       return unused;
     }
 
-    // 모든 단어를 다 풀었으면 리셋하되, 틀린 단어는 유지
+    // 다 풀었으면 리셋 + 재셔플
     useGameStore.getState().resetUsedWords();
-    return fullVocab;
+    // Re-shuffle
+    for (let i = this.shuffledVocab.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.shuffledVocab[i], this.shuffledVocab[j]] = [this.shuffledVocab[j], this.shuffledVocab[i]];
+    }
+    return this.shuffledVocab;
   }
 
   /** Fisher-Yates 셔플 기반 랜덤 선택 — 단어를 "사용됨"으로 표시하지 않음
@@ -7395,6 +7423,9 @@ export class WorldScene extends Phaser.Scene {
             store.setPlayer({ hp: newHp });
             ai.lastAttackAt = now;
             sprite.attackUntil = now + 800;
+
+            // Screen shake when player takes damage
+            this.cameras.main.shake(120, 0.005);
 
             // Add system message for damage taken
             store.addChat({
