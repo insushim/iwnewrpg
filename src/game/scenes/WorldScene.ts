@@ -4239,8 +4239,6 @@ export class WorldScene extends Phaser.Scene {
     const initialFrameKey = this.getFrameKey(textureBase, "idle", "s", 0);
     const playerAtlasKey = textureBase + "_atlas";
     const useAtlas = this.textures.exists(playerAtlasKey);
-    const hasProceduralFrame = this.textures.exists(initialFrameKey);
-    console.log(`[SPRITE DEBUG] player=${payload.name} textureBase=${textureBase} atlasKey=${playerAtlasKey} useAtlas=${useAtlas} hasFrame=${hasProceduralFrame} allKeys=${this.textures.getTextureKeys().filter(k=>k.includes('ranger')).join(',')}`);
     if (!useAtlas) this.ensureTextureExists(textureBase, "idle", "s", 0);
     const glow = this.createUnitBacklight(
       useAtlas ? playerAtlasKey : initialFrameKey,
@@ -6156,41 +6154,25 @@ export class WorldScene extends Phaser.Scene {
             ? "sword"
             : null;
 
-    if (className.includes("guardian")) {
-      if (weaponVariant === "dagger") return "anim_player_guardian_dagger";
-      if (weaponVariant === "sword") return "anim_player_guardian_sword";
-      if (weaponVariant === "greatsword")
-        return "anim_player_guardian_greatsword";
-      return "anim_player_guardian";
+    let base = "anim_player_guardian";
+    if (className.includes("guardian")) base = "anim_player_guardian";
+    else if (className.includes("ranger")) base = "anim_player_ranger";
+    else if (className.includes("arcan")) base = "anim_player_arcanist";
+    else if (className.includes("sovereign")) base = "anim_player_sovereign";
+
+    // Try weapon variant — only use if atlas or procedural pack exists
+    if (weaponVariant) {
+      const variantKey = `${base}_${weaponVariant}`;
+      const variantAtlas = `${variantKey}_atlas`;
+      if (
+        this.textures.exists(variantAtlas) ||
+        this.textures.exists(`${variantKey}_idle_s_0`)
+      ) {
+        return variantKey;
+      }
     }
-    if (className.includes("ranger")) {
-      if (weaponVariant === "dagger") return "anim_player_ranger_dagger";
-      if (weaponVariant === "sword") return "anim_player_ranger_sword";
-      if (weaponVariant === "greatsword")
-        return "anim_player_ranger_greatsword";
-      return "anim_player_ranger";
-    }
-    if (className.includes("arcan")) {
-      if (weaponVariant === "dagger") return "anim_player_arcanist_dagger";
-      if (weaponVariant === "sword") return "anim_player_arcanist_sword";
-      if (weaponVariant === "greatsword")
-        return "anim_player_arcanist_greatsword";
-      return "anim_player_arcanist";
-    }
-    if (className.includes("sovereign")) {
-      if (weaponVariant === "dagger") return "anim_player_sovereign_dagger";
-      if (weaponVariant === "sword") return "anim_player_sovereign_sword";
-      if (weaponVariant === "greatsword")
-        return "anim_player_sovereign_greatsword";
-      return "anim_player_sovereign";
-    }
-    return weaponVariant === "dagger"
-      ? "anim_player_guardian_dagger"
-      : weaponVariant === "greatsword"
-        ? "anim_player_guardian_greatsword"
-        : weaponVariant === "sword"
-          ? "anim_player_guardian_sword"
-          : "anim_player_guardian";
+
+    return base;
   }
 
   private getNpcTexture(role: string) {

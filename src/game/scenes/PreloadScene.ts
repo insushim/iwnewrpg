@@ -14,14 +14,9 @@ export class PreloadScene extends Phaser.Scene {
   async create() {
     // Generate procedural textures FIRST as baseline fallback
     registerRemasterUnitTextures(this);
-    const afterPhase1 = this.textures.getTextureKeys().filter((k: string) => k.includes("ranger"));
-    console.log("[PRELOAD] After Phase1 ranger textures:", afterPhase1.join(","));
     // Then load atlas overrides which replace procedural textures with pixel-art
     const manifest = await fetchRemasterManifest();
-    console.log("[PRELOAD] Manifest atlases:", manifest.atlases.length, "textures:", manifest.textures.length);
     await preloadRemasterOverrides(this, manifest);
-    const afterOverrides = this.textures.getTextureKeys().filter((k: string) => k.includes("ranger"));
-    console.log("[PRELOAD] After overrides ranger textures:", afterOverrides.join(","));
 
     const savedRaw = localStorage.getItem("iwnewrpg_save");
     if (savedRaw) {
