@@ -1065,9 +1065,12 @@ export class WorldScene extends Phaser.Scene {
       questionIndex,
       useEnToKr,
     );
-    const choices = [correctAnswer, ...wrongAnswers].sort(
-      () => Math.random() - 0.5,
-    );
+    const choiceArr = [correctAnswer, ...wrongAnswers];
+    for (let ci = choiceArr.length - 1; ci > 0; ci--) {
+      const cj = Math.floor(Math.random() * (ci + 1));
+      [choiceArr[ci], choiceArr[cj]] = [choiceArr[cj], choiceArr[ci]];
+    }
+    const choices = choiceArr;
 
     EventBus.emit("quiz_trigger", {
       question: {
@@ -1108,9 +1111,12 @@ export class WorldScene extends Phaser.Scene {
       questionIndex,
       useEnToKr,
     );
-    const choices = [correctAnswer, ...wrongAnswers].sort(
-      () => Math.random() - 0.5,
-    );
+    const choiceArr = [correctAnswer, ...wrongAnswers];
+    for (let ci = choiceArr.length - 1; ci > 0; ci--) {
+      const cj = Math.floor(Math.random() * (ci + 1));
+      [choiceArr[ci], choiceArr[cj]] = [choiceArr[cj], choiceArr[ci]];
+    }
+    const choices = choiceArr;
 
     EventBus.emit("quiz_trigger", {
       question: {
@@ -5498,11 +5504,11 @@ export class WorldScene extends Phaser.Scene {
       sprite.spriteBody.setScale(bodyPulse);
       sprite.glowBody.setScale(bodyPulse);
 
-      // MORE aggressive body flashing
+      // DRAMATIC white↔red body flashing
       if (sprite.animFrame % 2 === 0) {
-        sprite.spriteBody.setTint(0xff2222); // Brighter red
+        sprite.spriteBody.setTint(0xffffff); // BRIGHT WHITE flash
       } else {
-        sprite.spriteBody.setTint(0xffaaaa); // Light red instead of normal
+        sprite.spriteBody.setTint(0xff0000); // DEEP RED flash
       }
     } else if (!("playerId" in sprite)) {
       const ms = sprite as MonsterSprite;
@@ -7434,7 +7440,7 @@ export class WorldScene extends Phaser.Scene {
             ai.lastAttackAt = now;
 
             // LUNGE EFFECT: Monster lunges toward player during attack
-            const lungeDistance = 15;
+            const lungeDistance = 30;
             const angleToPlayer = Phaser.Math.Angle.Between(
               sprite.x,
               sprite.y,
@@ -7449,7 +7455,7 @@ export class WorldScene extends Phaser.Scene {
               targets: sprite,
               x: lungeX,
               y: lungeY,
-              duration: 100,
+              duration: 150,
               ease: "Quad.Out",
               yoyo: true,
               repeat: 0,
@@ -7457,14 +7463,14 @@ export class WorldScene extends Phaser.Scene {
 
             // SCREEN FLASH on impact
             const screenFlash = this.add
-              .rectangle(0, 0, this.cameras.main.width * 2, this.cameras.main.height * 2, 0xff0000, 0.2)
+              .rectangle(0, 0, this.cameras.main.width * 2, this.cameras.main.height * 2, 0xff0000, 0.35)
               .setScrollFactor(0)
               .setDepth(10000);
 
             this.tweens.add({
               targets: screenFlash,
               alpha: 0,
-              duration: 150,
+              duration: 300,
               onComplete: () => screenFlash.destroy(),
             });
 
@@ -7483,6 +7489,37 @@ export class WorldScene extends Phaser.Scene {
               onComplete: () => shockwave.destroy(),
             });
 
+            // LARGE RED SLASH LINE from monster to player
+            if (this.localPlayer) {
+              const slashLine = this.add.graphics();
+              slashLine.lineStyle(6, 0xff2200, 0.9);
+              slashLine.beginPath();
+              slashLine.moveTo(sprite.x, sprite.y);
+              slashLine.lineTo(this.localPlayer.x, this.localPlayer.y);
+              slashLine.strokePath();
+              const perpAngle = angleToPlayer + Math.PI / 2;
+              const crossLen = 25;
+              slashLine.lineStyle(4, 0xff4400, 0.7);
+              slashLine.beginPath();
+              slashLine.moveTo(
+                this.localPlayer.x + Math.cos(perpAngle) * crossLen,
+                this.localPlayer.y + Math.sin(perpAngle) * crossLen,
+              );
+              slashLine.lineTo(
+                this.localPlayer.x - Math.cos(perpAngle) * crossLen,
+                this.localPlayer.y - Math.sin(perpAngle) * crossLen,
+              );
+              slashLine.strokePath();
+              this.effectLayer?.add(slashLine);
+              this.tweens.add({
+                targets: slashLine,
+                alpha: 0,
+                duration: 400,
+                ease: "Quad.Out",
+                onComplete: () => slashLine.destroy(),
+              });
+            }
+
             // MONSTER JUMP EFFECT
             this.tweens.add({
               targets: sprite,
@@ -7495,7 +7532,7 @@ export class WorldScene extends Phaser.Scene {
             sprite.attackUntil = now + 800;
 
             // Screen shake when player takes damage
-            this.cameras.main.shake(120, 0.005);
+            this.cameras.main.shake(200, 0.012);
 
             // Add system message for damage taken
             store.addChat({
@@ -7522,11 +7559,16 @@ export class WorldScene extends Phaser.Scene {
               );
               this.tweens.add({
                 targets: this.localPlayer.spriteBody,
-                alpha: 0.15,
-                duration: 60,
+                alpha: 0.1,
+                duration: 80,
                 yoyo: true,
-                repeat: 2,
+                repeat: 3,
                 ease: "Linear",
+              });
+              // Tint player red briefly on hit
+              this.localPlayer.spriteBody.setTint(0xff4444);
+              this.time.delayedCall(400, () => {
+                if (this.localPlayer) this.localPlayer.spriteBody.clearTint();
               });
             }
 

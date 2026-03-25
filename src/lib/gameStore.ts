@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { ITEMS } from "@/game/data/items";
 import { ACHIEVEMENTS } from "@/game/data/achievements";
 import { rollEnchant } from "@/game/systems/enchant";
@@ -406,7 +407,9 @@ const INITIAL_ACHIEVEMENTS: AchievementState[] = ACHIEVEMENTS.map(
 
 const INITIAL_SYSTEM_TIMESTAMP = 0;
 
-export const useGameStore = create<GameStore>((set, get) => ({
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
   player: {
     name:
       (typeof window !== "undefined" && localStorage.getItem("playerName")) ||
@@ -1839,7 +1842,55 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
     });
   },
-}));
+    }),
+    {
+      name: "game-storage",
+      storage: createJSONStorage(() => localStorage, {
+        replacer: (_key: string, value: unknown) => {
+          if (value instanceof Set) {
+            return { __type: "Set", values: [...value] };
+          }
+          return value;
+        },
+        reviver: (_key: string, value: unknown) => {
+          if (
+            value &&
+            typeof value === "object" &&
+            (value as Record<string, unknown>).__type === "Set"
+          ) {
+            return new Set(
+              (value as { values: string[] }).values,
+            );
+          }
+          return value;
+        },
+      }),
+      partialize: (state) => ({
+        player: state.player,
+        inventory: state.inventory,
+        equipment: state.equipment,
+        achievements: state.achievements,
+        quests: state.quests,
+        totalKills: state.totalKills,
+        bossKills: state.bossKills,
+        maxQuizStreak: state.maxQuizStreak,
+        visitedMaps: state.visitedMaps,
+        activeTitle: state.activeTitle,
+        currentMapId: state.currentMapId,
+        loginStreak: state.loginStreak,
+        lastLoginDate: state.lastLoginDate,
+        sp: state.sp,
+        skillLevels: state.skillLevels,
+        comboKills: state.comboKills,
+        maxCombo: state.maxCombo,
+        comboMultiplier: state.comboMultiplier,
+        grade: state.grade,
+        usedWordIds: state.usedWordIds,
+        wrongWordIds: state.wrongWordIds,
+      }),
+    },
+  ),
+);
 
 function getEquipSlot(
   itemId: string,
