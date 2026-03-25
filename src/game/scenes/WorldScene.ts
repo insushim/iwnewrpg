@@ -5484,25 +5484,34 @@ export class WorldScene extends Phaser.Scene {
         sprite.glowBody.setTexture(fallback);
       }
     }
-    // Monster attack visual: red ring pulse + body flash
+    // Monster attack visual: DRAMATICALLY enhanced effects
     if (!("playerId" in sprite) && sprite.animState === "attack") {
       const ms = sprite as MonsterSprite;
-      // Bright pulsing red ring under monster
-      ms.ring.setFillStyle(0xff2200, 0.35);
-      ms.ring.setStrokeStyle(3, 0xff0000, 0.9);
-      const ringPulse = 1.2 + Math.sin(now * 0.015) * 0.3;
+      // MUCH larger and brighter pulsing red ring
+      ms.ring.setFillStyle(0xff1100, 0.5);
+      ms.ring.setStrokeStyle(4, 0xff0000, 1.0);
+      const ringPulse = 2.0 + Math.sin(now * 0.02) * 0.5; // 2x larger base scale
       ms.ring.setScale(ringPulse, ringPulse * 0.7);
-      // Flash the sprite body between red and normal
+
+      // DRAMATIC body scale pulsing
+      const bodyPulse = 1.0 + Math.sin(now * 0.025) * 0.3; // 1.0 → 1.3 → 1.0
+      sprite.spriteBody.setScale(bodyPulse);
+      sprite.glowBody.setScale(bodyPulse);
+
+      // MORE aggressive body flashing
       if (sprite.animFrame % 2 === 0) {
-        sprite.spriteBody.setTint(0xff4444);
+        sprite.spriteBody.setTint(0xff2222); // Brighter red
       } else {
-        sprite.spriteBody.clearTint();
+        sprite.spriteBody.setTint(0xffaaaa); // Light red instead of normal
       }
     } else if (!("playerId" in sprite)) {
       const ms = sprite as MonsterSprite;
       ms.ring.setFillStyle(ms.isBoss ? 0xffc976 : 0xf57f69, ms.isBoss ? 0.16 : 0.12);
       ms.ring.setStrokeStyle(2, ms.isBoss ? 0xffe1a8 : 0xff9c88, ms.isBoss ? 0.84 : 0.75);
       ms.ring.setScale(1, 1);
+      // Reset body scale and tint for non-attacking monsters
+      sprite.spriteBody.setScale(1);
+      sprite.glowBody.setScale(1);
       if (sprite.spriteBody.tintTopLeft !== 0xffffff) {
         sprite.spriteBody.clearTint();
       }
@@ -5512,7 +5521,7 @@ export class WorldScene extends Phaser.Scene {
       sprite.animState === "walk"
         ? [0, -2.2, -0.8, -1.5][sprite.animFrame % 4]
         : sprite.animState === "attack"
-          ? [-1, -3.5, 2, 0][sprite.animFrame % 4]
+          ? [-2, -6, 4, -1][sprite.animFrame % 4] // MORE aggressive bobbing
           : 0;
     const walkSway =
       sprite.animState === "walk"
@@ -5654,6 +5663,16 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     facing: DirectionKey,
   ) {
+    // Spawn effects toward PLAYER position if available
+    let targetX = x;
+    let targetY = y;
+    if (this.localPlayer) {
+      const angleToPlayer = Phaser.Math.Angle.Between(x, y, this.localPlayer.x, this.localPlayer.y);
+      const effectDistance = 35;
+      targetX = x + Math.cos(angleToPlayer) * effectDistance;
+      targetY = y + Math.sin(angleToPlayer) * effectDistance;
+    }
+
     const dirOffset: Record<DirectionKey, { x: number; y: number }> = {
       n: { x: 0, y: -28 },
       ne: { x: 20, y: -20 },
@@ -5676,16 +5695,16 @@ export class WorldScene extends Phaser.Scene {
       nw: (-3 * Math.PI) / 4,
     };
 
-    // Impact flash
+    // BIGGER Impact flash at player position
     const flash = this.add
-      .circle(x + off.x * 0.5, y + off.y * 0.5, 8, 0xffddaa, 0.6)
+      .circle(targetX, targetY, 16, 0xff6644, 0.8) // 8→16 radius, more red
       .setBlendMode(Phaser.BlendModes.ADD);
     this.effectLayer?.add(flash);
     this.tweens.add({
       targets: flash,
       alpha: 0,
-      scaleX: 3,
-      scaleY: 3,
+      scaleX: 4, // 3→4
+      scaleY: 4,
       duration: 200,
       ease: "Quad.Out",
       onComplete: () => flash.destroy(),
@@ -7388,8 +7407,8 @@ export class WorldScene extends Phaser.Scene {
           );
           const newX = sprite.x + Math.cos(angle) * speed * (1 / 60);
           const newY = sprite.y + Math.sin(angle) * speed * (1 / 60);
-          // Don't enter safe zone
-          if (!STARTER_TOWN_RECT.contains(newX, newY)) {
+          // Don't enter safe zone or blocked areas
+          if (!STARTER_TOWN_RECT.contains(newX, newY) && !this.isBlocked(newX, newY)) {
             sprite.setPosition(newX, newY);
           } else {
             ai.state = "idle";
@@ -7413,6 +7432,66 @@ export class WorldScene extends Phaser.Scene {
             const newHp = Math.max(0, store.player.hp - dmg);
             store.setPlayer({ hp: newHp });
             ai.lastAttackAt = now;
+
+            // LUNGE EFFECT: Monster lunges toward player during attack
+            const lungeDistance = 15;
+            const angleToPlayer = Phaser.Math.Angle.Between(
+              sprite.x,
+              sprite.y,
+              this.localPlayer!.x,
+              this.localPlayer!.y,
+            );
+            const lungeX = sprite.x + Math.cos(angleToPlayer) * lungeDistance;
+            const lungeY = sprite.y + Math.sin(angleToPlayer) * lungeDistance;
+
+            // Lunge forward then back
+            this.tweens.add({
+              targets: sprite,
+              x: lungeX,
+              y: lungeY,
+              duration: 100,
+              ease: "Quad.Out",
+              yoyo: true,
+              repeat: 0,
+            });
+
+            // SCREEN FLASH on impact
+            const screenFlash = this.add
+              .rectangle(0, 0, this.cameras.main.width * 2, this.cameras.main.height * 2, 0xff0000, 0.2)
+              .setScrollFactor(0)
+              .setDepth(10000);
+
+            this.tweens.add({
+              targets: screenFlash,
+              alpha: 0,
+              duration: 150,
+              onComplete: () => screenFlash.destroy(),
+            });
+
+            // IMPACT SHOCKWAVE at player position
+            const shockwave = this.add
+              .circle(this.localPlayer!.x, this.localPlayer!.y, 5, 0xff4444, 0.6)
+              .setBlendMode(Phaser.BlendModes.ADD);
+            this.effectLayer?.add(shockwave);
+            this.tweens.add({
+              targets: shockwave,
+              alpha: 0,
+              scaleX: 4,
+              scaleY: 4,
+              duration: 300,
+              ease: "Quad.Out",
+              onComplete: () => shockwave.destroy(),
+            });
+
+            // MONSTER JUMP EFFECT
+            this.tweens.add({
+              targets: sprite,
+              y: sprite.y - 8,
+              duration: 80,
+              ease: "Quad.Out",
+              yoyo: true,
+              repeat: 0,
+            });
             sprite.attackUntil = now + 800;
 
             // Screen shake when player takes damage
@@ -7481,10 +7560,11 @@ export class WorldScene extends Phaser.Scene {
             ai.wanderTargetX,
             ai.wanderTargetY,
           );
-          sprite.setPosition(
-            sprite.x + Math.cos(angle) * speed * (1 / 60),
-            sprite.y + Math.sin(angle) * speed * (1 / 60),
-          );
+          const wanderNewX = sprite.x + Math.cos(angle) * speed * (1 / 60);
+          const wanderNewY = sprite.y + Math.sin(angle) * speed * (1 / 60);
+          if (!this.isBlocked(wanderNewX, wanderNewY)) {
+            sprite.setPosition(wanderNewX, wanderNewY);
+          }
         }
       }
     });
@@ -7548,10 +7628,11 @@ export class WorldScene extends Phaser.Scene {
           );
           const speed = MOVE_SPEED;
 
-          this.localPlayer.setPosition(
-            this.localPlayer.x + Math.cos(angle) * speed * (1 / 60),
-            this.localPlayer.y + Math.sin(angle) * speed * (1 / 60),
-          );
+          const newX = this.localPlayer.x + Math.cos(angle) * speed * (1 / 60);
+          const newY = this.localPlayer.y + Math.sin(angle) * speed * (1 / 60);
+          if (!this.isBlocked(newX, newY)) {
+            this.localPlayer.setPosition(newX, newY);
+          }
 
           this.updatePlayerDirection(angle);
           this.localPlayer.animState = "walk";
@@ -8568,8 +8649,12 @@ export class WorldScene extends Phaser.Scene {
           );
           ally.sprite.lastX = ally.sprite.x;
           ally.sprite.lastY = ally.sprite.y;
-          ally.sprite.x += Math.cos(angle) * SUMMON_MOVE_SPEED * (1 / 60);
-          ally.sprite.y += Math.sin(angle) * SUMMON_MOVE_SPEED * (1 / 60);
+          const newX = ally.sprite.x + Math.cos(angle) * SUMMON_MOVE_SPEED * (1 / 60);
+          const newY = ally.sprite.y + Math.sin(angle) * SUMMON_MOVE_SPEED * (1 / 60);
+          if (!this.isBlocked(newX, newY)) {
+            ally.sprite.x = newX;
+            ally.sprite.y = newY;
+          }
         } else {
           // Attack
           if (now - ally.lastAttackAt >= SUMMON_ATTACK_INTERVAL) {
@@ -8657,10 +8742,12 @@ export class WorldScene extends Phaser.Scene {
           );
           ally.sprite.lastX = ally.sprite.x;
           ally.sprite.lastY = ally.sprite.y;
-          ally.sprite.x +=
-            Math.cos(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
-          ally.sprite.y +=
-            Math.sin(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
+          const allyNewX = ally.sprite.x + Math.cos(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
+          const allyNewY = ally.sprite.y + Math.sin(angle) * SUMMON_MOVE_SPEED * 0.75 * (1 / 60);
+          if (!this.isBlocked(allyNewX, allyNewY)) {
+            ally.sprite.x = allyNewX;
+            ally.sprite.y = allyNewY;
+          }
         }
       }
     });
@@ -9013,8 +9100,12 @@ export class WorldScene extends Phaser.Scene {
           );
           tm.sprite.lastX = tm.sprite.x;
           tm.sprite.lastY = tm.sprite.y;
-          tm.sprite.x += Math.cos(angle) * TAME_MOVE_SPEED * (1 / 60);
-          tm.sprite.y += Math.sin(angle) * TAME_MOVE_SPEED * (1 / 60);
+          const newX = tm.sprite.x + Math.cos(angle) * TAME_MOVE_SPEED * (1 / 60);
+          const newY = tm.sprite.y + Math.sin(angle) * TAME_MOVE_SPEED * (1 / 60);
+          if (!this.isBlocked(newX, newY)) {
+            tm.sprite.x = newX;
+            tm.sprite.y = newY;
+          }
         } else {
           if (now - tm.lastAttackAt >= TAME_ATTACK_INTERVAL) {
             tm.lastAttackAt = now;
@@ -9098,8 +9189,12 @@ export class WorldScene extends Phaser.Scene {
           );
           tm.sprite.lastX = tm.sprite.x;
           tm.sprite.lastY = tm.sprite.y;
-          tm.sprite.x += Math.cos(angle) * TAME_MOVE_SPEED * 0.7 * (1 / 60);
-          tm.sprite.y += Math.sin(angle) * TAME_MOVE_SPEED * 0.7 * (1 / 60);
+          const tameNewX = tm.sprite.x + Math.cos(angle) * TAME_MOVE_SPEED * 0.7 * (1 / 60);
+          const tameNewY = tm.sprite.y + Math.sin(angle) * TAME_MOVE_SPEED * 0.7 * (1 / 60);
+          if (!this.isBlocked(tameNewX, tameNewY)) {
+            tm.sprite.x = tameNewX;
+            tm.sprite.y = tameNewY;
+          }
         }
       }
     });
@@ -9380,7 +9475,7 @@ export class WorldScene extends Phaser.Scene {
       const newY = playerY + Math.sin(angle) * moveDistance;
 
       // Check for collision before moving
-      if (true) {
+      if (!this.isBlocked(newX, newY)) {
         // Auto-nav movement
         this.localPlayer.setPosition(newX, newY);
 

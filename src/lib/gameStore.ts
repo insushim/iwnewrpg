@@ -1641,15 +1641,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       });
 
-      const messages: ChatMessage[] = [
-        {
+      const messages: ChatMessage[] = [];
+
+      // Only show gold/exp message if there are actual rewards
+      if (gold > 0 || exp > 0) {
+        let rewardMessage = "";
+        if (gold > 0 && exp > 0) {
+          rewardMessage = `+${gold} Gold, +${exp} EXP 획득!`;
+        } else if (gold > 0) {
+          rewardMessage = `+${gold} Gold 획득!`;
+        } else if (exp > 0) {
+          rewardMessage = `+${exp} EXP 획득!`;
+        }
+
+        messages.push({
           id: crypto.randomUUID(),
           channel: "system",
           author: "시스템",
-          message: `+${gold} Gold, +${exp} EXP 획득!`,
+          message: rewardMessage,
           timestamp: Date.now(),
-        },
-      ];
+        });
+      }
       if (leveled) {
         messages.push({
           id: crypto.randomUUID(),
