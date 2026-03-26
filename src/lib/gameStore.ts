@@ -624,6 +624,21 @@ export const useGameStore = create<GameStore>()(
       const streakDay = (state.loginStreak - 1) % 7;
       const reward = DAY_REWARDS[streakDay];
 
+      // Sync reward to server so player:state won't overwrite
+      try {
+        const socket = getSocket();
+        if (socket.connected) {
+          socket.emit("player:claimDailyBonus", {
+            gold: reward.gold,
+            exp: reward.exp,
+            itemId: reward.itemId,
+            qty: reward.qty,
+          });
+        }
+      } catch {
+        // offline mode — client-only reward is fine
+      }
+
       const nextInventory = [...state.inventory];
       const itemData = ITEMS[reward.itemId];
       if (itemData) {

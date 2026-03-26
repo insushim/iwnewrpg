@@ -926,6 +926,37 @@ export function createGameServer(server: HttpServer) {
       socket.emit("player:state", serializePlayerState(session));
     });
 
+    socket.on(
+      "player:claimDailyBonus",
+      (payload: { gold: number; exp: number; itemId: string; qty: number }) => {
+        const session = sessions.get(playerId);
+        if (!session) return;
+
+        session.gold += payload.gold;
+        applyExpReward(session, payload.exp);
+
+        const item = ITEMS[payload.itemId];
+        if (item) {
+          const existing = session.inventory.find(
+            (e) => e.id === payload.itemId,
+          );
+          if (existing) {
+            existing.quantity += payload.qty;
+          } else {
+            session.inventory.push({
+              id: item.id,
+              name: item.name,
+              quantity: payload.qty,
+              rarity: item.rarity,
+              type: item.type,
+            });
+          }
+        }
+
+        socket.emit("player:state", serializePlayerState(session));
+      },
+    );
+
     socket.on("chat:send", (payload: { message: string }) => {
       io.to(currentMapId).emit("chat:message", {
         id: crypto.randomUUID(),
