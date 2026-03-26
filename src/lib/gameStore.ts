@@ -6,6 +6,14 @@ import { ITEMS } from "@/game/data/items";
 import { ACHIEVEMENTS } from "@/game/data/achievements";
 import { rollEnchant } from "@/game/systems/enchant";
 import { QUESTS, type QuestData } from "@/game/data/quests";
+import {
+  ATTENDANCE_REWARDS,
+  WEEKLY_CHEST_DAYS,
+  ATTENDANCE_TITLES,
+  MAKEUP_COST,
+  getStreakMultiplier,
+  getISOWeek,
+} from "@/game/data/attendanceRewards";
 import { getSocket } from "@/lib/socket";
 import { EventBus } from "@/components/game/EventBus";
 import { ArmorSubType, ItemType } from "@/types/item";
@@ -218,6 +226,17 @@ type EnchantOutcome = {
   message: string;
 };
 
+export type AttendanceRevealData = {
+  day: number;
+  gold: number;
+  exp: number;
+  items: Array<{ itemId: string; qty: number; name: string; rarity: string }>;
+  streakMultiplier: number;
+  isWeeklyChest: boolean;
+  isMonthlyMega: boolean;
+  displayRarity: string;
+};
+
 type GameStore = {
   player: PlayerSnapshot;
   serverName: string;
@@ -259,6 +278,13 @@ type GameStore = {
   // 자동 사냥 시스템
   autoHuntEnabled: boolean;
   lastAutoPotion: number;
+  // 28일 월간 출석 시스템
+  attendanceDays: number[];
+  attendanceMonth: number;
+  attendanceYear: number;
+  attendanceMakeupUsedThisWeek: number;
+  attendanceLastMakeupWeek: string | null;
+  pendingAttendanceReveal: AttendanceRevealData | null;
   setPlayer: (player: Partial<PlayerSnapshot>) => void;
   setServerName: (serverName: string) => void;
   setGrade: (grade: number) => void;
@@ -273,6 +299,8 @@ type GameStore = {
   clearLevelUp: () => void;
   claimDailyBonus: () => void;
   checkDailyLogin: () => void;
+  claimMakeup: () => void;
+  dismissAttendanceReveal: () => void;
   claimAchievement: (achievementId: string) => void;
   registerKill: (monsterId: string, isBoss: boolean) => void;
   updateAchievementProgress: (
@@ -529,6 +557,13 @@ export const useGameStore = create<GameStore>()(
   // 자동 사냥 시스템 초기값
   autoHuntEnabled: false,
   lastAutoPotion: 0,
+  // 28일 월간 출석 시스템 초기값
+  attendanceDays: [],
+  attendanceMonth: typeof window !== "undefined" ? new Date().getMonth() : 0,
+  attendanceYear: typeof window !== "undefined" ? new Date().getFullYear() : 2026,
+  attendanceMakeupUsedThisWeek: 0,
+  attendanceLastMakeupWeek: null,
+  pendingAttendanceReveal: null,
   setPlayer: (player) => {
     if (player.name && typeof window !== "undefined") {
       localStorage.setItem("playerName", player.name);
@@ -595,98 +630,222 @@ export const useGameStore = create<GameStore>()(
   clearLevelUp: () => set({ pendingLevelUp: false }),
   checkDailyLogin: () =>
     set((state) => {
-      const today = new Date().toDateString();
+      const now = new Date();
+      const today = now.toDateString();
       if (state.lastLoginDate === today) return state;
+
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      // Reset monthly cycle if new month
+      let nextDays = state.attendanceDays;
+      let nextMonth = state.attendanceMonth;
+      let nextYear = state.attendanceYear;
+      if (currentMonth !== state.attendanceMonth || currentYear !== state.attendanceYear) {
+        nextDays = [];
+        nextMonth = currentMonth;
+        nextYear = currentYear;
+      }
+
+      // Streak (consecutive calendar days)
       const yesterday = new Date(Date.now() - 86400000).toDateString();
       const newStreak =
         state.lastLoginDate === yesterday ? state.loginStreak + 1 : 1;
+
+      // Reset weekly makeup if new ISO week
+      const isoWeek = getISOWeek(now);
+      const makeupReset =
+        isoWeek !== state.attendanceLastMakeupWeek
+          ? { attendanceMakeupUsedThisWeek: 0, attendanceLastMakeupWeek: isoWeek }
+          : {};
+
       if (typeof window !== "undefined") {
         localStorage.setItem("lastLoginDate", today);
         localStorage.setItem("loginStreak", String(newStreak));
       }
+
       return {
         lastLoginDate: today,
         loginStreak: newStreak,
         pendingDailyBonus: true,
+        attendanceDays: nextDays,
+        attendanceMonth: nextMonth,
+        attendanceYear: nextYear,
+        ...makeupReset,
       };
     }),
+
   claimDailyBonus: () =>
     set((state) => {
-      const DAY_REWARDS = [
-        { gold: 200, exp: 500, itemId: "red_potion", qty: 5 },
-        { gold: 400, exp: 1000, itemId: "blue_potion", qty: 3 },
-        { gold: 600, exp: 1500, itemId: "teleport_scroll", qty: 2 },
-        { gold: 800, exp: 2000, itemId: "haste_potion", qty: 2 },
-        { gold: 1200, exp: 3000, itemId: "mystery_box", qty: 1 },
-        { gold: 1500, exp: 4000, itemId: "weapon_enchant_scroll", qty: 1 },
-        { gold: 3000, exp: 8000, itemId: "legendary_box", qty: 1 },
-      ];
-      const streakDay = (state.loginStreak - 1) % 7;
-      const reward = DAY_REWARDS[streakDay];
+      const attendanceDay = state.attendanceDays.length + 1;
+      if (attendanceDay > 28) return { pendingDailyBonus: false } as Partial<GameStore>;
 
-      // Sync reward to server so player:state won't overwrite
+      const reward = ATTENDANCE_REWARDS[attendanceDay - 1];
+      const multiplier = getStreakMultiplier(state.loginStreak);
+      const finalGold = Math.floor(reward.gold * multiplier);
+      const finalExp = Math.floor(reward.exp * multiplier);
+
+      // Sync to server
       try {
         const socket = getSocket();
         if (socket.connected) {
           socket.emit("player:claimDailyBonus", {
-            gold: reward.gold,
-            exp: reward.exp,
-            itemId: reward.itemId,
-            qty: reward.qty,
+            gold: finalGold,
+            exp: finalExp,
+            items: reward.items,
+            attendanceDay,
           });
         }
-      } catch {
-        // offline mode — client-only reward is fine
-      }
+      } catch { /* offline ok */ }
 
+      // Add items to inventory
       const nextInventory = [...state.inventory];
-      const itemData = ITEMS[reward.itemId];
-      if (itemData) {
-        const existing = nextInventory.find((e) => e.id === reward.itemId);
+      for (const { itemId, qty } of reward.items) {
+        const itemData = ITEMS[itemId];
+        if (!itemData) continue;
+        const existing = nextInventory.find((e) => e.id === itemId);
         if (existing) {
-          existing.quantity += reward.qty;
+          existing.quantity += qty;
         } else {
           nextInventory.push({
             id: itemData.id,
             name: itemData.name,
-            quantity: reward.qty,
+            quantity: qty,
             rarity: itemData.rarity,
             type: itemData.type,
           });
         }
       }
 
-      const playerWithGold = {
-        ...state.player,
-        gold: state.player.gold + reward.gold,
-      };
-      const nextPlayer = applyExpReward(playerWithGold, reward.exp);
+      // Gold + EXP
+      const playerWithGold = { ...state.player, gold: state.player.gold + finalGold };
+      const nextPlayer = applyExpReward(playerWithGold, finalExp);
 
+      // Achievements
       const updatedAchievements = state.achievements.map((ach) => {
         const def = ACHIEVEMENTS.find((d) => d.id === ach.id);
-        if (!def || ach.completed || def.trackType !== "login_streak")
-          return ach;
+        if (!def || ach.completed || def.trackType !== "login_streak") return ach;
         const newProg = Math.max(ach.progress, state.loginStreak);
         return { ...ach, progress: newProg, completed: newProg >= def.goal };
       });
+
+      // Title milestone
+      const titleReward = ATTENDANCE_TITLES[attendanceDay];
+      const dayOfMonth = new Date().getDate();
 
       return {
         player: nextPlayer,
         inventory: nextInventory,
         pendingDailyBonus: false,
         achievements: updatedAchievements,
+        activeTitle: titleReward ?? state.activeTitle,
+        attendanceDays: [...state.attendanceDays, dayOfMonth],
+        pendingAttendanceReveal: {
+          day: attendanceDay,
+          gold: finalGold,
+          exp: finalExp,
+          items: reward.items.map(({ itemId, qty }) => ({
+            itemId,
+            qty,
+            name: ITEMS[itemId]?.name ?? itemId,
+            rarity: ITEMS[itemId]?.rarity ?? "common",
+          })),
+          streakMultiplier: multiplier,
+          isWeeklyChest: WEEKLY_CHEST_DAYS.has(attendanceDay),
+          isMonthlyMega: attendanceDay === 28,
+          displayRarity: reward.displayRarity,
+        },
         chat: [
           ...state.chat.slice(-47),
           {
             id: crypto.randomUUID(),
             channel: "system" as const,
             author: "시스템",
-            message: `📅 출석 보너스 수령! ${state.loginStreak}일 연속 출석 · +${reward.gold} Gold · +${reward.exp} EXP`,
+            message: `📅 ${attendanceDay}일차 출석 보너스! (x${multiplier.toFixed(1)}) · +${finalGold.toLocaleString()} Gold · +${finalExp.toLocaleString()} EXP`,
             timestamp: Date.now(),
           },
         ],
       };
     }),
+
+  claimMakeup: () =>
+    set((state) => {
+      const attendanceDay = state.attendanceDays.length + 1;
+      if (attendanceDay > 28) return state;
+      if (state.attendanceMakeupUsedThisWeek >= 1) return state;
+      if (state.player.gold < MAKEUP_COST) return state;
+
+      const reward = ATTENDANCE_REWARDS[attendanceDay - 1];
+
+      // Sync to server
+      try {
+        const socket = getSocket();
+        if (socket.connected) {
+          socket.emit("player:claimDailyBonus", {
+            gold: reward.gold - MAKEUP_COST,
+            exp: reward.exp,
+            items: reward.items,
+            attendanceDay,
+          });
+        }
+      } catch { /* offline ok */ }
+
+      // Add items
+      const nextInventory = [...state.inventory];
+      for (const { itemId, qty } of reward.items) {
+        const itemData = ITEMS[itemId];
+        if (!itemData) continue;
+        const existing = nextInventory.find((e) => e.id === itemId);
+        if (existing) {
+          existing.quantity += qty;
+        } else {
+          nextInventory.push({
+            id: itemData.id,
+            name: itemData.name,
+            quantity: qty,
+            rarity: itemData.rarity,
+            type: itemData.type,
+          });
+        }
+      }
+
+      const playerWithGold = { ...state.player, gold: state.player.gold - MAKEUP_COST + reward.gold };
+      const nextPlayer = applyExpReward(playerWithGold, reward.exp);
+
+      return {
+        player: nextPlayer,
+        inventory: nextInventory,
+        attendanceDays: [...state.attendanceDays, 0], // 0 = makeup day
+        attendanceMakeupUsedThisWeek: state.attendanceMakeupUsedThisWeek + 1,
+        pendingAttendanceReveal: {
+          day: attendanceDay,
+          gold: reward.gold,
+          exp: reward.exp,
+          items: reward.items.map(({ itemId, qty }) => ({
+            itemId,
+            qty,
+            name: ITEMS[itemId]?.name ?? itemId,
+            rarity: ITEMS[itemId]?.rarity ?? "common",
+          })),
+          streakMultiplier: 1.0,
+          isWeeklyChest: WEEKLY_CHEST_DAYS.has(attendanceDay),
+          isMonthlyMega: attendanceDay === 28,
+          displayRarity: reward.displayRarity,
+        },
+        chat: [
+          ...state.chat.slice(-47),
+          {
+            id: crypto.randomUUID(),
+            channel: "system" as const,
+            author: "시스템",
+            message: `📅 출석 보충! ${attendanceDay}일차 보상 수령 (-${MAKEUP_COST.toLocaleString()} Gold)`,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    }),
+
+  dismissAttendanceReveal: () => set({ pendingAttendanceReveal: null }),
   claimAchievement: (achievementId) =>
     set((state) => {
       const def = ACHIEVEMENTS.find((d) => d.id === achievementId);
@@ -1894,6 +2053,11 @@ export const useGameStore = create<GameStore>()(
         currentMapId: state.currentMapId,
         loginStreak: state.loginStreak,
         lastLoginDate: state.lastLoginDate,
+        attendanceDays: state.attendanceDays,
+        attendanceMonth: state.attendanceMonth,
+        attendanceYear: state.attendanceYear,
+        attendanceMakeupUsedThisWeek: state.attendanceMakeupUsedThisWeek,
+        attendanceLastMakeupWeek: state.attendanceLastMakeupWeek,
         sp: state.sp,
         skillLevels: state.skillLevels,
         comboKills: state.comboKills,

@@ -928,25 +928,33 @@ export function createGameServer(server: HttpServer) {
 
     socket.on(
       "player:claimDailyBonus",
-      (payload: { gold: number; exp: number; itemId: string; qty: number }) => {
+      (payload: {
+        gold: number;
+        exp: number;
+        items?: Array<{ itemId: string; qty: number }>;
+        itemId?: string;
+        qty?: number;
+        attendanceDay?: number;
+      }) => {
         const session = sessions.get(playerId);
         if (!session) return;
 
         session.gold += payload.gold;
         applyExpReward(session, payload.exp);
 
-        const item = ITEMS[payload.itemId];
-        if (item) {
-          const existing = session.inventory.find(
-            (e) => e.id === payload.itemId,
-          );
+        // Support both new items array and legacy single-item format
+        const itemList = payload.items ?? (payload.itemId ? [{ itemId: payload.itemId, qty: payload.qty ?? 1 }] : []);
+        for (const { itemId, qty } of itemList) {
+          const item = ITEMS[itemId];
+          if (!item) continue;
+          const existing = session.inventory.find((e) => e.id === itemId);
           if (existing) {
-            existing.quantity += payload.qty;
+            existing.quantity += qty;
           } else {
             session.inventory.push({
               id: item.id,
               name: item.name,
-              quantity: payload.qty,
+              quantity: qty,
               rarity: item.rarity,
               type: item.type,
             });
